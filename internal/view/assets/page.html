@@ -3,14 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
 <title>REI — {{.Meta.ID}}</title>
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 <header class="masthead">
   <span class="brand"><span class="dot" aria-hidden="true"></span>REI · Visor de especificaciones</span>
-  <span class="masthead-tag">Manual de referencia · REI Harness</span>
+  <button id="index-toggle" class="index-toggle" type="button" aria-expanded="true" aria-controls="doc-index">Índice</button>
   <span id="notice" class="notice" role="status"></span>
+  <span class="masthead-tag">Manual de referencia · REI Harness</span>
 </header>
 <main id="content">{{template "content" .}}</main>
 <script src="/static/app.js"></script>
@@ -28,7 +30,7 @@
 </section>
 
 <div class="layout">
-  <aside class="index" aria-label="Documentos del Work Item">
+  <aside class="index" id="doc-index" aria-label="Documentos del Work Item">
     <p class="sec-h">Índice de documentos</p>
     <ul class="docs">
       {{range .Docs}}

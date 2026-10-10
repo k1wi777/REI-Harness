@@ -6,6 +6,39 @@
   "use strict";
 
   var STORE_KEY = "rei.view.doc";
+  var IDX_KEY = "rei.view.index";
+  var smallViewport = window.matchMedia("(max-width: 1080px)");
+  var indexCollapsedState = false;
+
+  function indexStored() {
+    try {
+      var v = localStorage.getItem(IDX_KEY);
+      if (v !== null) {
+        return v === "1";
+      }
+    } catch (e) {
+      /* sin almacenamiento */
+    }
+    // Por defecto: colapsado en móvil (menú desplegable), abierto en escritorio.
+    return smallViewport.matches;
+  }
+
+  // setIndex muestra u oculta el índice; con `remember` persiste la elección.
+  function setIndex(collapsed, remember) {
+    indexCollapsedState = collapsed;
+    if (remember) {
+      try {
+        localStorage.setItem(IDX_KEY, collapsed ? "1" : "0");
+      } catch (e) {
+        /* sin almacenamiento */
+      }
+    }
+    document.body.classList.toggle("index-collapsed", collapsed);
+    var btn = document.getElementById("index-toggle");
+    if (btn) {
+      btn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    }
+  }
 
   function setNotice(text) {
     var el = document.getElementById("notice");
@@ -67,6 +100,9 @@
       history.replaceState(null, "", "#doc-" + id);
     }
     applySelection();
+    if (smallViewport.matches && !indexCollapsedState) {
+      setIndex(true, true);
+    }
     var reader = document.querySelector(".reader");
     if (reader) {
       reader.scrollTop = 0;
@@ -134,11 +170,14 @@
     }
     if (t.id === "approve" || t.closest("#approve")) {
       approve();
+    } else if (t.id === "index-toggle" || t.closest("#index-toggle")) {
+      setIndex(!indexCollapsedState, true);
     }
   });
 
   // Activa el modo "una columna, un documento" y aplica la selección inicial.
   document.body.classList.add("js-viewer");
+  setIndex(indexStored(), false);
   applySelection();
 
   // SSE: el servidor emite `data: reload` al cambiar los documentos.

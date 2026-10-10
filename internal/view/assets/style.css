@@ -24,7 +24,7 @@
   --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "JetBrains Mono", monospace;
 
   --measure: 70ch;
-  --frame: 92rem;
+  --frame: 120rem;
 }
 
 * { box-sizing: border-box; }
@@ -68,15 +68,25 @@ a, button { caret-color: var(--accent); }
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  margin-right: auto;
   font-weight: 700;
   font-size: 14px;
   letter-spacing: 0.03em;
   text-transform: uppercase;
 }
 .brand .dot { width: 10px; height: 10px; background: var(--accent); border-radius: 2px; flex: none; }
+.index-toggle {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--soft);
+  background: var(--ground-3);
+  border: 1px solid var(--line-2);
+  border-radius: 4px;
+  padding: 0.3rem 0.65rem;
+  cursor: pointer;
+}
+.index-toggle:hover { color: var(--accent); border-color: var(--accent); }
 .notice { font-family: var(--mono); font-size: 13px; color: var(--accent); }
-.masthead-tag { font-family: var(--mono); font-size: 13px; color: var(--muted); letter-spacing: 0.03em; }
+.masthead-tag { margin-left: auto; font-family: var(--mono); font-size: 13px; color: var(--muted); letter-spacing: 0.03em; }
 
 /* ── Banda de título ──────────────────────────────────────── */
 .titleband {
@@ -126,9 +136,9 @@ a, button { caret-color: var(--accent); }
   margin: 0 auto;
   align-items: start;
 }
-.index { min-width: 0; padding: 2rem 1.5rem 2.5rem; border-right: 1px solid var(--line); }
-.reader { min-width: 0; padding: 2.25rem clamp(1.5rem, 4vw, 3rem) 3rem; }
-.meta { min-width: 0; padding: 2rem 1.5rem 2.5rem; border-left: 1px solid var(--line); }
+.index { min-width: 0; padding: 1.75rem 1.25rem 2rem; border-right: 1px solid var(--line); }
+.reader { min-width: 0; padding: 1.75rem clamp(1.25rem, 3vw, 2.5rem) 3rem; }
+.meta { min-width: 0; padding: 1.75rem 1.25rem 2rem; border-left: 1px solid var(--line); }
 
 .sec-h {
   margin: 0 0 0.9rem;
@@ -142,8 +152,8 @@ a, button { caret-color: var(--accent); }
 .sec-h.gap { margin-top: 1.9rem; }
 
 /* Índice de documentos */
-.docs { list-style: none; margin: 0; padding: 0; }
-.doc { padding: 0.5rem 0; border-top: 1px solid var(--line); }
+.docs { list-style: none; margin: 0 -0.7rem; padding: 0; }
+.doc { padding: 0.5rem 0.7rem; border-top: 1px solid var(--line); border-radius: 4px; }
 .doc:first-child { border-top: 0; }
 .doc .nm { font-family: var(--mono); font-size: 14px; color: var(--soft); text-decoration: none; }
 .doc a.nm { cursor: pointer; }
@@ -265,7 +275,7 @@ a, button { caret-color: var(--accent); }
   gap: 1.4rem 2.6rem;
   max-width: var(--frame);
   margin: 0 auto;
-  padding: 1.4rem clamp(1rem, 4vw, 2.5rem) 3rem;
+  padding: 1.25rem clamp(1rem, 3vw, 2.5rem) 1.25rem;
   border-top: 1px solid var(--line);
 }
 .col-item { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
@@ -304,6 +314,9 @@ a, button { caret-color: var(--accent); }
 .js-viewer .reader .doc-body { display: none; }
 .js-viewer .reader .doc-body.is-active { display: block; }
 
+/* El índice es desplegable: colapsarlo libera el ancho para la lectura. */
+.index-collapsed .index { display: none; }
+
 @media (min-width: 1081px) {
   body { display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
   .masthead { position: static; flex: 0 0 auto; }
@@ -311,5 +324,6 @@ a, button { caret-color: var(--accent); }
   .titleband { flex: 0 0 auto; }
   .layout { flex: 1 1 auto; min-height: 0; overflow: hidden; }
   .index, .reader, .meta { height: 100%; overflow-y: auto; }
+  .index-collapsed .layout { grid-template-columns: minmax(0, 1fr) 19rem; }
   .colophon { flex: 0 0 auto; }
 }
