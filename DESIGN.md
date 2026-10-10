@@ -17,6 +17,8 @@ colors:
   signal-ok: "#7fb98a"
   signal-fail: "#e5646b"
   signal-review: "#6bb0d6"
+  signal-warn-hover: "#e9b351"
+  on-signal-warn: "#241a06"
   primary-hover: "#6755d8"
   on-primary: "#f3f0ff"
   scrollbar-hover: "#4a515e"

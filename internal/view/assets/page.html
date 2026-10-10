@@ -24,7 +24,7 @@
   <span class="bar" aria-hidden="true"></span>
   <h1>{{or .Meta.Title .Meta.ID}}</h1>
   <span class="titlemeta">
-    <span class="badge status-{{.Meta.Status}}">{{.Meta.Status}}</span>
+    <span class="badge status-{{.Meta.Status}}">{{status .Meta.Status}}</span>
     <span class="wid">{{.Meta.ID}}</span>
   </span>
 </section>
@@ -51,31 +51,40 @@
 
   <section class="reader">
     {{range .Docs}}{{if .Present}}
-    <article class="doc-body" id="doc-{{.Name}}" data-doc="{{.Name}}"><div class="markdown">{{.HTML}}</div></article>
+    <article class="doc-body" id="doc-{{.Name}}" data-doc="{{.Name}}">
+      <div class="running-head"><span class="rh-name">{{.Name}}</span><span class="rh-folio">Folio {{.Pos}}/{{$.TotalPresent}}</span></div>
+      <div class="markdown">{{.HTML}}</div>
+    </article>
     {{end}}{{end}}
   </section>
 
   <aside class="meta" aria-label="Ficha y validación">
     <p class="sec-h">Validación</p>
     {{if .Issues}}
-    {{range .Issues}}<div class="callout issue-{{.Level}}"><span class="tag">{{.Level}}</span><span class="msg">{{.Message}}</span></div>{{end}}
+    {{range .Issues}}<div class="callout issue-{{.Level}}"><span class="tag">{{level .Level}}</span><span class="msg">{{.Message}}{{if .Doc}} <a class="callout-link" href="#doc-{{.Doc}}" data-doc="{{.Doc}}">ver {{.Doc}}</a>{{end}}</span></div>{{end}}
     {{else}}
-    <div class="callout ok"><span class="tag">OK</span><span class="msg">Sin hallazgos.</span></div>
+    <div class="callout ok"><span class="tag">Correcto</span><span class="msg">Sin hallazgos.</span></div>
     {{end}}
 
     <p class="sec-h gap">Ficha</p>
     <dl class="facts">
       <div class="row"><dt>tipo</dt><dd class="v">{{.Meta.Type}}</dd></div>
-      <div class="row"><dt>estado</dt><dd class="v">{{.Meta.Status}}</dd></div>
+      <div class="row"><dt>estado</dt><dd class="v">{{status .Meta.Status}}</dd></div>
       <div class="row"><dt>creado</dt><dd class="v">{{.Meta.CreatedAt}}</dd></div>
     </dl>
 
-    {{if .CanApprove}}
-    <div class="action">
-      <button id="approve" type="button" data-id="{{.Meta.ID}}">Aprobar</button>
-      <p class="hint">Aprobación del plan (ready → in_progress)</p>
+    <div class="action" id="approve-area">
+      {{if .CanApprove}}
+      <p class="sec-h gap">Aprobación</p>
+      <p class="approve-note">Transición: <span class="mono">listo para aprobar → en curso</span>.</p>
+      <button id="approve" type="button" data-id="{{.Meta.ID}}">Firmar aprobación</button>
+      <button id="approve-cancel" type="button" class="ghost" hidden>Cancelar</button>
+      <p class="action-status" id="action-status" role="status"></p>
+      {{else}}
+      <p class="sec-h gap">Aprobación</p>
+      <p class="approve-note">Este Work Item no está esperando aprobación.</p>
+      {{end}}
     </div>
-    {{end}}
   </aside>
 </div>
 
