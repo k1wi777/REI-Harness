@@ -10,7 +10,7 @@
 <body>
 <header class="masthead">
   <span class="brand"><span class="dot" aria-hidden="true"></span>REI<span class="brand-sub"> · Visor de especificaciones</span></span>
-  <button id="index-toggle" class="index-toggle" type="button" aria-expanded="true" aria-controls="doc-index">Índice</button>
+  <button id="index-toggle" class="index-toggle masthead-index-toggle" type="button" aria-expanded="true" aria-controls="doc-index" aria-label="Abrir o cerrar el índice"><span class="bars" aria-hidden="true"></span></button>
   <span id="notice" class="notice" role="status"></span>
   <span class="masthead-tag">Manual de referencia · REI Harness</span>
 </header>
@@ -31,7 +31,10 @@
 
 <div class="layout">
   <aside class="index" id="doc-index" aria-label="Documentos del Work Item">
-    <p class="sec-h">Índice de documentos</p>
+    <div class="index-head">
+      <button class="index-toggle rail-toggle" type="button" aria-expanded="true" aria-controls="doc-index" aria-label="Contraer o expandir el índice"><span class="bars" aria-hidden="true"></span></button>
+      <p class="sec-h">Índice de documentos</p>
+    </div>
     <ul class="docs">
       {{range .Docs}}
       <li class="doc{{if .Present}}{{else}} missing{{end}}">

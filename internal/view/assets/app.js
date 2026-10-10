@@ -34,9 +34,9 @@
       }
     }
     document.body.classList.toggle("index-collapsed", collapsed);
-    var btn = document.getElementById("index-toggle");
-    if (btn) {
-      btn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    var btns = document.querySelectorAll(".index-toggle");
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].setAttribute("aria-expanded", collapsed ? "false" : "true");
     }
   }
 
@@ -170,7 +170,7 @@
     }
     if (t.id === "approve" || t.closest("#approve")) {
       approve();
-    } else if (t.id === "index-toggle" || t.closest("#index-toggle")) {
+    } else if (t.closest(".index-toggle")) {
       setIndex(!indexCollapsedState, true);
     }
   });

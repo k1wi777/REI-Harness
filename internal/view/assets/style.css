@@ -24,7 +24,6 @@
   --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "JetBrains Mono", monospace;
 
   --measure: 70ch;
-  --frame: 100%;
 }
 
 * { box-sizing: border-box; }
@@ -78,27 +77,27 @@ a, button { caret-color: var(--accent); }
 .index-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  font-family: var(--mono);
-  font-size: 13px;
+  justify-content: center;
   color: var(--soft);
   background: var(--ground-3);
   border: 1px solid var(--line-2);
   border-radius: 4px;
-  padding: 0.3rem 0.65rem;
+  padding: 0.4rem 0.5rem;
   cursor: pointer;
 }
-.index-toggle::after {
-  content: "";
-  width: 0;
-  height: 0;
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-  border-top: 5px solid currentColor;
-  transition: transform 0.15s ease;
-}
 .index-toggle:hover { color: var(--accent); border-color: var(--accent); }
-.index-collapsed .index-toggle::after { transform: rotate(-90deg); }
+.bars {
+  width: 16px;
+  height: 12px;
+  --bar: linear-gradient(currentColor, currentColor);
+  background-image: var(--bar), var(--bar), var(--bar);
+  background-size: 100% 2px;
+  background-position: 0 0, 0 5px, 0 10px;
+  background-repeat: no-repeat;
+}
+.masthead-index-toggle { display: none; }
+.index-head { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.9rem; }
+.index-head .sec-h { margin: 0; }
 .notice { font-family: var(--mono); font-size: 13px; color: var(--accent); }
 .masthead-tag { margin-left: auto; font-family: var(--mono); font-size: 13px; color: var(--muted); letter-spacing: 0.03em; }
 
@@ -146,13 +145,12 @@ a, button { caret-color: var(--accent); }
 .layout {
   display: grid;
   grid-template-columns: 15rem minmax(0, 1fr) 19rem;
-  max-width: var(--frame);
-  margin: 0 auto;
   align-items: start;
+  padding-inline: clamp(1rem, 4vw, 2.5rem);
 }
-.index { min-width: 0; padding: 1.75rem 1.25rem 2rem; border-right: 1px solid var(--line); }
+.index { min-width: 0; padding: 1.75rem 1.25rem 2rem 0; border-right: 1px solid var(--line); }
 .reader { min-width: 0; padding: 1.75rem clamp(1.25rem, 3vw, 2.5rem) 3rem; }
-.meta { min-width: 0; padding: 1.75rem 1.25rem 2rem; border-left: 1px solid var(--line); }
+.meta { min-width: 0; padding: 1.75rem 0 2rem 1.25rem; border-left: 1px solid var(--line); }
 
 .sec-h {
   margin: 0 0 0.9rem;
@@ -287,9 +285,7 @@ a, button { caret-color: var(--accent); }
   display: flex;
   flex-wrap: wrap;
   gap: 1.4rem 2.6rem;
-  max-width: var(--frame);
-  margin: 0 auto;
-  padding: 1.25rem clamp(1rem, 3vw, 2.5rem) 1.25rem;
+  padding: 1.25rem clamp(1rem, 4vw, 2.5rem) 1.25rem;
   border-top: 1px solid var(--line);
 }
 .col-item { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
@@ -313,6 +309,8 @@ a, button { caret-color: var(--accent); }
   .reader { padding: 1.75rem clamp(1rem, 4vw, 2.5rem); }
   .meta { border-left: 0; border-top: 1px solid var(--line); padding: 1.5rem clamp(1rem, 4vw, 2.5rem); }
   .masthead-tag { display: none; }
+  .masthead-index-toggle { display: inline-flex; }
+  .index-collapsed .index { display: none; }
   .brand-sub { display: none; }
   .titlemeta { margin-left: 0; }
 }
@@ -337,8 +335,13 @@ a, button { caret-color: var(--accent); }
 .js-viewer .reader .doc-body { display: none; }
 .js-viewer .reader .doc-body.is-active { display: block; }
 
-/* El índice es desplegable: colapsarlo libera el ancho para la lectura. */
-.index-collapsed .index { display: none; }
+/* El índice es plegable: al colapsar se oculta su contenido; en escritorio
+   queda un raíl con la hamburguesa, en móvil desaparece el panel. */
+.index-collapsed .index .sec-h,
+.index-collapsed .index .docs,
+.index-collapsed .index .session { display: none; }
+.index-collapsed .index { padding-inline: 0; }
+.index-collapsed .index .index-head { justify-content: center; }
 
 @media (min-width: 1081px) {
   body { display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
@@ -347,6 +350,6 @@ a, button { caret-color: var(--accent); }
   .titleband { flex: 0 0 auto; }
   .layout { flex: 1 1 auto; min-height: 0; overflow: hidden; }
   .index, .reader, .meta { height: 100%; overflow-y: auto; }
-  .index-collapsed .layout { grid-template-columns: minmax(0, 1fr) 19rem; }
+  .index-collapsed .layout { grid-template-columns: 3.25rem minmax(0, 1fr) 19rem; }
   .colophon { flex: 0 0 auto; }
 }
