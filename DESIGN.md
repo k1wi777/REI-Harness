@@ -69,6 +69,11 @@ typography:
     fontFamily: 'ui-monospace, "SFMono-Regular", Menlo, Consolas, "JetBrains Mono", monospace'
     fontSize: "0.86rem"
     fontWeight: 400
+  doc-title:
+    fontFamily: '"Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", "Source Serif 4", Georgia, serif'
+    fontSize: "clamp(1.6rem, 2.4vw, 1.95rem)"
+    fontWeight: 600
+    lineHeight: 1.22
   ui:
     fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     fontSize: "15px"
