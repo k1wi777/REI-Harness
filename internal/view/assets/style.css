@@ -42,6 +42,7 @@
   --ui-small-weight: 400;
   --label-size: 13px;
   --label-weight: 700;
+  --micro-size: 12px;
   --mono-size: 13px;
   --mono-weight: 400;
   --display-size: clamp(1.3rem, 2.4vw, 1.75rem);
@@ -236,7 +237,7 @@ a, button { caret-color: var(--accent); }
   margin-left: 0.5rem;
   padding: 0.05rem 0.4rem;
   font-family: var(--ui);
-  font-size: var(--label-size);
+  font-size: var(--micro-size);
   font-weight: var(--label-weight);
   letter-spacing: 0.05em;
   text-transform: uppercase;

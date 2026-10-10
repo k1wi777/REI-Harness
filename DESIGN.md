@@ -46,6 +46,11 @@ typography:
     fontSize: "13px"
     fontWeight: 700
     letterSpacing: "0.1em"
+  micro-label:
+    fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+    fontSize: "12px"
+    fontWeight: 700
+    letterSpacing: "0.05em"
   mono:
     fontFamily: 'ui-monospace, "SFMono-Regular", Menlo, Consolas, "JetBrains Mono", monospace'
     fontSize: "13px"
@@ -212,7 +217,8 @@ tamaño.
 
 ### Named Rules
 **La Regla de la Etiqueta Grande.** Ninguna etiqueta baja de 13px; el suelo
-pisa sobre terreno blando, no en letra enana.
+pisa sobre terreno blando, no en letra enana. Excepción única: la
+micro-etiqueta (12px), reservada a la píldora «cambios» del índice.
 
 ## Layout
 
