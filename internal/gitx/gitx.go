@@ -4,8 +4,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/k1wi777/my-harness-SDD/internal/meta"
@@ -74,29 +77,135 @@ func SetCommit(p *paths.Project, id, field string) (string, error) {
 	return field + "=" + sha, nil
 }
 
-// ReviewDiff genera el paquete de revisión de un Work Item.
-func ReviewDiff(p *paths.Project, id string, full bool) (string, error) {
+// ReviewBase devuelve el commit base de revisión de un Work Item
+// (last_review_commit; en su defecto base_commit) y su origen. ok=false si no
+// hay ninguno o si el commit no es válido; err solo si no se puede leer
+// meta.json o si no hay un repositorio git.
+func ReviewBase(p *paths.Project, id string) (base, origin string, ok bool, err error) {
 	m, err := meta.Load(p.MetaFile(id))
 	if err != nil {
-		return "", err
+		return "", "", false, err
 	}
 	if !IsRepo(p.Root) {
-		return "", ErrNoGit
+		return "", "", false, ErrNoGit
 	}
-
-	base := ""
-	origin := "base_commit"
+	origin = "base_commit"
 	switch {
 	case m.LastReviewCommit != "":
-		base = m.LastReviewCommit
-		origin = "last_review_commit"
+		base, origin = m.LastReviewCommit, "last_review_commit"
 	case m.BaseCommit != "":
 		base = m.BaseCommit
 	}
 	if base == "" {
-		return "", ErrNoBase
+		return "", "", false, nil
 	}
 	if _, err := gitOut(p.Root, "cat-file", "-e", base+"^{commit}"); err != nil {
+		return "", "", false, nil
+	}
+	return base, origin, true, nil
+}
+
+// FileChange describe el cambio de un archivo respecto de un commit base.
+type FileChange struct {
+	Changed bool   // el contenido difiere del base
+	New     bool   // no existía en el base (todo añadido)
+	Added   int    // líneas añadidas
+	Removed int    // líneas eliminadas
+	Diff    string // diff unificado (--no-color); "" si no cambió
+}
+
+// FileChanges calcula el cambio de cada ruta (relativa a la raíz del proyecto)
+// respecto de un commit base. No descarta el bookkeeping de sesión
+// (.rei/progress/**): el visor muestra esos documentos y quiere sus cambios.
+func FileChanges(p *paths.Project, base string, relPaths []string) (map[string]FileChange, error) {
+	out := make(map[string]FileChange, len(relPaths))
+	for _, rel := range relPaths {
+		fc, err := fileChange(p, base, rel)
+		if err != nil {
+			return nil, err
+		}
+		out[rel] = fc
+	}
+	return out, nil
+}
+
+// fileChange resuelve el cambio de una única ruta respecto del base: los
+// archivos sin rastrear presentes en disco son material añadido por completo;
+// los rastreados se comparan con git.
+func fileChange(p *paths.Project, base, rel string) (FileChange, error) {
+	var fc FileChange
+	if _, err := gitOut(p.Root, "ls-files", "--error-unmatch", "--", rel); err != nil {
+		// No rastreado: si existe en disco, todo su contenido es añadido.
+		if !fileExists(filepath.Join(p.Root, rel)) {
+			return fc, nil
+		}
+		diff, _ := gitOut(p.Root, "diff", "--no-color", "--no-index", "--", "/dev/null", rel)
+		fc.Changed = true
+		fc.New = true
+		fc.Added, fc.Removed = countDiff(diff)
+		fc.Diff = diff
+		return fc, nil
+	}
+	numstat, _ := gitOut(p.Root, "diff", "--numstat", "--no-color", base, "--", rel)
+	if strings.TrimSpace(numstat) == "" {
+		return fc, nil // sin cambios
+	}
+	fc.Changed = true
+	fc.Added, fc.Removed = parseNumstat(numstat)
+	diff, _ := gitOut(p.Root, "diff", "--no-color", base, "--", rel)
+	fc.Diff = diff
+	return fc, nil
+}
+
+// countDiff cuenta las líneas añadidas y eliminadas de un diff unificado.
+func countDiff(diff string) (added, removed int) {
+	for _, line := range strings.Split(diff, "\n") {
+		switch {
+		case strings.HasPrefix(line, "+++"), strings.HasPrefix(line, "---"):
+			continue
+		case strings.HasPrefix(line, "+"):
+			added++
+		case strings.HasPrefix(line, "-"):
+			removed++
+		}
+	}
+	return added, removed
+}
+
+// parseNumstat suma las columnas añadida/eliminada de `git diff --numstat`
+// (los archivos binarios reportan "-", que cuenta como cero).
+func parseNumstat(out string) (added, removed int) {
+	for _, line := range strings.Split(out, "\n") {
+		fields := strings.Fields(line)
+		if len(fields) < 2 {
+			continue
+		}
+		added += atoiOrZero(fields[0])
+		removed += atoiOrZero(fields[1])
+	}
+	return added, removed
+}
+
+func atoiOrZero(s string) int {
+	n, err := strconv.Atoi(s)
+	if err != nil {
+		return 0
+	}
+	return n
+}
+
+func fileExists(path string) bool {
+	fi, err := os.Stat(path)
+	return err == nil && !fi.IsDir()
+}
+
+// ReviewDiff genera el paquete de revisión de un Work Item.
+func ReviewDiff(p *paths.Project, id string, full bool) (string, error) {
+	base, origin, ok, err := ReviewBase(p, id)
+	if err != nil {
+		return "", err
+	}
+	if !ok {
 		return "", ErrNoBase
 	}
 

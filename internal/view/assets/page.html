@@ -9,7 +9,7 @@
 </head>
 <body>
 <header class="masthead">
-  <span class="brand"><span class="dot" aria-hidden="true"></span>REI<span class="brand-sub"> · Visor de especificaciones</span></span>
+  <span class="brand"><span class="dot" aria-hidden="true"></span>REI</span>
   <button id="index-toggle" class="index-toggle masthead-index-toggle" type="button" aria-expanded="true" aria-controls="doc-index" aria-label="Abrir o cerrar el índice"><span class="bars" aria-hidden="true"></span></button>
   <span id="notice" class="notice" role="status"></span>
   <span class="masthead-tag">Manual de referencia · REI Harness</span>
@@ -37,8 +37,8 @@
     </div>
     <ul class="docs">
       {{range .Docs}}
-      <li class="doc{{if .Present}}{{else}} missing{{end}}">
-        {{if .Present}}<a class="nm" href="#doc-{{.Name}}" data-doc="{{.Name}}">{{.Name}}</a>
+      <li class="doc{{if .Present}}{{else}} missing{{end}}{{if .Changed}} changed{{end}}{{if .New}} new{{end}}">
+        {{if .Present}}<a class="nm" href="#doc-{{.Name}}" data-doc="{{.Name}}">{{.Name}}</a>{{if .Changed}}<span class="change-tag">{{if .New}}nuevo{{else}}cambios{{end}}</span>{{end}}
         {{else}}<span class="nm">{{.Name}}</span><span class="missing-tag">(no existe)</span>{{end}}
       </li>
       {{end}}
@@ -51,9 +51,17 @@
 
   <section class="reader">
     {{range .Docs}}{{if .Present}}
-    <article class="doc-body" id="doc-{{.Name}}" data-doc="{{.Name}}">
-      <div class="running-head"><span class="rh-name">{{.Name}}</span><span class="rh-folio">Folio {{.Pos}}/{{$.TotalPresent}}</span></div>
+    <article class="doc-body{{if .Changed}} has-changes{{end}}" id="doc-{{.Name}}" data-doc="{{.Name}}">
+      <div class="running-head">
+        <span class="rh-name">{{.Name}}</span>
+        <span class="rh-side">
+          {{if $.HasBase}}{{if .Changed}}<button class="changes-toggle" type="button" aria-pressed="false" aria-controls="diff-{{.Name}}">Cambios +{{.Added}} / −{{.Removed}}</button>{{else}}<span class="change-note">sin cambios</span>{{end}}{{end}}
+          <span class="rh-folio">Folio {{.Pos}}/{{$.TotalPresent}}</span>
+        </span>
+      </div>
+      {{if ge (len .Sections) 2}}<nav class="toc" aria-label="Secciones de {{.Name}}"><p class="sec-h">Secciones</p><ul class="toc-list">{{range .Sections}}<li class="toc-item toc-l{{.Level}}"><a href="#{{.ID}}">{{.Text}}</a></li>{{end}}</ul></nav>{{end}}
       <div class="markdown">{{.HTML}}</div>
+      {{if .Changed}}<div class="doc-diff" id="diff-{{.Name}}">{{.Diff}}</div>{{end}}
     </article>
     {{end}}{{end}}
   </section>
@@ -92,5 +100,12 @@
   <span class="col-item"><span class="col-k">id</span><span class="col-v">{{.Meta.ID}}</span></span>
   <span class="col-item"><span class="col-k">base_commit</span><span class="col-v">{{or .Meta.BaseCommit "(vacío)"}}</span></span>
   <span class="col-item"><span class="col-k">last_review_commit</span><span class="col-v">{{or .Meta.LastReviewCommit "(vacío)"}}</span></span>
+  {{if .HasBase}}
+  <span class="col-item"><span class="col-k">cambios desde</span><span class="col-v">{{short .BaseSHA}} · {{.BaseOrigin}}</span></span>
+  {{else if .GitAvailable}}
+  <span class="col-item"><span class="col-k">cambios</span><span class="col-v">sin base de revisión</span></span>
+  {{else}}
+  <span class="col-item"><span class="col-k">cambios</span><span class="col-v">sin git</span></span>
+  {{end}}
 </footer>
 {{end}}

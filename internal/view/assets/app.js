@@ -262,6 +262,15 @@
       resetApprove();
       return;
     }
+    var changes = t.closest(".changes-toggle");
+    if (changes) {
+      var body = changes.closest(".doc-body");
+      if (body) {
+        var on = body.classList.toggle("show-changes");
+        changes.setAttribute("aria-pressed", on ? "true" : "false");
+      }
+      return;
+    }
     if (t.closest(".index-toggle")) {
       setIndex(!indexCollapsedState, true);
     }
@@ -274,15 +283,54 @@
   applyHash();
   window.addEventListener("hashchange", applyHash);
 
-  // SSE: el servidor emite `data: reload` al cambiar los documentos.
-  try {
-    var es = new EventSource("/events");
+  // SSE: el servidor emite `data: reload` al cambiar los documentos. Si la
+  // conexión se interrumpe, se reconecta con espera creciente (1s → 15s) y se
+  // avisa de forma discreta hasta restablecerse.
+  var RETRY_MIN = 1000;
+  var RETRY_MAX = 15000;
+  var es = null;
+  var retryDelay = RETRY_MIN;
+  var reconnectTimer = null;
+
+  function scheduleReconnect() {
+    if (reconnectTimer) {
+      return;
+    }
+    reconnectTimer = setTimeout(function () {
+      reconnectTimer = null;
+      connectEvents();
+    }, retryDelay);
+    retryDelay = Math.min(retryDelay * 2, RETRY_MAX);
+  }
+
+  function connectEvents() {
+    try {
+      es = new EventSource("/events");
+    } catch (e) {
+      scheduleReconnect();
+      return;
+    }
+    es.onopen = function () {
+      retryDelay = RETRY_MIN;
+      var el = document.getElementById("notice");
+      if (el && el.textContent === "Reconectando…") {
+        setNotice("");
+      }
+    };
     es.onmessage = function (ev) {
       if (ev.data === "reload") {
         refresh();
       }
     };
-  } catch (e) {
-    /* sin SSE la página sigue siendo útil */
+    es.onerror = function () {
+      if (es) {
+        es.close();
+        es = null;
+      }
+      setNotice("Reconectando…");
+      scheduleReconnect();
+    };
   }
+
+  connectEvents();
 })();

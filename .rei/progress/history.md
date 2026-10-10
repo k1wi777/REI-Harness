@@ -656,3 +656,42 @@ Planificación del visor de especificaciones en el navegador (v1):
 
 Cambios solicitados aplicados. Esperando **revisión** del Work Item `2026-10-09_23-45__spec-browser-viewer` (`.rei/specs/2026-10-09_23-45__spec-browser-viewer/`). Corrige las acciones 1 (T9–T12 marcadas en `tasks.md`) y 2 (comentario doc separado en `internal/cli/cli.go`) del `review.md`; evidencia en `.rei/progress/work-items/2026-10-09_23-45__spec-browser-viewer/impl.md`.
 
+
+## 2026-10-10 03:27 — 2026-10-10_03-07__view-phase2
+
+- **Work Item:** 2026-10-10_03-07__view-phase2
+- **Tipo:** feature
+- **Estado:** review
+- **Inicio:** 2026-10-10T03:08:24-05:00
+- **Agente activo:** implementer
+
+## Plan
+
+Planificación de la Fase 2 del visor completada:
+`requirements.md` (R1–R26), `design.md` y `tasks.md` (T1–T13) escritos en
+`.rei/specs/2026-10-10_03-07__view-phase2/`.
+
+Alcance planificado: ver qué cambió desde `last_review_commit` (diff por
+documento), índice de secciones (TOC), reconexión del SSE, masthead sin
+redundancia, más contraste del índice activo y alineación de tokens
+(`DESIGN.md`/`design.json` ⇄ `style.css`).
+
+## Bitácora
+
+- Leído `meta.json` (fuente del alcance) y la documentación del arnés.
+- Estudiada la v1 (`2026-10-09_23-45__spec-browser-viewer`) y el código de
+  `internal/view/` (render, servidor, assets) y `internal/gitx/`.
+- Redactados los tres documentos de planificación de la Feature.
+- La planificación finalizó y fue aprobada.
+- Implementadas T1–T13: `gitx.ReviewBase`/`FileChanges`; `changes.go`,
+  `toc.go` y ampliación de `render.go`; modo "Cambios" en `page.html`/`app.js`;
+  TOC; reconexión del SSE; masthead sin redundancia; contraste del activo;
+  alineación de tokens en `style.css` y `DESIGN.md`; tests de gitx y del visor.
+- Validación final verde (gofmt, vet, test, build, `rei check`); todas las
+  tareas marcadas `[x]`.
+
+## Próximo paso
+
+Esperar la revisión del Work Item (`review`); no hay acciones pendientes de
+implementación.
+

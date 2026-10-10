@@ -41,13 +41,13 @@ func writeTestFile(t *testing.T, path, content string) {
 	}
 }
 
-// TestRenderMarkdownNeutralizaHTML comprueba el modo seguro por defecto de
-// goldmark: el HTML crudo no se interpreta (R17) y el Markdown sí se convierte.
-func TestRenderMarkdownNeutralizaHTML(t *testing.T) {
+// TestRenderDocNeutralizaHTML comprueba el modo seguro por defecto de goldmark:
+// el HTML crudo no se interpreta y el Markdown sí se convierte.
+func TestRenderDocNeutralizaHTML(t *testing.T) {
 	src := "# Título\n\n<script>alert(1)</script>\n\n<img src=x onerror=alert(2)>\n\n**negrita** y `código`\n"
-	html, err := renderMarkdown([]byte(src))
+	html, _, err := renderDoc([]byte(src))
 	if err != nil {
-		t.Fatalf("renderMarkdown: %v", err)
+		t.Fatalf("renderDoc: %v", err)
 	}
 	got := string(html)
 	// En modo seguro (sin html.WithUnsafe), goldmark no interpreta el HTML crudo:

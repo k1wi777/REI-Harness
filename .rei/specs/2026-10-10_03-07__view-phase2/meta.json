@@ -1,0 +1,10 @@
+{
+  "id": "2026-10-10_03-07__view-phase2",
+  "title": "Visor de especificaciones — Fase 2",
+  "description": "Segunda fase del visor de especificaciones `rei view`: mejoras de lectura y pulido que quedaron fuera de la v1 y que marcó la crítica de Impeccable. FUERA DE ALCANCE (queda para una fase posterior): el feedback/selección de cambios sobre las specs, mapeado a Spec Author Caso C.\n\nAlcance acordado:\n- Ver qué cambió desde `last_review_commit`: diff o resaltado del material modificado desde la última revisión. Es la red flag principal del revisor (hoy hay que releer la spec entera).\n- Índice de secciones visible (TOC) dentro del documento; los headings ya tienen id (goldmark WithAutoHeadingID).\n- Reconexión del SSE: manejar onerror del EventSource para reconectar si el visor se reinicia.\n- Masthead sin redundancia: hoy dice \"Visor de especificaciones\" y a la derecha \"Manual de referencia · REI Harness\"; dejar una sola descripción.\n- Estado activo del índice con más contraste: subirlo de --ground-2 a --ground-3 (Impeccable lo marcó como apenas perceptible).\n- Deriva de tokens: DESIGN.md/design.json declaran roles (headline, title, caption, on-primary, etc.) que el CSS no usa como variables, y el botón tiene colores hardcodeados (#6f5ae0, #f3f0ff, #6755d8). Alinear tokens y CSS.\n\nRestricciones (mantener lo acordado en v1): sin terceros en JS/CSS; runtime-agnóstico; UI en español; preservar el mundo visual documentado en DESIGN.md y el comportamiento actual (selector de documento, aprobación en dos pasos, enlaces profundos, scroll conservado en la recarga). No introducir dependencias Go nuevas sin justificarlo.\n\nRelacionado: v1 es el Work Item 2026-10-09_23-45__spec-browser-viewer (done).",
+  "type": "feature",
+  "status": "done",
+  "created_at": "2026-10-10T03:07:00-05:00",
+  "base_commit": "a27c9cabc4c44280e050e3bd0986481c0ae037e8",
+  "last_review_commit": ""
+}

@@ -20,6 +20,7 @@ colors:
   signal-warn-hover: "#e9b351"
   on-signal-warn: "#241a06"
   primary-hover: "#6755d8"
+  primary-edge: "#6f5ae0"
   on-primary: "#f3f0ff"
   scrollbar-hover: "#4a515e"
   on-accent: "#ffffff"
@@ -28,13 +29,13 @@ typography:
     fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     fontSize: "clamp(1.3rem, 2.4vw, 1.75rem)"
     fontWeight: 650
-    lineHeight: 1.2
+    lineHeight: 1.25
     letterSpacing: "-0.01em"
   headline:
     fontFamily: '"Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", "Source Serif 4", Georgia, serif'
-    fontSize: "1.6rem"
+    fontSize: "1.3rem"
     fontWeight: 600
-    lineHeight: 1.25
+    lineHeight: 1.6
   body:
     fontFamily: '"Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", "Source Serif 4", Georgia, serif'
     fontSize: "1.0625rem"
@@ -44,15 +45,16 @@ typography:
     fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     fontSize: "13px"
     fontWeight: 700
-    letterSpacing: "0.16em"
+    letterSpacing: "0.1em"
   mono:
     fontFamily: 'ui-monospace, "SFMono-Regular", Menlo, Consolas, "JetBrains Mono", monospace'
     fontSize: "13px"
     fontWeight: 400
   title:
     fontFamily: '"Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", "Source Serif 4", Georgia, serif'
-    fontSize: "1.3rem"
+    fontSize: "1.32rem"
     fontWeight: 600
+    lineHeight: 1.3
   subtitle:
     fontFamily: '"Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", "Source Serif 4", Georgia, serif'
     fontSize: "1.12rem"
@@ -77,7 +79,7 @@ typography:
   ui:
     fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     fontSize: "15px"
-    fontWeight: 400
+    fontWeight: 700
   ui-small:
     fontFamily: 'ui-monospace, "SFMono-Regular", Menlo, Consolas, "JetBrains Mono", monospace'
     fontSize: "14px"
@@ -86,6 +88,7 @@ typography:
     fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     fontSize: "16px"
     fontWeight: 400
+    lineHeight: 1.6
 rounded:
   xs: "3px"
   sm: "4px"
@@ -153,9 +156,13 @@ conjunto reducido de colores de señal para el estado.
 
 ### Primary
 - **Violeta de instrumento** (#9a86f5): foco, enlaces, marca y realces; el
-  violeta legible sobre el grafito.
+  violeta legible sobre el grafito. En hover, el botón primario sube hasta este
+  violeta desde el de acción.
 - **Violeta de acción** (#5a49c9): relleno del botón primario (Aprobar).
-- **Violeta sombra** (#332a56): reservado a tintes, no a superficies grandes.
+- **Violeta borde** (#6f5ae0, `primary-edge`): filete de 1px del botón primario,
+  un paso por encima del relleno.
+- **Violeta sombra** (#332a56): reservado a tintes, no a superficies grandes;
+  fondo de la insignia de "cambios".
 
 ### Neutral
 - **Grafito cálido** (#14161a): lienzo general.
@@ -192,13 +199,14 @@ terceros), no una ausencia de criterio; se compensa con jerarquía por peso y
 tamaño.
 
 ### Hierarchy
-- **Display** (650, `clamp(1.3rem, 2.4vw, 1.75rem)`, 1.2, tracking -0.01em): el
+- **Display** (650, `clamp(1.3rem, 2.4vw, 1.75rem)`, 1.25, tracking -0.01em): el
   título del Work Item en la banda de título.
-- **Headline** (600, 1.6rem / 1.3rem / 1.12rem, 1.25, serif): los encabezados
-  de los documentos renderizados (`h1`/`h2`/`h3`).
+- **Headline** (600, `clamp(1.6rem, 2.4vw, 1.95rem)` / 1.32rem / 1.3rem /
+  1.12rem, serif): los encabezados de los documentos renderizados
+  (`h1`/`h2`/`h3`); el primero lleva `.markdown > h1:first-child`.
 - **Body** (400, 1.0625rem / 17px, 1.72, serif, máx ~70ch): la columna de
   lectura.
-- **Label** (700, 13px, tracking 0.16em, MAYÚSCULAS, sans): encabezados de
+- **Label** (700, 13px, tracking 0.1em, MAYÚSCULAS, sans): encabezados de
   sección (índice, validación, ficha) y etiquetas de campo.
 - **Mono** (400, 13px): identificadores, commits, nombres de archivo y código.
 
@@ -212,7 +220,8 @@ Rejilla de tres columnas `15rem | minmax(0, 1fr) | 19rem`, con ancho máximo de
 `92rem` y centrada: **índice** a la izquierda, **columna de lectura** en el
 centro, **ficha y validación** a la derecha. El masthead es *sticky* (64px) y la
 banda de título lleva el nombre del Work Item. Un colofón cierra la página con
-`id`, `base_commit` y `last_review_commit`.
+`id`, `base_commit`, `last_review_commit` y `cambios desde` (la base de revisión
+usada por el visor y su origen).
 
 Por debajo de `1080px` la rejilla colapsa a una columna: el índice pasa a una
 lista horizontal que envuelve, la ficha baja bajo el lector y el masthead
@@ -264,12 +273,30 @@ regla y la banda, la de un instrumento impreso, no la de una tarjeta.
 
 ### Index (navegación)
 - **Style:** lista de documentos en mono (14px); los ausentes en gris con
-  `(no existe)`; los presentes enlazan a su sección. En móvil, lista horizontal
-  que envuelve.
+  `(no existe)`; los presentes enlazan a su sección. El documento activo se
+  marca con el fondo `{colors.surface-raised}` y el enlace en violeta. Los
+  documentos que cambiaron desde la base de revisión llevan una insignia
+  "cambios" (fondo `{colors.primary-tint}`); los nuevos, "nuevo". En móvil,
+  lista horizontal que envuelve.
+
+### TOC (índice de secciones)
+- **Style:** bloque `surface` con hairline, cabecera de etiqueta (`.sec-h`) y
+  lista anidada por nivel del encabezado (`toc-l1`…`toc-l6`); enlaces de sección
+  a `#<id>`. Solo aparece cuando el documento tiene 2 o más encabezados.
+- **Regla:** sin sombras; la jerarquía se expresa con sangría, no con color.
+
+### Changes (diff por documento)
+- **Style:** bloque `surface` en mono (0.82rem); las líneas añadidas en verde de
+  conformidad y las eliminadas en rojo de fallo (tinte de señal al 10%), las de
+  hunk en azul de revisión y las de cabecera en gris apagado. El recuento
+  `+A / −R` vive en el botón del running head.
+- **State:** con JS el diff se oculta y se alterna con el botón
+  (`aria-pressed`); sin JS se muestra tras el contenido.
 
 ### Colophon
 - **Style:** fila de pares etiqueta/valor (`id`, `base_commit`,
-  `last_review_commit`) separada por una hairline superior.
+  `last_review_commit` y `cambios desde <sha> · <orig>`) separada por una
+  hairline superior.
 
 ## Do's and Don'ts
 

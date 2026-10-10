@@ -66,8 +66,13 @@ func TestServerTokenYContent(t *testing.T) {
 		t.Errorf("la cookie debe ser HttpOnly")
 	}
 
-	if rr := doRequest(t, h, http.MethodGet, "/content", cookie); rr.Code != http.StatusOK {
-		t.Errorf("/content con cookie = %d, want 200", rr.Code)
+	rrContent := doRequest(t, h, http.MethodGet, "/content", cookie)
+	if rrContent.Code != http.StatusOK {
+		t.Errorf("/content con cookie = %d, want 200", rrContent.Code)
+	}
+	// El colofón informa siempre del estado de los cambios (aquí, sin git).
+	if !strings.Contains(rrContent.Body.String(), "cambios") {
+		t.Errorf("/content debe incluir la información de cambios:\n%s", rrContent.Body.String())
 	}
 	if rr := doRequest(t, h, http.MethodGet, "/content", nil); rr.Code != http.StatusForbidden {
 		t.Errorf("/content sin cookie = %d, want 403", rr.Code)

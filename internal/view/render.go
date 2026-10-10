@@ -15,6 +15,7 @@ import (
 	"github.com/k1wi777/my-harness-SDD/internal/validate"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/parser"
+	"github.com/yuin/goldmark/text"
 )
 
 // viewAssets contiene la plantilla HTML y los estáticos propios del visor.
@@ -34,12 +35,27 @@ var documentos = []string{
 	"spec.md",
 }
 
+// sectionView es un encabezado del documento, para el índice de secciones (TOC).
+type sectionView struct {
+	Level int
+	ID    string
+	Text  string
+}
+
 // docView representa un documento en la página.
 type docView struct {
-	Name    string
-	Present bool
-	HTML    template.HTML
-	Pos     int // posición 1..N entre los documentos presentes (folio)
+	Name     string
+	Present  bool
+	HTML     template.HTML
+	Pos      int // posición 1..N entre los documentos presentes (folio)
+	Sections []sectionView
+
+	// Cambios respecto del commit base de revisión (vacío si no hay base).
+	Changed bool
+	New     bool
+	Added   int
+	Removed int
+	Diff    template.HTML
 }
 
 // issueView es un hallazgo de validación con el documento al que apunta.
@@ -58,12 +74,27 @@ type viewModel struct {
 	Issues        []issueView
 	CanApprove    bool
 	TotalPresent  int
+
+	// Estado de la comparación contra el commit base de revisión.
+	GitAvailable bool
+	HasBase      bool
+	BaseSHA      string
+	BaseOrigin   string
 }
 
 // funcMap expone etiquetas en español a la plantilla.
 var funcMap = template.FuncMap{
 	"status": statusLabel,
 	"level":  levelLabel,
+	"short":  shortSHA,
+}
+
+// shortSHA devuelve los primeros 8 caracteres de un SHA (o el propio SHA).
+func shortSHA(s string) string {
+	if len(s) > 8 {
+		return s[:8]
+	}
+	return s
 }
 
 // statusLabel traduce el estado crudo de meta.json a una etiqueta en español.
@@ -114,13 +145,18 @@ var mdRenderer = goldmark.New(goldmark.WithParserOptions(parser.WithAutoHeadingI
 // "content" (fragmento para la recarga por SSE).
 var pageTpl = template.Must(template.New("page.html").Funcs(funcMap).ParseFS(viewAssets, "assets/page.html"))
 
-// renderMarkdown convierte Markdown a HTML con goldmark en modo seguro.
-func renderMarkdown(src []byte) (template.HTML, error) {
+// renderDoc convierte Markdown a HTML con goldmark en modo seguro y extrae sus
+// encabezados para el índice de secciones. Se parsea una sola vez: el HTML que
+// produce es el mismo que `mdRenderer.Convert` (R9, R10).
+func renderDoc(src []byte) (template.HTML, []sectionView, error) {
+	doc := mdRenderer.Parser().Parse(text.NewReader(src))
+	sections := collectSections(doc, src)
+
 	var buf bytes.Buffer
-	if err := mdRenderer.Convert(src, &buf); err != nil {
-		return "", err
+	if err := mdRenderer.Renderer().Render(&buf, src, doc); err != nil {
+		return "", nil, err
 	}
-	return template.HTML(buf.String()), nil
+	return template.HTML(buf.String()), sections, nil
 }
 
 // buildModel compone los datos de la página para un Work Item.
@@ -150,9 +186,10 @@ func buildModel(p *paths.Project, id string) (*viewModel, error) {
 	for _, name := range documentos {
 		dv := docView{Name: name}
 		if data, err := os.ReadFile(docPath(p, id, name)); err == nil {
-			if html, rerr := renderMarkdown(data); rerr == nil {
+			if html, sections, rerr := renderDoc(data); rerr == nil {
 				dv.Present = true
 				dv.HTML = html
+				dv.Sections = sections
 				total++
 				dv.Pos = total
 			}
@@ -160,6 +197,7 @@ func buildModel(p *paths.Project, id string) (*viewModel, error) {
 		vm.Docs = append(vm.Docs, dv)
 	}
 	vm.TotalPresent = total
+	applyChanges(p, id, vm)
 	return vm, nil
 }
 
