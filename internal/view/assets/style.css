@@ -189,6 +189,8 @@ a, button { caret-color: var(--accent); }
 /* ── Columna de lectura ───────────────────────────────────── */
 .doc-body { max-width: var(--measure); min-width: 0; margin-inline: auto; scroll-margin-top: 5rem; }
 .doc-body + .doc-body { margin-top: 3rem; padding-top: 2.5rem; border-top: 1px solid var(--line); }
+/* Con JS solo se muestra un documento: sin borde superior ni aire extra. */
+.js-viewer .doc-body + .doc-body { margin-top: 0; padding-top: 0; border-top: 0; }
 .missing-note { font-family: var(--mono); font-size: 13.5px; color: var(--muted); }
 .running-head {
   display: flex;
