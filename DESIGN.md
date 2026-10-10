@@ -17,6 +17,10 @@ colors:
   signal-ok: "#7fb98a"
   signal-fail: "#e5646b"
   signal-review: "#6bb0d6"
+  primary-hover: "#6755d8"
+  on-primary: "#f3f0ff"
+  scrollbar-hover: "#4a515e"
+  on-accent: "#ffffff"
 typography:
   display:
     fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
@@ -43,9 +47,44 @@ typography:
     fontFamily: 'ui-monospace, "SFMono-Regular", Menlo, Consolas, "JetBrains Mono", monospace'
     fontSize: "13px"
     fontWeight: 400
+  title:
+    fontFamily: '"Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", "Source Serif 4", Georgia, serif'
+    fontSize: "1.3rem"
+    fontWeight: 600
+  subtitle:
+    fontFamily: '"Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", "Source Serif 4", Georgia, serif'
+    fontSize: "1.12rem"
+    fontWeight: 600
+  caption:
+    fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+    fontSize: "0.95rem"
+    fontWeight: 700
+  dense:
+    fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+    fontSize: "0.92rem"
+    fontWeight: 400
+  code:
+    fontFamily: 'ui-monospace, "SFMono-Regular", Menlo, Consolas, "JetBrains Mono", monospace'
+    fontSize: "0.86rem"
+    fontWeight: 400
+  ui:
+    fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+    fontSize: "15px"
+    fontWeight: 400
+  ui-small:
+    fontFamily: 'ui-monospace, "SFMono-Regular", Menlo, Consolas, "JetBrains Mono", monospace'
+    fontSize: "14px"
+    fontWeight: 400
+  base:
+    fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+    fontSize: "16px"
+    fontWeight: 400
 rounded:
   xs: "3px"
   sm: "4px"
+  hairline: "1px"
+  micro: "2px"
+  pill: "999px"
 spacing:
   xs: "8px"
   sm: "14px"
