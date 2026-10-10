@@ -96,7 +96,7 @@ a, button { caret-color: var(--accent); }
   background-repeat: no-repeat;
 }
 .masthead-index-toggle { display: none; }
-.index-head { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0; }
+.index-head { display: flex; flex-direction: column; align-items: flex-start; gap: 0.6rem; margin-bottom: 0; }
 .index-head .sec-h { margin: 0; }
 .notice { font-family: var(--mono); font-size: 13px; color: var(--accent); }
 .masthead-tag { margin-left: auto; font-family: var(--mono); font-size: 13px; color: var(--muted); letter-spacing: 0.03em; }
@@ -174,7 +174,7 @@ a, button { caret-color: var(--accent); }
 }
 
 /* Índice de documentos */
-.docs { list-style: none; margin: 0 -0.7rem; padding: 0; }
+.docs { list-style: none; margin: 0; padding: 0; }
 .doc { padding: 0.5rem 0.7rem; border-top: 1px solid var(--line); border-radius: 4px; }
 .doc:first-child { border-top: 0; }
 .doc .nm { font-family: var(--mono); font-size: 14px; color: var(--soft); text-decoration: none; }
@@ -368,6 +368,12 @@ a, button { caret-color: var(--accent); }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .action button { transition: none; }
+}
+
+/* En ultra-ancho se capa el ancho y se centra, para que los raíles no queden
+   lejos del texto; en el resto de tamaños las columnas llenan el ancho. */
+@media (min-width: 2000px) {
+  .layout, .colophon { width: 100%; max-width: 120rem; margin-inline: auto; }
 }
 
 /* ── Selector de documento y shell de aplicación ──────────────
