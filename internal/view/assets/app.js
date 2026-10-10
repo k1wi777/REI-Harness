@@ -1,12 +1,75 @@
 // app.js — JavaScript propio mínimo del visor (sin dependencias de terceros).
-// Se encarga de: (1) recarga en vivo por SSE y (2) el botón Aprobar.
+// Se encarga de: (1) recarga en vivo por SSE, (2) el selector de documento del
+// índice (solo se muestra el documento elegido en la columna de lectura) y
+// (3) el botón Aprobar.
 (function () {
   "use strict";
+
+  var STORE_KEY = "rei.view.doc";
 
   function setNotice(text) {
     var el = document.getElementById("notice");
     if (el) {
       el.textContent = text || "";
+    }
+  }
+
+  function storedDoc() {
+    try {
+      return localStorage.getItem(STORE_KEY);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function storeDoc(id) {
+    try {
+      localStorage.setItem(STORE_KEY, id);
+    } catch (e) {
+      /* almacenamiento no disponible; la selección no persiste */
+    }
+  }
+
+  // applySelection muestra el documento activo y marca el índice.
+  function applySelection() {
+    var reader = document.querySelector(".reader");
+    if (!reader) {
+      return;
+    }
+    var bodies = reader.querySelectorAll(".doc-body");
+    if (!bodies.length) {
+      return;
+    }
+    var wanted = storedDoc();
+    var found = false;
+    for (var i = 0; i < bodies.length; i++) {
+      if (bodies[i].getAttribute("data-doc") === wanted) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      wanted = bodies[0].getAttribute("data-doc");
+    }
+    for (var j = 0; j < bodies.length; j++) {
+      bodies[j].classList.toggle("is-active", bodies[j].getAttribute("data-doc") === wanted);
+    }
+    var items = document.querySelectorAll(".doc");
+    for (var k = 0; k < items.length; k++) {
+      var link = items[k].querySelector("a.nm");
+      items[k].classList.toggle("active", !!link && link.getAttribute("data-doc") === wanted);
+    }
+  }
+
+  function selectDoc(id) {
+    storeDoc(id);
+    if (window.history && history.replaceState) {
+      history.replaceState(null, "", "#doc-" + id);
+    }
+    applySelection();
+    var reader = document.querySelector(".reader");
+    if (reader) {
+      reader.scrollTop = 0;
     }
   }
 
@@ -17,6 +80,7 @@
         var el = document.getElementById("content");
         if (el) {
           el.innerHTML = html;
+          applySelection();
         }
       })
       .catch(function () { /* recarga best-effort */ });
@@ -52,13 +116,30 @@
       });
   }
 
-  // Delegación de eventos: el botón puede reaparecer tras una recarga.
+  // Delegación de eventos: el botón y los enlaces del índice reaparecen tras
+  // una recarga, así que no se enlazan directamente.
   document.addEventListener("click", function (ev) {
     var t = ev.target;
-    if (t && t.id === "approve") {
+    if (!t || !t.closest) {
+      return;
+    }
+    var link = t.closest(".doc a.nm");
+    if (link) {
+      var id = link.getAttribute("data-doc");
+      if (id) {
+        ev.preventDefault();
+        selectDoc(id);
+      }
+      return;
+    }
+    if (t.id === "approve" || t.closest("#approve")) {
       approve();
     }
   });
+
+  // Activa el modo "una columna, un documento" y aplica la selección inicial.
+  document.body.classList.add("js-viewer");
+  applySelection();
 
   // SSE: el servidor emite `data: reload` al cambiar los documentos.
   try {

@@ -7,8 +7,9 @@
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-<header class="topbar">
-  <span class="brand">REI · Visor de especificaciones</span>
+<header class="masthead">
+  <span class="brand"><span class="dot" aria-hidden="true"></span>REI · Visor de especificaciones</span>
+  <span class="masthead-tag">Manual de referencia · REI Harness</span>
   <span id="notice" class="notice" role="status"></span>
 </header>
 <main id="content">{{template "content" .}}</main>
@@ -17,48 +18,65 @@
 </html>{{end}}
 
 {{define "content"}}
-<section class="card toolbar">
-  <div class="status-line">
-    Estado actual: <span class="status status-{{.Meta.Status}}">{{.Meta.Status}}</span>
-    {{if .SessionActive}}<span class="session">· sesión activa ({{or .Session.Agent "?"}}, {{or .Session.State "?"}})</span>{{end}}
-  </div>
-  {{if .CanApprove}}
-  <div class="approve-box">
-    <button id="approve" type="button" data-id="{{.Meta.ID}}">Aprobar</button>
-    <span class="approve-hint">Aprobación del plan (ready → in_progress)</span>
-  </div>
-  {{end}}
-</section>
-
-<section class="card meta">
+<section class="titleband">
+  <span class="bar" aria-hidden="true"></span>
   <h1>{{or .Meta.Title .Meta.ID}}</h1>
-  <table class="meta-table">
-    <tr><th>id</th><td>{{.Meta.ID}}</td></tr>
-    <tr><th>title</th><td>{{.Meta.Title}}</td></tr>
-    <tr><th>type</th><td>{{.Meta.Type}}</td></tr>
-    <tr><th>status</th><td>{{.Meta.Status}}</td></tr>
-    <tr><th>created_at</th><td>{{.Meta.CreatedAt}}</td></tr>
-    <tr><th>base_commit</th><td>{{or .Meta.BaseCommit "(vacío)"}}</td></tr>
-    <tr><th>last_review_commit</th><td>{{or .Meta.LastReviewCommit "(vacío)"}}</td></tr>
-  </table>
+  <span class="titlemeta">
+    <span class="badge status-{{.Meta.Status}}">{{.Meta.Status}}</span>
+    <span class="wid">{{.Meta.ID}}</span>
+  </span>
 </section>
 
-<section class="card validation">
-  <h2>Validación</h2>
-  {{if .Issues}}
-  <ul class="issues">
-    {{range .Issues}}<li class="issue issue-{{.Level}}"><span class="level">{{.Level}}</span> {{.Message}}</li>{{end}}
-  </ul>
-  {{else}}
-  <p class="ok">Sin hallazgos.</p>
-  {{end}}
-</section>
+<div class="layout">
+  <aside class="index" aria-label="Documentos del Work Item">
+    <p class="sec-h">Índice de documentos</p>
+    <ul class="docs">
+      {{range .Docs}}
+      <li class="doc{{if .Present}}{{else}} missing{{end}}">
+        {{if .Present}}<a class="nm" href="#doc-{{.Name}}" data-doc="{{.Name}}">{{.Name}}</a>
+        {{else}}<span class="nm">{{.Name}}</span><span class="missing-tag">(no existe)</span>{{end}}
+      </li>
+      {{end}}
+    </ul>
+    {{if .SessionActive}}
+    <p class="sec-h gap">Sesión</p>
+    <p class="session">activa · {{or .Session.Agent "?"}} · {{or .Session.State "?"}}</p>
+    {{end}}
+  </aside>
 
-{{range .Docs}}
-<section class="card doc{{if not .Present}} missing{{end}}">
-  <h2>{{.Name}}{{if not .Present}} <span class="missing-tag">(no existe)</span>{{end}}</h2>
-  {{if .Present}}<div class="markdown">{{.HTML}}</div>
-  {{else}}<p class="missing-note">(no existe)</p>{{end}}
-</section>
-{{end}}
+  <section class="reader">
+    {{range .Docs}}{{if .Present}}
+    <article class="doc-body" id="doc-{{.Name}}" data-doc="{{.Name}}"><div class="markdown">{{.HTML}}</div></article>
+    {{end}}{{end}}
+  </section>
+
+  <aside class="meta" aria-label="Ficha y validación">
+    <p class="sec-h">Validación</p>
+    {{if .Issues}}
+    {{range .Issues}}<div class="callout issue-{{.Level}}"><span class="tag">{{.Level}}</span><span class="msg">{{.Message}}</span></div>{{end}}
+    {{else}}
+    <div class="callout ok"><span class="tag">OK</span><span class="msg">Sin hallazgos.</span></div>
+    {{end}}
+
+    <p class="sec-h gap">Ficha</p>
+    <dl class="facts">
+      <div class="row"><dt>tipo</dt><dd class="v">{{.Meta.Type}}</dd></div>
+      <div class="row"><dt>estado</dt><dd class="v">{{.Meta.Status}}</dd></div>
+      <div class="row"><dt>creado</dt><dd class="v">{{.Meta.CreatedAt}}</dd></div>
+    </dl>
+
+    {{if .CanApprove}}
+    <div class="action">
+      <button id="approve" type="button" data-id="{{.Meta.ID}}">Aprobar</button>
+      <p class="hint">Aprobación del plan (ready → in_progress)</p>
+    </div>
+    {{end}}
+  </aside>
+</div>
+
+<footer class="colophon">
+  <span class="col-item"><span class="col-k">id</span><span class="col-v">{{.Meta.ID}}</span></span>
+  <span class="col-item"><span class="col-k">base_commit</span><span class="col-v">{{or .Meta.BaseCommit "(vacío)"}}</span></span>
+  <span class="col-item"><span class="col-k">last_review_commit</span><span class="col-v">{{or .Meta.LastReviewCommit "(vacío)"}}</span></span>
+</footer>
 {{end}}
