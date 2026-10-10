@@ -30,3 +30,20 @@ func TestCmdInitUpdateUsoIncorrecto(t *testing.T) {
 		}
 	}
 }
+
+// TestCmdViewUsoIncorrecto cubre modos excluyentes, modos desconocidos y dos
+// Work Items (R4, R5). El parseo falla antes de resolver el proyecto.
+func TestCmdViewUsoIncorrecto(t *testing.T) {
+	cases := [][]string{
+		{"--open", "--stop"},
+		{"--enable", "--disable"},
+		{"--open", "--bogus"},
+		{"--wat"},
+		{"id1", "id2"},
+	}
+	for _, args := range cases {
+		if code := cmdView(args); code != 2 {
+			t.Errorf("cmdView(%v) = %d, esperaba 2", args, code)
+		}
+	}
+}

@@ -8,7 +8,7 @@ import (
 func TestCommandHelpTextConocidos(t *testing.T) {
 	for _, name := range []string{
 		"check", "init", "doctor", "new", "session", "items", "status",
-		"commit", "validate", "review-diff", "test", "item", "update",
+		"commit", "validate", "review-diff", "test", "item", "view", "update",
 		"version", "help",
 	} {
 		text, ok := commandHelpText(name)
@@ -52,9 +52,23 @@ func normalize(s string) string {
 
 func TestHelpGeneralIncluyeNuevosComandos(t *testing.T) {
 	text := helpText()
-	for _, want := range []string{"test", "item", "update", "init [status|opencode|claude|--update]"} {
+	for _, want := range []string{"test", "item", "update", "view", "init [status|opencode|claude|--update]"} {
 		if !strings.Contains(text, want) {
 			t.Errorf("la ayuda general no incluye %q:\n%s", want, text)
+		}
+	}
+}
+
+// TestHelpViewDocumentaModos comprueba que la ayuda de view cubre sus modos y
+// códigos de salida (R42).
+func TestHelpViewDocumentaModos(t *testing.T) {
+	text, ok := commandHelpText("view")
+	if !ok {
+		t.Fatal("no hay ayuda para view")
+	}
+	for _, want := range []string{"--open", "--stop", "--enable", "--disable", "Códigos de salida", "sesión activa"} {
+		if !strings.Contains(text, want) {
+			t.Errorf("la ayuda de view debe mencionar %q:\n%s", want, text)
 		}
 	}
 }

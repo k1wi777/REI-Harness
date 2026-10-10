@@ -133,6 +133,20 @@ var commands = []commandInfo{
 		},
 	},
 	{
+		name:  "view",
+		usage: "view [<id>] [--open|--stop|--enable|--disable]",
+		short: "Abre el visor de especificaciones de un Work Item en el navegador",
+		detail: []string{
+			"Sin <id>, usa el Work Item de la sesión activa.",
+			"Sin modo (primer plano): sirve el visor y bloquea hasta Ctrl+C.",
+			"--open: arranca (o reutiliza) el servidor en segundo plano y abre el navegador sin bloquear la conversación.",
+			"--stop: detiene el servidor de fondo del proyecto y elimina su registro temporal.",
+			"--enable / --disable: activan o desactivan viewer.autoOpenOnReady en .rei/config.json.",
+			"Los modos son mutuamente excluyentes; usar más de uno es uso incorrecto (2).",
+			"Códigos de salida: 0 correcto; 1 sin sesión activa o error de E/S; 2 uso incorrecto.",
+		},
+	},
+	{
 		name:  "update",
 		usage: "update [--check]",
 		short: "Auto-actualiza el binario de REI desde GitHub Releases",

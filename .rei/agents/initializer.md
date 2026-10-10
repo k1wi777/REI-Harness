@@ -76,6 +76,17 @@ plantillas.
 | 5. Verificación | `.rei/docs/project/verification.md` + `.rei/config.json` | los de `verification.md` |
 | 6. Cierre y validación | `rei init status` / `rei doctor` | — (verificación final) |
 
+#### Configuración del visor
+
+Durante la entrevista, pregunta al usuario si desea que el visor de
+especificaciones en el navegador (`rei view`) se abra automáticamente al aprobar
+una planificación. Es opcional y está desactivado por defecto.
+
+Registra la respuesta escribiendo la clave booleana `viewer.autoOpenOnReady` en
+`.rei/config.json`, preservando el resto del archivo (por ejemplo, `checks`). Si
+el usuario no lo pide, deja el valor en `false`. No actives el visor sin una
+respuesta explícita del usuario.
+
 #### Entrevista guiada
 
 - Haz **una pregunta o un bloque corto** de preguntas por paso.

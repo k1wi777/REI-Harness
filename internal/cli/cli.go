@@ -19,6 +19,7 @@ import (
 	"github.com/k1wi777/my-harness-SDD/internal/template"
 	"github.com/k1wi777/my-harness-SDD/internal/update"
 	"github.com/k1wi777/my-harness-SDD/internal/validate"
+	"github.com/k1wi777/my-harness-SDD/internal/view"
 	"github.com/k1wi777/my-harness-SDD/internal/workitem"
 )
 
@@ -76,6 +77,8 @@ func Run(args []string) int {
 		return cmdTest(rest)
 	case "item":
 		return cmdItem(rest)
+	case "view":
+		return cmdView(rest)
 	case "update":
 		return cmdUpdate(rest)
 	default:
@@ -253,6 +256,64 @@ func cmdItem(args []string) int {
 		return code
 	}
 	return show.WorkItem(p, args[1], os.Stdout)
+}
+
+// cmdView implementa `rei view [<id>] [--open|--stop|--enable|--disable]`.
+// Resuelve el Work Item (id explícito o sesión activa) y delega en view.Run.
+// Los modos son mutuamente excluyentes; un modo desconocido o una combinación
+// incompatible es uso incorrecto (2, R5).
+func cmdView(args []string) int {
+	const usage = "uso: rei view [<id>] [--open|--stop|--enable|--disable]"
+
+	id := ""
+	mode := view.ModeForeground
+	modes := 0
+	for _, a := range args {
+		switch a {
+		case "--open":
+			mode, modes = view.ModeOpen, modes+1
+		case "--stop":
+			mode, modes = view.ModeStop, modes+1
+		case "--enable":
+			mode, modes = view.ModeEnable, modes+1
+		case "--disable":
+			mode, modes = view.ModeDisable, modes+1
+		case "--serve":
+			mode, modes = view.ModeServe, modes+1
+		default:
+			if strings.HasPrefix(a, "-") {
+				fmt.Fprintln(os.Stderr, usage)
+				return 2
+			}
+			if id != "" {
+				fmt.Fprintln(os.Stderr, usage)
+				return 2
+			}
+			id = a
+		}
+	}
+	if modes > 1 {
+		fmt.Fprintln(os.Stderr, usage)
+		return 2
+	}
+
+	p, code := project()
+	if p == nil {
+		return code
+	}
+
+	if mode == view.ModeForeground || mode == view.ModeOpen || mode == view.ModeServe {
+		if id == "" {
+			s, err := state.ReadSession(p)
+			if err != nil || !s.Active() {
+				fmt.Fprintln(os.Stderr, "No hay sesión activa; indica un Work Item: rei view <id>")
+				return 1
+			}
+			id = s.WorkItem
+		}
+	}
+
+	return view.Run(p, view.Options{Mode: mode, ID: id, Stdout: os.Stdout})
 }
 
 // cmdUpdate implementa `rei update [--check]`. Solo acepta `--check` como
@@ -446,31 +507,23 @@ func cmdStatus(args []string) int {
 		fmt.Fprintf(os.Stderr, "ERROR: el Work Item %q no existe\n", id)
 		return 1
 	}
-	previous, err := meta.Load(path)
-	if err != nil {
+	previous, forced, err := state.Transition(p, id, status, force)
+	switch {
+	case errors.Is(err, state.ErrTransitionNotAllowed):
+		fmt.Fprintf(os.Stderr, "ERROR: transición no permitida: %s -> %s (ver workflow.md; usa --force para forzar)\n", previous, status)
+		return 1
+	case err != nil:
 		fmt.Fprintf(os.Stderr, "ERROR: %v\n", err)
 		return 1
 	}
-	if previous.Status == status {
+	if previous == status {
 		fmt.Printf("Work Item %s: ya está en '%s'.\n", id, status)
 		return 0
 	}
-	forced := false
-	if !meta.TransitionAllowed(previous.Status, status) {
-		if !force {
-			fmt.Fprintf(os.Stderr, "ERROR: transición no permitida: %s -> %s (ver workflow.md; usa --force para forzar)\n", previous.Status, status)
-			return 1
-		}
-		forced = true
-	}
-	if _, err := meta.SetStatus(path, status); err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: %v\n", err)
-		return 1
-	}
 	if forced {
-		fmt.Printf("Work Item %s: %s -> %s (forzado).\n", id, previous.Status, status)
+		fmt.Printf("Work Item %s: %s -> %s (forzado).\n", id, previous, status)
 	} else {
-		fmt.Printf("Work Item %s: %s -> %s.\n", id, previous.Status, status)
+		fmt.Printf("Work Item %s: %s -> %s.\n", id, previous, status)
 	}
 	return 0
 }

@@ -1,0 +1,64 @@
+{{define "page"}}<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>REI — {{.Meta.ID}}</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <span class="brand">REI · Visor de especificaciones</span>
+  <span id="notice" class="notice" role="status"></span>
+</header>
+<main id="content">{{template "content" .}}</main>
+<script src="/static/app.js"></script>
+</body>
+</html>{{end}}
+
+{{define "content"}}
+<section class="card toolbar">
+  <div class="status-line">
+    Estado actual: <span class="status status-{{.Meta.Status}}">{{.Meta.Status}}</span>
+    {{if .SessionActive}}<span class="session">· sesión activa ({{or .Session.Agent "?"}}, {{or .Session.State "?"}})</span>{{end}}
+  </div>
+  {{if .CanApprove}}
+  <div class="approve-box">
+    <button id="approve" type="button" data-id="{{.Meta.ID}}">Aprobar</button>
+    <span class="approve-hint">Aprobación del plan (ready → in_progress)</span>
+  </div>
+  {{end}}
+</section>
+
+<section class="card meta">
+  <h1>{{or .Meta.Title .Meta.ID}}</h1>
+  <table class="meta-table">
+    <tr><th>id</th><td>{{.Meta.ID}}</td></tr>
+    <tr><th>title</th><td>{{.Meta.Title}}</td></tr>
+    <tr><th>type</th><td>{{.Meta.Type}}</td></tr>
+    <tr><th>status</th><td>{{.Meta.Status}}</td></tr>
+    <tr><th>created_at</th><td>{{.Meta.CreatedAt}}</td></tr>
+    <tr><th>base_commit</th><td>{{or .Meta.BaseCommit "(vacío)"}}</td></tr>
+    <tr><th>last_review_commit</th><td>{{or .Meta.LastReviewCommit "(vacío)"}}</td></tr>
+  </table>
+</section>
+
+<section class="card validation">
+  <h2>Validación</h2>
+  {{if .Issues}}
+  <ul class="issues">
+    {{range .Issues}}<li class="issue issue-{{.Level}}"><span class="level">{{.Level}}</span> {{.Message}}</li>{{end}}
+  </ul>
+  {{else}}
+  <p class="ok">Sin hallazgos.</p>
+  {{end}}
+</section>
+
+{{range .Docs}}
+<section class="card doc{{if not .Present}} missing{{end}}">
+  <h2>{{.Name}}{{if not .Present}} <span class="missing-tag">(no existe)</span>{{end}}</h2>
+  {{if .Present}}<div class="markdown">{{.HTML}}</div>
+  {{else}}<p class="missing-note">(no existe)</p>{{end}}
+</section>
+{{end}}
+{{end}}

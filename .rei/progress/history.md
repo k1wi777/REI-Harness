@@ -620,3 +620,39 @@ de `implementer`/`reviewer` y `progress.md`, y regenerar los nativos.
 Esperar revisión del Work Item (`review`). El Reviewer validará el trabajo
 contra `plan.md`.
 
+
+## 2026-10-10 00:10 — 2026-10-09_23-45__spec-browser-viewer
+
+- **Work Item:** 2026-10-09_23-45__spec-browser-viewer
+- **Tipo:** feature
+- **Estado:** review
+- **Inicio:** 2026-10-09T23:46:12-05:00
+- **Agente activo:** implementer
+
+## Plan
+
+Planificación del visor de especificaciones en el navegador (v1):
+- `requirements.md`: 44 requisitos EARS (comando/modos, contenido, render seguro con goldmark, SSE, botón Aprobar, servidor de fondo, config, disparo desde el arnés, dependencias/integridad).
+- `design.md`: paquete `internal/view` + `internal/browser`/`config`/`state`; endpoints, token por instancia, ciclo de vida del servidor de fondo y decisiones de diseño.
+- `tasks.md`: 17 tareas en 5 fases (fundaciones, render, servidor/ciclo de vida, CLI/arnés, validación).
+
+## Bitácora
+
+- Sesión iniciada (`rei session start`, estado `pending`).
+- Leído `meta.json` (acuerdo completo): `rei view [<id>]` con modos `--open`/`--stop`/`--enable`/`--disable`; render con `goldmark`; JS propio mínimo (SSE + botón Aprobar); transición validada `ready -> in_progress` reutilizando `rei status set`; servidor local 127.0.0.1 con token, reutilización y autocierre; config `viewer.autoOpenOnReady` (default `false`); Fase 2 (marcar secciones + feedback) fuera de v1.
+- Explorado el código existente: `internal/cli`, `internal/show`, `internal/state`, `internal/meta`, `internal/config`, `internal/update` (openBrowser), `internal/validate`, `internal/template`, contratos de Leader/Initializer.
+- Generados `requirements.md`, `design.md` y `tasks.md`.
+- Estado de la sesión y de `meta.json` puestos en `ready`.
+- Planificación aprobada por el usuario; sesión y `meta.json` puestos en `in_progress`.
+- Inicio de la implementación (rol `implementer`).
+- T1–T5 completadas: `internal/browser` extraído; `internal/config` con `viewer`+`SetAutoOpenOnReady`; `internal/state.Transition` + alineación de `current.md` y `cmdStatus` refactorizado; `goldmark v1.8.6` añadido (sin dependencias transitivas); `internal/view/render.go` con render seguro y assets. Build OK en cada paso.
+- Nota de entorno: el `go` del sistema no estaba instalado; se instaló `go1.27.2` en `~/.local/go-toolchain/go` (fuera del repo) para poder verificar.
+- T6–T15 completadas: servidor HTTP con token/cookie y SSE; assets (HTML/JS/CSS) propios; ciclo de vida con descriptor temporal `0600`, `--open`/`--stop`/`--enable`/`--disable` y autocierre; dispatch `view` en la CLI + ayuda; config por defecto y `.gitignore`; contratos de Leader e Initializer.
+- T16 (validación) superada: `gofmt -l internal` sin salida, `make vet`, `make test`, `make build` y `rei check --quiet` (exit 0); verificación manual (primer plano + Ctrl+C, SSE, reutilización de servidor, Aprobar con alineación de `current.md`, `--stop`, autocierre al salir de `ready`, `--enable`/`--disable`).
+- T17: `tasks.md` con las 17 tareas marcadas `[x]`. Trabajo documentado en `.rei/progress/work-items/2026-10-09_23-45__spec-browser-viewer/impl.md`.
+- Rework (Caso C): revisión `changes_requested`. Acciones aplicadas: T9–T12 marcadas `[x]` en `tasks.md` (T17 al día) y comentario doc de `cmdUpdate` separado del de `cmdView` en `internal/cli/cli.go`. Re-verificado: `gofmt -l internal` sin salida, `make vet`, `make test`, `rei check --quiet` (exit 0) y `rei validate <id>` OK. Documentado en `impl.md`.
+
+## Próximo paso
+
+Cambios solicitados aplicados. Esperando **revisión** del Work Item `2026-10-09_23-45__spec-browser-viewer` (`.rei/specs/2026-10-09_23-45__spec-browser-viewer/`). Corrige las acciones 1 (T9–T12 marcadas en `tasks.md`) y 2 (comentario doc separado en `internal/cli/cli.go`) del `review.md`; evidencia en `.rei/progress/work-items/2026-10-09_23-45__spec-browser-viewer/impl.md`.
+

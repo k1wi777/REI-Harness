@@ -10,6 +10,8 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/k1wi777/my-harness-SDD/internal/browser"
 )
 
 // Options configura una ejecución de `rei update`. Los campos de costura con
@@ -46,7 +48,7 @@ func Run(opts Options) int {
 		opts.GOARCH = runtime.GOARCH
 	}
 	if opts.OpenBrowser == nil {
-		opts.OpenBrowser = openBrowser
+		opts.OpenBrowser = browser.Open
 	}
 	if opts.APIBase == "" {
 		opts.APIBase = defaultAPIBase

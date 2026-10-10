@@ -9,3 +9,6 @@
 
 # Artefacto de instalación local (lo genera `rei init`; no aplica al repo fuente)
 /.rei/install-manifest.json
+
+# Registro temporal del servidor del visor (`rei view --open`); se elimina al cerrarlo
+/.rei/.view-server.json

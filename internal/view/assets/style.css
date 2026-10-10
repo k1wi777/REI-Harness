@@ -1,0 +1,117 @@
+:root {
+  --bg: #0f1115;
+  --panel: #171a21;
+  --border: #262b36;
+  --fg: #e6e9ef;
+  --muted: #9aa4b2;
+  --accent: #5b8cff;
+  --ready: #e0a12b;
+  --in_progress: #2ea36a;
+  --review: #8b6cf0;
+  --fail: #e5484d;
+  --warn: #e0a12b;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: rgba(15, 17, 21, 0.92);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(6px);
+}
+
+.brand { font-weight: 600; letter-spacing: 0.02em; }
+
+.notice { color: var(--accent); font-size: 0.9rem; }
+
+main { max-width: 960px; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.1rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; }
+
+.status-line { color: var(--muted); }
+.session { color: var(--muted); }
+
+.status {
+  font-weight: 600;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+.status-ready { color: var(--ready); border-color: var(--ready); }
+.status-in_progress { color: var(--in_progress); border-color: var(--in_progress); }
+.status-review { color: var(--review); border-color: var(--review); }
+
+.approve-box { display: flex; align-items: center; gap: 0.75rem; }
+.approve-hint { color: var(--muted); font-size: 0.85rem; }
+
+button#approve {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1.1rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+button#approve:hover { filter: brightness(1.1); }
+button#approve:disabled { opacity: 0.6; cursor: default; }
+
+h1 { font-size: 1.4rem; margin: 0 0 0.75rem; }
+h2 { font-size: 1.05rem; margin: 0 0 0.6rem; color: var(--muted); }
+
+.meta-table { width: 100%; border-collapse: collapse; }
+.meta-table th {
+  text-align: left;
+  color: var(--muted);
+  font-weight: 500;
+  width: 11rem;
+  padding: 0.2rem 0.75rem 0.2rem 0;
+  vertical-align: top;
+}
+.meta-table td { padding: 0.2rem 0; word-break: break-word; }
+
+.issues { list-style: none; margin: 0; padding: 0; }
+.issue { padding: 0.25rem 0; }
+.issue .level { font-weight: 600; margin-right: 0.4rem; }
+.issue-FAIL .level { color: var(--fail); }
+.issue-WARN .level { color: var(--warn); }
+.ok { color: var(--in_progress); margin: 0; }
+
+.doc .missing-tag, .missing-note { color: var(--muted); font-weight: 400; }
+
+.markdown { overflow-wrap: anywhere; }
+.markdown pre {
+  background: #0b0d12;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.9rem;
+  overflow-x: auto;
+}
+.markdown code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; }
+.markdown table { border-collapse: collapse; width: 100%; }
+.markdown th, .markdown td { border: 1px solid var(--border); padding: 0.35rem 0.6rem; }
+.markdown blockquote { margin: 0.5rem 0; padding-left: 0.9rem; border-left: 3px solid var(--border); color: var(--muted); }
+.markdown img { max-width: 100%; }
+.markdown a { color: var(--accent); }

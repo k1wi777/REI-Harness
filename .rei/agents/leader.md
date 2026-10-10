@@ -86,6 +86,14 @@ No delegues ningún trabajo hasta completar estos pasos.
 6. Solicita al usuario una aprobación explícita indicando la ruta
    `.rei/specs/<work-item-id>/` y que responda **"aprobado"** para continuar o
    solicite los cambios necesarios.
+7. **Visor opcional en la puerta de aprobación.** Si `viewer.autoOpenOnReady`
+   de `.rei/config.json` es `true`, ejecuta `rei view <work-item-id> --open`
+   para ofrecer el visor en el navegador (metadatos + documentos renderizados +
+   validación + botón Aprobar). Es una ejecución **NO bloqueante**: no esperes
+   su salida ni dependas de ella, y **NO** sustituye la aprobación del chat. Si
+   la opción es `false` (o la clave no existe), no ejecutes nada y el flujo es
+   idéntico al actual. El disparo es siempre por CLI; **NUNCA** dependas de
+   hooks nativos del runtime.
 
 ##### Caso B — `status == ready`
 
