@@ -158,7 +158,8 @@ func stopViewer(p *paths.Project, out io.Writer) error {
 }
 
 // runServe es el proceso de fondo (`view <id> --serve`): registra el
-// descriptor, sirve y lo elimina al cerrarse.
+// descriptor, sirve y lo elimina al cerrarse. Solo se cierra solo cuando el Work
+// Item llega a done (además de `--stop` y el idle timeout).
 func runServe(p *paths.Project, id string) int {
 	s, err := newServer(p, id)
 	if err != nil {
@@ -171,7 +172,7 @@ func runServe(p *paths.Project, id string) int {
 		return 1
 	}
 	s.background = true
-	s.closeOnStatusChange = true
+	s.closeOnDone = true
 
 	d := &descriptor{
 		PID:       os.Getpid(),

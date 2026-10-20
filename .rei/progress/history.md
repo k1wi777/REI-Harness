@@ -695,3 +695,46 @@ redundancia, más contraste del índice activo y alineación de tokens
 Esperar la revisión del Work Item (`review`); no hay acciones pendientes de
 implementación.
 
+
+## 2026-10-20 17:26 — 2026-10-13_15-51__viewer-lifecycle
+
+- **Work Item:** 2026-10-13_15-51__viewer-lifecycle
+- **Tipo:** task
+- **Estado:** review
+- **Inicio:** 2026-10-13T15:53:54-05:00
+- **Agente activo:** implementer
+
+## Plan
+
+`plan.md` generado (Task simplificada): (1) el servidor de fondo del visor deja
+de cerrarse al salir de `ready` y solo se cierra en `done` (`--stop` e idle
+timeout intactos); (2) el Initializer recomienda mantener activa la apertura
+automática y el default del esqueleto `.rei/config.json` pasa a `true`.
+
+## Bitácora
+
+- Leído `meta.json`: acuerdo completo sobre el visor y su activación (2 puntos).
+- Revisados `internal/view/server.go` (`watchStatus`, `handleEvents`,
+  `closeOnStatusChange`), `internal/view/lifecycle.go` (`runServe`),
+  `.rei/agents/initializer.md` (§ «Configuración del visor»), `.rei/config.json`
+  y `internal/config/config.go`.
+- Decisión evaluada: el default efectivo es el del esqueleto `.rei/config.json`
+  (lo despliega `rei init` y lo lee el Leader); se deja el fallback compilado de
+  `config.Load` en `false` (sin consumidor en runtime, coherente con R34 y
+  `leader.md`).
+- Redactado `plan.md`; planificación finalizada, esperando aprobación humana.
+- Plan aprobado. Inicio de la implementación (pasos 1–6) por el Implementer.
+- Pasos 1–3 hechos: cierre del servidor solo en `done` (dos condiciones),
+  renombrado `closeOnStatusChange` → `closeOnDone` y test
+  `TestFondoSeCierraEnDone` (ready→in_progress y review no cierran; done sí).
+- Pasos 4–5 hechos: `.rei/config.json` con `autoOpenOnReady: true` y sección
+  «Configuración del visor» del Initializer reescrita para recomendar activa,
+  conservando la pregunta y respetando un `false` explícito.
+- Paso 6: `gofmt -l .` limpio, `go vet ./...`, `go test ./...` y `make build`
+  OK; `rei check --quiet` exit 0. Documentado en `impl.md`.
+
+## Próximo paso
+
+Esperar la revisión del Reviewer sobre
+`.rei/progress/work-items/2026-10-13_15-51__viewer-lifecycle/impl.md`.
+

@@ -80,12 +80,14 @@ plantillas.
 
 Durante la entrevista, pregunta al usuario si desea que el visor de
 especificaciones en el navegador (`rei view`) se abra automáticamente al aprobar
-una planificación. Es opcional y está desactivado por defecto.
+una planificación. **Recomienda mantenerlo activo**: abrir el visor al aprobar
+facilita leer las specs en el navegador (con TOC, diff y recarga en vivo) en
+lugar de hacerlo en crudo.
 
 Registra la respuesta escribiendo la clave booleana `viewer.autoOpenOnReady` en
 `.rei/config.json`, preservando el resto del archivo (por ejemplo, `checks`). Si
-el usuario no lo pide, deja el valor en `false`. No actives el visor sin una
-respuesta explícita del usuario.
+el usuario no tiene preferencia, deja el valor en `true` (recomendado). Si pide
+explícitamente desactivarlo, escribe `false`; respeta siempre esa decisión.
 
 #### Entrevista guiada
 

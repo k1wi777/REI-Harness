@@ -1,0 +1,10 @@
+{
+  "id": "2026-10-13_15-51__viewer-lifecycle",
+  "title": "Visor: vivo tras aprobar y recomendar auto-open",
+  "description": "Task sobre el visor `rei view` y su activación.\n\n1. NO cerrar el servidor al aprobar. Hoy el servidor de fondo se cierra en cuanto el Work Item deja de estar `ready` (comportamiento R30 de la v1), así que al aprobar la página queda en estado \"Reconectando…\" y ya no deja ver nada. Debe seguir vivo para poder ver cómo se generan después `impl.md` / `review.md`. Nueva condición de cierre: el Work Item en `done` (fin del trabajo), más el `rei view --stop` explícito y el idle timeout ya existentes. Nota: no se puede detectar el cierre de la ventana desde el servidor; por eso el terminal es `done` / `--stop` / idle.\n\n2. Initializer: hoy recomienda dejar la apertura automática del visor DESACTIVADA (\"está desactivado por defecto\"; \"si el usuario no lo pide, deja `false`; no actives el visor sin respuesta explícita\"). Debe recomendar MANTENERLA ACTIVA, argumentando que hace más fácil leer las specs. Se conserva la pregunta (la decide el usuario), pero cambia la recomendación. Evaluar si el valor por defecto del esqueleto `viewer.autoOpenOnReady` pasa a `true`.\n\nRestricciones: sin dependencias nuevas; no romper el resto del comportamiento del visor (selector de documento, aprobación en dos pasos, TOC, diff, enlaces profundos, scroll, reconexión SSE).",
+  "type": "task",
+  "status": "done",
+  "created_at": "2026-10-13T15:51:00-05:00",
+  "base_commit": "915eab64887c02c74e4baed0b7a2a931311a0394",
+  "last_review_commit": ""
+}

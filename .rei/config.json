@@ -1,6 +1,6 @@
 {
   "checks": [],
   "viewer": {
-    "autoOpenOnReady": false
+    "autoOpenOnReady": true
   }
 }

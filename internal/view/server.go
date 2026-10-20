@@ -29,10 +29,10 @@ type Server struct {
 	id    string
 	token string
 
-	background          bool
-	closeOnStatusChange bool
-	pollInterval        time.Duration
-	idleTimeout         time.Duration
+	background   bool
+	closeOnDone  bool
+	pollInterval time.Duration
+	idleTimeout  time.Duration
 
 	srv        *http.Server
 	stopServer func()
@@ -102,13 +102,13 @@ func (s *Server) Handler() http.Handler {
 }
 
 // Serve sirve hasta que el servidor se cierra. Si es de fondo, arranca el
-// monitor de inactividad.
+// monitor de inactividad y, si procede, el vigilante del estado terminal.
 func (s *Server) Serve(ln net.Listener) error {
 	s.srv = &http.Server{Handler: s.Handler(), ReadHeaderTimeout: 5 * time.Second}
 	s.stopServer = func() { _ = s.srv.Close() }
 	if s.background {
 		go s.monitor()
-		if s.closeOnStatusChange {
+		if s.closeOnDone {
 			go s.watchStatus()
 		}
 	}
@@ -132,8 +132,10 @@ func (s *Server) requestClose() {
 	})
 }
 
-// watchStatus cierra el servidor de fondo en cuanto el Work Item deja de estar
-// en ready (R30), sin depender de que haya un cliente SSE conectado.
+// watchStatus cierra el servidor de fondo cuando el Work Item llega a done,
+// sin depender de que haya un cliente SSE conectado. Mientras avanza
+// (in_progress, review) el servidor sigue vivo para poder leer los documentos
+// que se generan; además siguen vigentes `rei view --stop` y el idle timeout.
 func (s *Server) watchStatus() {
 	ticker := time.NewTicker(s.pollInterval)
 	defer ticker.Stop()
@@ -142,7 +144,7 @@ func (s *Server) watchStatus() {
 		case <-s.closed:
 			return
 		case <-ticker.C:
-			if m, err := meta.Load(s.p.MetaFile(s.id)); err == nil && m.Status != meta.StatusReady {
+			if m, err := meta.Load(s.p.MetaFile(s.id)); err == nil && m.Status == meta.StatusDone {
 				s.requestClose()
 				return
 			}
@@ -273,7 +275,7 @@ func (s *Server) handleApprove(w http.ResponseWriter, r *http.Request) {
 
 // handleEvents es el endpoint SSE: emite `data: reload` cuando cambia el mtime
 // de algún documento del Work Item. En segundo plano, además, cierra el
-// servidor cuando el Work Item deja de estar en ready.
+// servidor cuando el Work Item llega a done.
 func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 	if !s.authorized(r) {
 		http.Error(w, "no autorizado", http.StatusForbidden)
@@ -308,8 +310,8 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 				}
 				flusher.Flush()
 			}
-			if s.background && s.closeOnStatusChange {
-				if m, err := meta.Load(s.p.MetaFile(s.id)); err == nil && m.Status != meta.StatusReady {
+			if s.background && s.closeOnDone {
+				if m, err := meta.Load(s.p.MetaFile(s.id)); err == nil && m.Status == meta.StatusDone {
 					s.requestClose()
 					return
 				}

@@ -211,3 +211,69 @@ func TestEventsEmiteReload(t *testing.T) {
 		}
 	}
 }
+
+// TestFondoSeCierraEnDone cubre el ciclo de vida del servidor de fondo: al
+// aprobar (ready -> in_progress) y durante review NO se cierra; solo se cierra
+// al llegar a done.
+func TestFondoSeCierraEnDone(t *testing.T) {
+	p, id := newViewFixture(t, meta.StatusReady)
+	s, err := newServer(p, id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s.background = true
+	s.closeOnDone = true
+	s.pollInterval = 10 * time.Millisecond
+
+	ln, err := s.Listen()
+	if err != nil {
+		t.Fatal(err)
+	}
+	served := make(chan error, 1)
+	go func() { served <- s.Serve(ln) }()
+
+	setStatus := func(status string) {
+		t.Helper()
+		m, err := meta.Load(p.MetaFile(id))
+		if err != nil {
+			t.Fatal(err)
+		}
+		m.Status = status
+		if err := m.Save(p.MetaFile(id)); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// ready -> in_progress: aprobar no debe cerrar el visor.
+	setStatus(meta.StatusInProgress)
+	select {
+	case <-s.closed:
+		t.Fatal("el servidor no debe cerrarse al aprobar (in_progress)")
+	case <-time.After(150 * time.Millisecond):
+	}
+
+	// in_progress -> review: tampoco.
+	setStatus(meta.StatusReview)
+	select {
+	case <-s.closed:
+		t.Fatal("el servidor no debe cerrarse en review")
+	case <-time.After(150 * time.Millisecond):
+	}
+
+	// review -> done: trabajo terminado, el servidor se cierra.
+	setStatus(meta.StatusDone)
+	select {
+	case <-s.closed:
+	case <-time.After(3 * time.Second):
+		t.Fatal("el servidor debe cerrarse al llegar a done")
+	}
+
+	select {
+	case err := <-served:
+		if err != nil {
+			t.Fatalf("Serve devolvió error: %v", err)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("Serve no terminó tras cerrarse el servidor")
+	}
+}
