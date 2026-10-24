@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>REI · Visor de especificaciones</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;700&family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1440px;height:900px;overflow:hidden;background:#0e0f12;color:#f2efe9;
+  font-family:"Literata",Georgia,serif;-webkit-font-smoothing:antialiased;
+  display:flex;flex-direction:column}
+.mono{font-family:"JetBrains Mono",monospace}
+.disp{font-family:"Archivo Black",Impact,sans-serif}
+
+/* ---- masthead a sangre ---- */
+.masthead{flex:0 0 70px;background:#ff5a1f;color:#0e0f12;display:flex;
+  align-items:center;justify-content:space-between;padding:0 48px}
+.brand{font-family:"Archivo Black";font-size:20px;letter-spacing:-.015em;text-transform:uppercase}
+.nav{display:flex;align-items:center;gap:26px;font-family:"JetBrains Mono";
+  font-size:14px;font-weight:500;text-transform:uppercase;letter-spacing:.09em}
+.nav span{opacity:.5}
+.nav .on{opacity:1;padding-bottom:4px;border-bottom:3px solid #0e0f12}
+
+/* ---- hero / título ---- */
+.hero{flex:0 0 auto;padding:28px 48px 24px;display:flex;justify-content:space-between;
+  align-items:flex-end;gap:40px;border-bottom:1px solid #22242a}
+.hero h1{font-family:"Archivo Black";font-size:72px;line-height:.92;
+  letter-spacing:-.025em;max-width:940px}
+.hero .meta{margin-top:18px;display:flex;align-items:center;gap:16px;
+  font-family:"JetBrains Mono";font-size:14px;color:#92959d}
+.hero .meta b{color:#f2efe9;font-weight:500}
+.hero .dot{width:4px;height:4px;background:#4b4e56;border-radius:50%}
+.hero-tags{display:flex;flex-direction:column;align-items:flex-end;gap:12px;padding-bottom:4px}
+.tag{font-family:"JetBrains Mono";font-size:14px;font-weight:500;letter-spacing:.08em;
+  text-transform:uppercase;padding:8px 15px;border:1px solid #34373e;color:#c9ccd2;white-space:nowrap}
+.flag{font-family:"JetBrains Mono";font-size:14px;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;padding:8px 16px;background:#ff5a1f;color:#0e0f12;white-space:nowrap}
+
+/* ---- cuerpo: 3 columnas ---- */
+.workspace{flex:1 1 auto;display:grid;grid-template-columns:236px 1fr 300px;
+  gap:44px;padding:30px 48px 40px;min-height:0}
+
+.rail-head{font-family:"JetBrains Mono";font-size:13px;font-weight:500;
+  letter-spacing:.16em;text-transform:uppercase;color:#7f828a;margin-bottom:12px}
+.doc{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:11px 0;border-bottom:1px solid #1c1e23;font-family:"JetBrains Mono";
+  font-size:15px;color:#c9ccd2}
+.doc .name{white-space:nowrap}
+.doc.active{color:#f2efe9}
+.doc.active .name::before{content:"▸ ";color:#ff5a1f}
+.chip{font-family:"JetBrains Mono";font-size:11px;font-weight:700;letter-spacing:.1em;
+  padding:3px 7px;text-transform:uppercase;background:#ffd23f;color:#0e0f12}
+
+/* ---- columna de lectura (calmada) ---- */
+.reading{display:grid;grid-template-columns:136px 1fr;gap:30px;align-items:start;
+  padding:0 8px 0 4px}
+.numeral{font-family:"Archivo Black";font-size:196px;line-height:.7;
+  color:#ff5a1f;letter-spacing:-.05em}
+.eyebrow{font-family:"JetBrains Mono";font-size:14px;letter-spacing:.02em;
+  color:#92959d;padding-bottom:14px;border-bottom:1px solid #22242a}
+.eyebrow b{color:#ffd23f;font-weight:500}
+.read h2{font-family:"Literata";font-weight:600;font-size:31px;line-height:1.16;
+  letter-spacing:-.01em;margin:22px 0 18px}
+.req{font-size:17.5px;line-height:1.7;color:#d8d5cd;max-width:66ch}
+.rid{font-family:"JetBrains Mono";font-weight:700;font-size:15px;color:#ff5a1f;letter-spacing:.04em}
+.debe{font-style:normal;font-weight:700;text-transform:uppercase;letter-spacing:.02em;color:#ffd23f}
+.cmd{font-family:"JetBrains Mono";font-size:15.5px;background:#1a1c21;
+  border:1px solid #2c2f36;border-radius:3px;padding:2px 8px;white-space:nowrap}
+
+/* ---- rail de metadatos + señal de estado ---- */
+.meta-rail{display:flex;flex-direction:column;gap:22px;border-left:1px solid #22242a;padding-left:28px}
+.lbl{font-family:"JetBrains Mono";font-size:12.5px;font-weight:500;letter-spacing:.14em;
+  text-transform:uppercase;color:#7f828a;margin-bottom:7px}
+.val{font-family:"JetBrains Mono";font-size:15px;color:#f2efe9;word-break:break-all}
+.val.sig{color:#ff5a1f;font-weight:700;letter-spacing:.06em}
+.bands{display:flex;flex-direction:column;gap:10px}
+.band{display:flex;gap:12px;align-items:flex-start;padding:11px 14px;
+  background:#15171b;border-left:4px solid}
+.band.warn{border-color:#ffd23f}
+.band.ok{border-color:#ff5a1f}
+.band .b-tag{font-family:"JetBrains Mono";font-size:12px;font-weight:700;
+  letter-spacing:.1em;padding-top:1px}
+.band.warn .b-tag{color:#ffd23f}
+.band.ok .b-tag{color:#ff5a1f}
+.band p{font-family:"JetBrains Mono";font-size:13.5px;line-height:1.45;color:#d6d3cc}
+.action{margin-top:auto}
+.approve{width:100%;border:0;background:#ff5a1f;color:#0e0f12;cursor:pointer;
+  font-family:"Archivo Black";font-size:17px;letter-spacing:.03em;text-transform:uppercase;
+  padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+.approve span{font-family:"JetBrains Mono";font-weight:700;font-size:18px}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="brand">REI · Visor de especificaciones</div>
+  <nav class="nav">
+    <span>Índice</span>
+    <span class="on">Lectura</span>
+    <span>Validación</span>
+  </nav>
+</header>
+
+<section class="hero">
+  <div>
+    <h1>Visor de especificaciones en el navegador</h1>
+    <div class="meta mono">
+      <span>spec-browser-viewer</span><span class="dot"></span>
+      <span>id</span><b>2026-10-09_23-45__spec-browser-viewer</b>
+    </div>
+  </div>
+  <div class="hero-tags">
+    <span class="tag">feature</span>
+    <span class="flag">done</span>
+  </div>
+</section>
+
+<main class="workspace">
+
+  <aside class="rail">
+    <div class="rail-head">Índice de documentos</div>
+    <div class="doc"><span class="name">requirements.md</span></div>
+    <div class="doc"><span class="name">design.md</span></div>
+    <div class="doc"><span class="name">tasks.md</span></div>
+    <div class="doc active"><span class="name">impl.md</span><span class="chip">WARN</span></div>
+    <div class="doc"><span class="name">review.md</span></div>
+  </aside>
+
+  <article class="reading">
+    <div class="numeral disp">1</div>
+    <div class="read">
+      <div class="eyebrow mono"><b>Requirements</b> — Visor de especificaciones en el navegador</div>
+      <h2>1. Comando y modos</h2>
+      <p class="req">
+        <span class="rid">R1.</span> El sistema <em class="debe">DEBE</em> ofrecer
+        el comando <code class="cmd">rei view [&lt;id&gt;]</code>.
+      </p>
+    </div>
+  </article>
+
+  <aside class="meta-rail">
+    <div>
+      <div class="lbl">Estado</div>
+      <div class="val sig">done</div>
+    </div>
+    <div>
+      <div class="lbl">Tipo</div>
+      <div class="val">feature</div>
+    </div>
+    <div>
+      <div class="lbl">Validación</div>
+      <div class="bands">
+        <div class="band warn"><span class="b-tag">WARN</span><p>impl.md excede el tope blando</p></div>
+        <div class="band ok"><span class="b-tag">OK</span><p>Resto sin hallazgos</p></div>
+      </div>
+    </div>
+    <div class="action">
+      <button class="approve">Aprobar <span>→</span></button>
+    </div>
+  </aside>
+
+</main>
+
+</body>
+</html>

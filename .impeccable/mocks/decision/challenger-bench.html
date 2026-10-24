@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>REI · Visor de especificaciones</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=Azeret+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0a0a0b; --panel:#131316; --line:#26262c; --chalk:rgba(241,237,228,.82);
+    --cream:#f2efe6; --paper:#1c1812; --muted:#969389;
+    --flag:#ff6a00; --flag-deep:#d34d00;
+    --label:'Oswald',sans-serif; --read:'Source Sans 3',sans-serif; --mono:'Azeret Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    width:1440px;height:900px;overflow:hidden;
+    background:var(--ink);color:var(--cream);font-family:var(--read);
+    display:grid;grid-template-rows:68px 174px 1fr;
+  }
+  /* ---------- header ---------- */
+  .top{display:flex;align-items:center;justify-content:space-between;padding:0 46px;border-bottom:1px solid var(--line)}
+  .brand{display:flex;align-items:center;gap:13px;font-family:var(--label);text-transform:uppercase;letter-spacing:.2em;font-size:14px;font-weight:500}
+  .brand i{width:11px;height:11px;background:var(--flag);display:block;transform:rotate(45deg)}
+  .meta{display:flex;align-items:center;gap:30px}
+  .meta .id{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+  .field{display:flex;flex-direction:column;gap:4px}
+  .field b{font-family:var(--label);text-transform:uppercase;letter-spacing:.2em;font-size:10px;color:var(--muted);font-weight:500}
+  .field span{font-family:var(--label);text-transform:uppercase;letter-spacing:.1em;font-size:13.5px;font-weight:500}
+  .field .done{display:flex;align-items:center;gap:9px}
+  /* ---------- the grease cross (state mark) ---------- */
+  .x{position:relative;width:14px;height:14px;display:inline-block;color:var(--chalk);flex:none}
+  .x::before,.x::after{content:"";position:absolute;left:50%;top:50%;width:2px;height:100%;background:currentColor;border-radius:1px;transform:translate(-50%,-50%) rotate(45deg)}
+  .x::after{transform:translate(-50%,-50%) rotate(-45deg)}
+  /* ---------- rail ---------- */
+  .rail{position:relative;overflow:hidden;border-bottom:1px solid var(--line);background:radial-gradient(120% 150% at 18% 0%,#151517,#0a0a0b 72%)}
+  .rail::before,.rail::after{content:"";position:absolute;left:0;right:0;height:20px;pointer-events:none;background-image:radial-gradient(circle at 13px 10px,rgba(240,236,225,.20) 0 4px,transparent 4.6px);background-size:48px 20px}
+  .rail::before{top:6px}.rail::after{bottom:6px}
+  .track{position:absolute;left:46px;right:46px;top:32px;bottom:32px;display:flex;gap:14px;z-index:2}
+  .frame{position:relative;flex:1;min-width:0;border:1px solid var(--line);border-radius:3px;background:linear-gradient(180deg,#17171a,#101013);display:flex;flex-direction:column;justify-content:flex-end;padding:14px 16px}
+  .frame .idx{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-bottom:7px}
+  .frame .name{font-family:var(--label);text-transform:uppercase;letter-spacing:.16em;font-size:14px;font-weight:500;color:#d6d2c8}
+  .frame .x{position:absolute;top:13px;right:13px}
+  .frame.is-active{flex:1.9;border-color:#ff8f3f;background:linear-gradient(155deg,var(--flag),var(--flag-deep));box-shadow:0 18px 44px rgba(255,106,0,.20)}
+  .frame.is-active .idx{color:rgba(24,12,2,.62)}
+  .frame.is-active .name{color:#170d02;font-weight:600}
+  .frame.is-active .x{color:rgba(23,13,2,.7)}
+  /* the bent tape flag: where you stopped */
+  .flag{position:absolute;top:-24px;left:24px;width:38px;height:46px;background:var(--flag);z-index:3;
+    clip-path:polygon(0 0,100% 0,100% 100%,50% 74%,0 100%);filter:drop-shadow(0 8px 12px rgba(255,106,0,.4))}
+  .flag::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 45%,rgba(0,0,0,.22) 50%,transparent 55%)}
+  /* ---------- body ---------- */
+  main{display:grid;grid-template-columns:1fr 424px;gap:34px;padding:34px 46px 42px;min-height:0}
+  .reading{position:relative;overflow:hidden;background:var(--cream);color:var(--paper);border-radius:3px;padding:46px 54px;box-shadow:0 26px 60px rgba(0,0,0,.55)}
+  .reading::before,.reading::after{content:"";position:absolute;left:0;right:0;height:18px;opacity:.85;background-image:radial-gradient(circle at 12px 9px,var(--ink) 0 3.6px,transparent 4.1px);background-size:42px 18px}
+  .reading::before{top:9px}.reading::after{bottom:9px}
+  .kicker{display:flex;align-items:center;gap:13px;max-width:642px;font-size:14.5px;font-weight:600;color:#6d6558}
+  .kicker::before{content:"";width:26px;height:3px;background:var(--flag);flex:none}
+  h1{margin:24px 0 20px;font-size:27px;font-weight:600;letter-spacing:-.01em;color:#17130d}
+  .rule{height:1px;background:#d8d2c4;max-width:642px;margin-bottom:26px}
+  .rc{max-width:642px;font-size:16px;line-height:1.66;color:#262019}
+  .rc code{font-family:var(--mono);font-size:14px;background:#e7e1d3;color:#2b2318;padding:2px 6px;border-radius:3px}
+  .rc b{font-weight:700}
+  /* ---------- orange workbench ---------- */
+  .bench{display:flex;flex-direction:column;padding:34px;border-radius:3px;color:#1a0d02;
+    background:linear-gradient(165deg,var(--flag),var(--flag-deep) 78%);box-shadow:0 26px 60px rgba(255,106,0,.16)}
+  .lbl{font-family:var(--label);text-transform:uppercase;letter-spacing:.2em;font-size:11px;font-weight:600;color:rgba(26,13,2,.6)}
+  .check{display:flex;align-items:center;gap:15px;margin-top:16px}
+  .check .x{width:22px;height:22px;color:#1a0d02}
+  .check .x::before,.check .x::after{width:3px}
+  .check b{font-size:22px;font-weight:700}
+  .spacer{flex:1}
+  .resume{margin-bottom:22px}
+  .resume .row{display:flex;align-items:center;gap:10px;margin-top:12px}
+  .resume .tickflag{width:14px;height:18px;background:#1a0d02;clip-path:polygon(0 0,100% 0,100% 100%,50% 72%,0 100%)}
+  .resume .row span{font-family:var(--label);text-transform:uppercase;letter-spacing:.12em;font-size:15px;font-weight:500}
+  .cta{display:flex;align-items:center;justify-content:space-between;padding:21px 24px;border-radius:3px;background:#120d07;color:var(--cream);
+    font-family:var(--label);text-transform:uppercase;letter-spacing:.22em;font-size:15px;font-weight:500}
+  .cta::after{content:"";width:9px;height:9px;border-top:2px solid var(--flag);border-right:2px solid var(--flag);transform:rotate(45deg)}
+</style>
+</head>
+<body>
+  <header class="top">
+    <div class="brand"><i></i>REI · Visor de especificaciones</div>
+    <div class="meta">
+      <span class="id">2026-10-09_23-45__spec-browser-viewer</span>
+      <div class="field"><b>Tipo</b><span>feature</span></div>
+      <div class="field"><b>Estado</b><span class="done"><i class="x"></i>done</span></div>
+    </div>
+  </header>
+
+  <section class="rail">
+    <div class="track">
+      <div class="frame is-active">
+        <span class="flag"></span><i class="x"></i>
+        <span class="idx">01</span><span class="name">requirements</span>
+      </div>
+      <div class="frame"><i class="x"></i><span class="idx">02</span><span class="name">design</span></div>
+      <div class="frame"><i class="x"></i><span class="idx">03</span><span class="name">tasks</span></div>
+      <div class="frame"><i class="x"></i><span class="idx">04</span><span class="name">impl</span></div>
+      <div class="frame"><i class="x"></i><span class="idx">05</span><span class="name">review</span></div>
+    </div>
+  </section>
+
+  <main>
+    <article class="reading">
+      <div class="kicker">Requirements — Visor de especificaciones en el navegador</div>
+      <h1>1. Comando y modos</h1>
+      <div class="rule"></div>
+      <p class="rc"><b>R1.</b> El sistema DEBE ofrecer el comando <code>rei view [&lt;id&gt;]</code>.</p>
+    </article>
+
+    <aside class="bench">
+      <div class="lbl">Validación</div>
+      <div class="check"><i class="x"></i><b>Sin hallazgos</b></div>
+      <div class="spacer"></div>
+      <div class="resume">
+        <div class="lbl">Punto de reanudación</div>
+        <div class="row"><span class="tickflag"></span><span>requirements</span></div>
+      </div>
+      <div class="cta">Aprobar</div>
+    </aside>
+  </main>
+</body>
+</html>

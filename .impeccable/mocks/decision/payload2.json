@@ -1,0 +1,31 @@
+{
+  "title": "Manual de referencia — elige el registro",
+  "question": "Ya elegiste el Manual de referencia, en oscuro y con tipografía más generosa. ¿Te quedas con el registro fiel o te vas al audaz?",
+  "options": [
+    {
+      "id": "manual-dark",
+      "label": "Manual de referencia · oscuro",
+      "kicker": "TU BRIEF",
+      "lineage": "Manuales de servicio sobre papel técnico, invertidos a tinta oscura",
+      "thesis": "El manual de servicio sobre un campo oscuro cálido que descansa la vista, con la tipografía pequeña ya generosa.",
+      "palette": ["#14161a", "#e9e6df", "#ff7a1a", "#8a9099"],
+      "materials": ["tinta sobre grafito", "callouts", "tablas de revisión"],
+      "viewport": "Masthead, banda de título, índice de documentos, columna de lectura calmada y panel de validación sobre fondo oscuro.",
+      "risk": "En oscuro, callouts y contraste piden cuidado para no vibrar.",
+      "html": ".impeccable/mocks/decision/manual-dark.html"
+    },
+    {
+      "id": "manual-bold",
+      "label": "Manual de referencia · audaz",
+      "kicker": "BOLDER",
+      "lineage": "Manuales técnicos con espíritu de cartel tipográfico",
+      "thesis": "El mismo manual llevado al límite: numerales de sección enormes, una banda de masthead que manda y el estado como señal.",
+      "palette": ["#0e0f12", "#f2efe9", "#ff5a1f", "#ffd23f"],
+      "materials": ["cartel tipográfico", "tinta sobre grafito", "bandas de señal"],
+      "viewport": "Banda de masthead a sangre, numeral de sección gigante, rail de documentos audaz, columna calmada y validación como señal.",
+      "risk": "Fácil de sobreactuar; la lectura debe seguir siendo fácil.",
+      "html": ".impeccable/mocks/decision/manual-bold.html"
+    }
+  ],
+  "steer": true
+}

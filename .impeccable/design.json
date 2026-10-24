@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-10T01:20:00-05:00",
+  "title": "Design System: REI Harness — Visor de especificaciones",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Violeta de instrumento", "canonical": "#9a86f5", "tonalRamp": ["#241b4d", "#332a56", "#463a8f", "#5a49c9", "#6f5ae0", "#8a76ee", "#9a86f5", "#c3b8fb"] },
+      "canvas": { "role": "neutral", "displayName": "Grafito cálido", "canonical": "#14161a", "tonalRamp": ["#0b0c0e", "#14161a", "#1a1d22", "#23272e", "#2b3039", "#3a404b", "#525a67", "#8a92a0"] },
+      "text": { "role": "neutral", "displayName": "Tinta", "canonical": "#eae7e0", "tonalRamp": ["#2b2b28", "#4a4a45", "#6b6a63", "#8f8d85", "#b3b0a7", "#d6d2c9", "#eae7e0", "#f7f5f0"] },
+      "signal-warn": { "role": "tertiary", "displayName": "Ámbar de precaución", "canonical": "#e0a33a", "tonalRamp": ["#3a2a0d", "#5c4213", "#8a631d", "#ad7d26", "#c9922f", "#e0a33a", "#ecc072", "#f6dfae"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Título del Work Item en la banda de título." },
+      "body": { "displayName": "Cuerpo de lectura", "purpose": "Columna de lectura serif a ~70ch." },
+      "label": { "displayName": "Etiqueta", "purpose": "Encabezados de sección y campos, en mayúsculas." },
+      "mono": { "displayName": "Datos", "purpose": "IDs, commits, nombres de archivo y código." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "ease-standard", "value": "background 0.15s ease", "purpose": "Único estado transicionado: el color del botón primario." }
+    ],
+    "breakpoints": [
+      { "name": "md", "value": "1080px" },
+      { "name": "sm", "value": "640px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botón primario",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "La acción de aprobación en el panel de validación.",
+      "html": "<button class=\"ds-btn-primary\">Aprobar</button>",
+      "css": ".ds-btn-primary{width:100%;padding:13px 0;font-family:system-ui,sans-serif;font-weight:700;font-size:15px;letter-spacing:.05em;text-transform:uppercase;color:#f3f0ff;background:#5a49c9;border:1px solid #6f5ae0;border-radius:4px;cursor:pointer;transition:background .15s ease}.ds-btn-primary:hover{background:#9a86f5}.ds-btn-primary:focus-visible{outline:2px solid #9a86f5;outline-offset:2px}.ds-btn-primary:disabled{opacity:.6;cursor:default}"
+    },
+    {
+      "name": "Badge de estado",
+      "kind": "chip",
+      "refersTo": "badge",
+      "description": "Estado del Work Item; el color codifica el estado, el violeta no decora.",
+      "html": "<span class=\"ds-badge ds-badge-done\">done</span>",
+      "css": ".ds-badge{display:inline-block;font-family:system-ui,sans-serif;font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border:1px solid #3a404b;border-radius:3px;color:#d6d2c9;background:#23272e}.ds-badge-ready{color:#e0a33a;border-color:rgba(224,163,58,.5)}.ds-badge-in_progress{color:#9a86f5;border-color:rgba(154,134,245,.5)}.ds-badge-done{color:#7fb98a;border-color:rgba(127,185,138,.5)}"
+    },
+    {
+      "name": "Callout de validación",
+      "kind": "custom",
+      "description": "Resultado de la validación por nivel (WARN/FAIL/OK).",
+      "html": "<div class=\"ds-callout ds-callout-warn\"><span class=\"ds-callout-tag\">WARN</span><span class=\"ds-callout-msg\">impl.md excede el tope blando (90 líneas / 599 palabras).</span></div>",
+      "css": ".ds-callout{display:grid;grid-template-columns:auto 1fr;gap:.65rem;align-items:start;padding:.8rem .9rem;background:#1a1d22;border:1px solid rgba(224,163,58,.4);border-radius:4px}.ds-callout-tag{font-family:system-ui,sans-serif;font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#e0a33a}.ds-callout-msg{font-family:system-ui,sans-serif;font-size:14px;line-height:1.55;color:#d6d2c9}.ds-callout-ok{border-color:rgba(127,185,138,.4)}.ds-callout-ok .ds-callout-tag{color:#7fb98a}"
+    },
+    {
+      "name": "Índice de documentos",
+      "kind": "nav",
+      "description": "Wayfinding del Work Item; los documentos ausentes se marcan en gris.",
+      "html": "<nav class=\"ds-index\"><span class=\"ds-index-h\">Índice de documentos</span><ul><li><a href=\"#\">requirements.md</a></li><li><a href=\"#\">design.md</a></li><li class=\"ds-index-missing\">spec.md (no existe)</li></ul></nav>",
+      "css": ".ds-index{font-family:ui-monospace,Menlo,Consolas,monospace;color:#d6d2c9}.ds-index-h{display:block;font-family:system-ui,sans-serif;font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#9aa0a8;margin-bottom:.5rem}.ds-index ul{list-style:none;margin:0;padding:0}.ds-index li{padding:.5rem 0;border-top:1px solid #2b3039}.ds-index li:first-child{border-top:0}.ds-index a{color:#d6d2c9;text-decoration:none;font-size:14px}.ds-index a:hover{color:#9a86f5}.ds-index-missing{color:#9aa0a8;font-size:14px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "El manual de servicio",
+    "overview": "El visor de specs se comporta como un manual de referencia técnica: cabecera, portada con el identificador del trabajo, índice, apartado de validación y colofón. Es un documento para revisarse, no un panel de métricas. El mundo posee el frame y lo lleva con carácter; la columna de lectura se mantiene calmada. La profundidad es tonal, por capas y hairlines, nunca por sombras.",
+    "keyCharacteristics": [
+      "Frame de manual: masthead, banda de título, índice, validación, colofón.",
+      "Grafito cálido de fondo; violeta como único acento de marca.",
+      "Columna de lectura serif a ~70ch; cuerpo a 17px.",
+      "Etiquetas generosas: ninguna por debajo de 13px.",
+      "Sin sombras ni desenfoques: profundidad por capas tonales y hairlines.",
+      "Sin fuentes de terceros: stacks de sistema."
+    ],
+    "rules": [
+      { "name": "La Regla del Único Acento", "body": "El violeta es el único color de marca. Los colores de señal solo significan estado; nunca se usan para decorar.", "section": "colors" },
+      { "name": "La Regla de la Etiqueta Grande", "body": "Ninguna etiqueta baja de 13px.", "section": "typography" },
+      { "name": "La Regla del Papel sin Sombra", "body": "La profundidad es tonal y por filetes. El relieve se gana con capas, nunca con sombras.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do mantener el acento violeta en ≤10% de la pantalla; su rareza es el punto.",
+      "Do dejar que el frame cargue el carácter y mantener la columna de lectura calmada.",
+      "Do usar capas tonales y hairlines de 1px para la profundidad.",
+      "Do mantener toda etiqueta en ≥13px.",
+      "Do usar los colores de señal solo para estado."
+    ],
+    "donts": [
+      "Don't introducir sombras, desenfoques ni cristal decorativo.",
+      "Don't usar el violeta ni ningún color como decoración: solo marca o señal.",
+      "Don't añadir filetes laterales gruesos a callouts o listas.",
+      "Don't poner un kicker/eyebrow encima de un encabezado.",
+      "Don't cargar fuentes, CSS o JS de terceros.",
+      "Don't poner el texto de lectura en monoespaciada."
+    ]
+  }
+}

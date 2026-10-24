@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>REI · Visor de especificaciones</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ground:#16181c; --ground-2:#1b1e23; --ground-3:#23272e;
+    --line:#2c313a; --line-2:#3b424c;
+    --text:#e9e6df; --soft:#d6d2c9; --muted:#9aa0a8;
+    --accent:#ff7a1a; --warn:#e0a33a; --ok:#7fb98a;
+    --ui:"Archivo",system-ui,sans-serif;
+    --read:"Source Serif 4",Georgia,serif;
+    --mono:"JetBrains Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  body{width:1440px;height:900px;overflow:hidden;margin:0;
+    background:var(--ground);color:var(--text);
+    font-family:var(--ui);display:flex;flex-direction:column}
+
+  /* ── masthead ──────────────────────────────────────────────── */
+  .masthead{height:70px;display:flex;align-items:center;gap:24px;padding:0 40px;
+    background:var(--ground-2);border-bottom:1px solid var(--line)}
+  .brand{font-weight:700;font-size:21px;letter-spacing:.03em;text-transform:uppercase;
+    display:flex;align-items:center;gap:12px}
+  .brand .dot{width:11px;height:11px;background:var(--accent);border-radius:1px}
+  .masthead .meta{margin-left:auto;text-align:right;line-height:1.5}
+  .masthead .meta .m1{font-family:var(--mono);font-size:13px;color:var(--muted);letter-spacing:.02em}
+  .masthead .meta .m2{font-family:var(--mono);font-size:13px;color:var(--soft)}
+
+  /* ── banda de título ───────────────────────────────────────── */
+  .titleband{height:84px;display:flex;align-items:center;gap:20px;padding:0 40px;
+    border-bottom:1px solid var(--line)}
+  .titleband .bar{width:4px;height:40px;background:var(--accent)}
+  .titleband h1{font-size:28px;font-weight:600;letter-spacing:-.01em;margin:0}
+  .titleband .id{margin-left:auto;font-family:var(--mono);font-size:13px;color:var(--muted)}
+
+  /* ── cuerpo ────────────────────────────────────────────────── */
+  .body{flex:1;display:grid;grid-template-columns:280px 1fr 366px;min-height:0}
+
+  .index{border-right:1px solid var(--line);padding:26px 0;display:flex;flex-direction:column}
+  .sec-h{font-size:13px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--muted);padding:0 32px 14px}
+  .doc{display:grid;grid-template-columns:38px 1fr;align-items:baseline;gap:12px;
+    padding:14px 32px;border-top:1px solid var(--line)}
+  .doc .no{font-family:var(--mono);font-size:13px;color:var(--muted)}
+  .doc .nm{font-family:var(--mono);font-size:14px;color:var(--soft)}
+  .doc.active{background:var(--ground-3);border-left:3px solid var(--accent);padding-left:29px}
+  .doc.active .no{color:var(--accent)}
+  .doc.active .nm{color:var(--text);font-weight:500}
+
+  .reader{overflow:hidden;padding:46px 56px;display:flex;justify-content:center}
+  .col{width:648px}
+  .col h2{font-family:var(--read);font-weight:600;font-size:25px;line-height:1.24;margin:0 0 8px}
+  .col .eyebrow{font-family:var(--mono);font-size:13px;color:var(--muted);margin-bottom:30px}
+  .col h3{font-family:var(--read);font-weight:600;font-size:20px;margin:0 0 14px;
+    padding-bottom:8px;border-bottom:1px solid var(--line)}
+  .col p{font-family:var(--read);font-size:17px;line-height:1.72;color:var(--soft);
+    margin:0;max-width:66ch}
+  .col code{font-family:var(--mono);font-size:14px;background:var(--ground-3);
+    border:1px solid var(--line-2);padding:2px 6px;border-radius:2px;color:var(--text)}
+
+  .meta{border-left:1px solid var(--line);padding:26px 32px;display:flex;flex-direction:column;gap:22px}
+  .facts{border-top:1px solid var(--line)}
+  .row{display:grid;grid-template-columns:96px 1fr;gap:14px;padding:10px 0;
+    border-bottom:1px solid var(--line);align-items:baseline}
+  .k{font-size:13px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+  .v{font-family:var(--mono);font-size:13px;color:var(--text);word-break:break-all}
+  .badge{display:inline-block;font-family:var(--ui);font-weight:700;font-size:13px;
+    letter-spacing:.08em;text-transform:uppercase;padding:2px 10px;border-radius:2px}
+  .badge.ft{background:var(--ground-3);border:1px solid var(--line-2);color:var(--soft)}
+  .badge.done{background:#223026;border:1px solid #35513c;color:var(--ok)}
+
+  .callout{display:grid;grid-template-columns:26px 1fr;gap:12px;padding:14px 16px;
+    border:1px solid;border-left-width:4px;border-radius:2px}
+  .callout.warn{background:rgba(224,163,58,.08);border-color:rgba(224,163,58,.32);
+    border-left-color:var(--warn)}
+  .callout.ok{background:rgba(127,185,138,.07);border-color:rgba(127,185,138,.3);
+    border-left-color:var(--ok)}
+  .callout .tag{font-family:var(--ui);font-weight:700;font-size:14px;letter-spacing:.1em;
+    text-transform:uppercase}
+  .callout.warn .tag{color:var(--warn)}
+  .callout.ok .tag{color:var(--ok)}
+  .callout .msg{font-family:var(--ui);font-size:14.5px;line-height:1.55;color:var(--soft)}
+
+  .action{margin-top:auto}
+  .action button{width:100%;font-family:var(--ui);font-weight:700;font-size:18px;
+    letter-spacing:.08em;text-transform:uppercase;color:#1a1206;background:var(--accent);
+    border:0;border-radius:2px;padding:15px 0;cursor:pointer}
+  .action .hint{font-family:var(--mono);font-size:13px;color:var(--muted);
+    text-align:center;margin-top:10px}
+
+  /* ── historial de revisión ─────────────────────────────────── */
+  .foot{height:176px;background:var(--ground-2);border-top:2px solid var(--line-2);padding:20px 40px 0}
+  .foot table{width:100%;border-collapse:collapse}
+  .foot th{font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--muted);text-align:left;padding:8px 16px;border-bottom:1px solid var(--line-2)}
+  .foot td{font-family:var(--mono);font-size:13px;color:var(--soft);
+    padding:10px 16px;border-bottom:1px solid var(--line)}
+  .foot td.desc{font-family:var(--ui);color:var(--text)}
+</style>
+</head>
+<body>
+  <header class="masthead">
+    <div class="brand"><span class="dot"></span>REI · Visor de especificaciones</div>
+    <div class="meta">
+      <div class="m1">Manual de referencia técnica · REI Harness</div>
+      <div class="m2">Rev. 2026-10-10</div>
+    </div>
+  </header>
+
+  <section class="titleband">
+    <span class="bar"></span>
+    <h1>Visor de especificaciones en el navegador</h1>
+    <span class="id">id · 2026-10-09_23-45__spec-browser-viewer</span>
+  </section>
+
+  <div class="body">
+    <aside class="index">
+      <div class="sec-h">Índice de documentos</div>
+      <div class="doc active"><span class="no">01</span><span class="nm">requirements.md</span></div>
+      <div class="doc"><span class="no">02</span><span class="nm">design.md</span></div>
+      <div class="doc"><span class="no">03</span><span class="nm">tasks.md</span></div>
+      <div class="doc"><span class="no">04</span><span class="nm">impl.md</span></div>
+      <div class="doc"><span class="no">05</span><span class="nm">review.md</span></div>
+    </aside>
+
+    <section class="reader">
+      <div class="col">
+        <h2>Requirements — Visor de especificaciones en el navegador</h2>
+        <div class="eyebrow">requirements.md · R1 de 4 · actualizado 2026-10-10</div>
+        <h3>1. Comando y modos</h3>
+        <p>R1. El sistema DEBE ofrecer el comando <code>rei view [&lt;id&gt;]</code>.</p>
+      </div>
+    </section>
+
+    <aside class="meta">
+      <div class="facts">
+        <div class="sec-h" style="padding:0 0 10px">Ficha del documento</div>
+        <div class="row"><span class="k">Tipo</span><span class="v"><span class="badge ft">feature</span></span></div>
+        <div class="row"><span class="k">Estado</span><span class="v"><span class="badge done">done</span></span></div>
+        <div class="row"><span class="k">Creado</span><span class="v">2026-10-10</span></div>
+        <div class="row"><span class="k">ID</span><span class="v">2026-10-09_23-45__spec-browser-viewer</span></div>
+      </div>
+      <div class="sec-h" style="padding:0">Validación</div>
+      <div class="callout warn">
+        <span class="tag">WARN</span>
+        <span class="msg">impl.md excede el tope blando (90 líneas / 599 palabras)</span>
+      </div>
+      <div class="callout ok">
+        <span class="tag">OK</span>
+        <span class="msg">Resto sin hallazgos</span>
+      </div>
+      <div class="action">
+        <button type="button">Aprobar</button>
+        <div class="hint">acción primaria · estado: done</div>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="foot">
+    <div class="sec-h" style="padding:0 0 8px">Historial de revisión</div>
+    <table>
+      <thead>
+        <tr><th>Rev</th><th>Fecha</th><th>Tipo</th><th>Estado</th><th>Descripción</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>01</td><td>2026-10-10</td><td>feature</td>
+          <td style="color:var(--ok)">done</td>
+          <td class="desc">Redacción inicial: requirements, design, tasks, impl y review verificados.</td>
+        </tr>
+      </tbody>
+    </table>
+  </footer>
+</body>
+</html>

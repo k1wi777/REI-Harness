@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>REI · Visor de especificaciones</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --ink:#15181d; --ink2:#59606a; --ink3:#9098a2;
+  --line:#d9dce0; --line2:#eceef0;
+  --paper:#fcfcfc; --panel:#f5f6f6;
+  --accent:#de4f0e; --accent-soft:#fbece3;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  width:1440px;height:900px;overflow:hidden;
+  display:flex;flex-direction:column;
+  background:var(--paper);color:var(--ink);
+  font-family:"Archivo",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:"JetBrains Mono",monospace}
+
+/* ── masthead ─────────────────────────────── */
+.masthead{flex:0 0 46px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 40px;border-bottom:1px solid var(--ink)}
+.brand{font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase}
+.brand span{color:var(--accent)}
+.masthead .rev{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink2)}
+
+/* ── title band ───────────────────────────── */
+.titlerow{flex:0 0 auto;display:flex;align-items:flex-end;justify-content:space-between;
+  gap:40px;padding:24px 40px 20px;border-bottom:1px solid var(--line)}
+.kicker{font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink3);margin-bottom:9px}
+h1{font-size:27px;font-weight:600;letter-spacing:-.015em;margin:0;line-height:1.1}
+.meta{display:grid;grid-template-columns:auto auto;gap:12px 34px;margin:0}
+.meta dt{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px}
+.meta dd{margin:0;font-family:"JetBrains Mono",monospace;font-size:12px}
+.meta .id{font-size:11px}
+
+/* ── main ─────────────────────────────────── */
+.main{flex:1;display:flex;min-height:0}
+
+/* index of documents (tabs) */
+.index{flex:0 0 236px;border-right:1px solid var(--line);padding:22px 20px;
+  display:flex;flex-direction:column;gap:2px}
+.sectlabel{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink3);margin:0 0 12px}
+.indextab{display:flex;align-items:baseline;gap:10px;padding:9px 10px;
+  border-left:2px solid transparent;font-family:"JetBrains Mono",monospace;font-size:12.5px;color:var(--ink2)}
+.indextab .n{font-size:10px;color:var(--ink3)}
+.indextab.active{background:var(--panel);border-left-color:var(--accent);color:var(--ink);font-weight:500}
+
+/* reading column — calm */
+.reading{flex:1;min-width:0;padding:34px 60px;overflow:hidden}
+.reading .inner{max-width:620px}
+.docname{font-family:"JetBrains Mono",monospace;font-size:11.5px;color:var(--ink2);
+  padding-bottom:12px;border-bottom:1px solid var(--line2);margin-bottom:22px}
+.reading h2{font-family:"Literata",serif;font-size:19px;font-weight:600;margin:0 0 16px}
+.reading p{font-family:"Literata",serif;font-size:17px;line-height:1.62;margin:0;color:#1c2026}
+.reading code{font-family:"JetBrains Mono",monospace;font-size:14px;background:var(--line2);
+  padding:1px 5px;border-radius:2px}
+.rid{font-family:"JetBrains Mono",monospace;font-size:14px;font-weight:500;color:var(--accent)}
+
+/* side panel */
+.panel{flex:0 0 384px;border-left:1px solid var(--line);background:var(--panel);
+  padding:22px 24px;display:flex;flex-direction:column;gap:20px;overflow:hidden}
+.psect h3{font-size:12px;font-weight:600;letter-spacing:.04em;margin:0 0 12px;
+  display:flex;gap:8px;align-items:baseline}
+.psect h3 .num{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--accent)}
+
+/* callouts: warn = precaución (accent), ok = nota (quiet) */
+.callout{border-left:3px solid var(--line);background:#fff;padding:11px 13px;margin-bottom:9px}
+.callout .tag{display:block;font-size:9.5px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink2);margin-bottom:5px}
+.callout p{margin:0;font-size:12.5px;line-height:1.5;color:var(--ink)}
+.callout code{font-family:"JetBrains Mono",monospace;font-size:11.5px}
+.callout.warn{border-left-color:var(--accent);background:var(--accent-soft)}
+.callout.warn .tag{color:var(--accent)}
+.valsum{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--ink3);margin:0 0 12px}
+
+/* revision history table */
+table.rev{width:100%;border-collapse:collapse;font-size:11px}
+table.rev th{text-align:left;font-weight:500;font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink3);padding:0 6px 7px 0;border-bottom:1px solid var(--line)}
+table.rev td{padding:9px 6px 9px 0;border-bottom:1px solid var(--line);vertical-align:top;
+  font-family:"JetBrains Mono",monospace;color:var(--ink)}
+table.rev td.id{font-size:10.5px;line-height:1.4;color:var(--ink2);max-width:128px}
+.tagstate{display:inline-block;font-family:"Archivo",sans-serif;font-size:10px;font-weight:600;
+  letter-spacing:.06em;text-transform:uppercase;background:var(--ink);color:#fff;padding:2px 7px;border-radius:2px}
+.commits{font-size:10px;color:var(--ink2)}
+
+/* action */
+.spacer{flex:1}
+.approve{width:100%;border:0;background:var(--accent);color:#fff;font-family:"Archivo",sans-serif;
+  font-size:14px;font-weight:600;letter-spacing:.02em;padding:14px;cursor:pointer}
+</style>
+</head>
+<body>
+
+  <header class="masthead">
+    <div class="brand"><span>REI</span> · Visor de especificaciones</div>
+    <div class="rev">Manual de servicio · Rev. 01</div>
+  </header>
+
+  <section class="titlerow">
+    <div>
+      <div class="kicker">Work Item</div>
+      <h1>Visor de especificaciones en el navegador</h1>
+    </div>
+    <dl class="meta">
+      <div><dt>ID</dt><dd class="id">2026-10-09_23-45__spec-browser-viewer</dd></div>
+      <div><dt>Tipo</dt><dd>feature</dd></div>
+      <div><dt>Estado</dt><dd>done</dd></div>
+      <div><dt>Creado</dt><dd>2026-10-10</dd></div>
+    </dl>
+  </section>
+
+  <main class="main">
+
+    <nav class="index">
+      <div class="sectlabel">Índice de documentos</div>
+      <a class="indextab active"><span class="n">01</span>requirements.md</a>
+      <a class="indextab"><span class="n">02</span>design.md</a>
+      <a class="indextab"><span class="n">03</span>tasks.md</a>
+      <a class="indextab"><span class="n">04</span>impl.md</a>
+      <a class="indextab"><span class="n">05</span>review.md</a>
+    </nav>
+
+    <article class="reading">
+      <div class="inner">
+        <div class="docname">Requirements — Visor de especificaciones en el navegador</div>
+        <h2>1. Comando y modos</h2>
+        <p><span class="rid">R1.</span> El sistema DEBE ofrecer el comando <code>rei view [&lt;id&gt;]</code>.</p>
+      </div>
+    </article>
+
+    <aside class="panel">
+      <section class="psect">
+        <h3><span class="num">2</span> Validación</h3>
+        <p class="valsum">2 verificaciones · 1 precaución</p>
+        <div class="callout warn">
+          <span class="tag">Precaución · WARN</span>
+          <p><code>impl.md</code> excede el tope blando (90 líneas/599 palabras).</p>
+        </div>
+        <div class="callout ok">
+          <span class="tag">Nota · OK</span>
+          <p>Sin hallazgos en <code>requirements.md</code>.</p>
+        </div>
+      </section>
+
+      <section class="psect">
+        <h3><span class="num">3</span> Historial de revisión</h3>
+        <table class="rev">
+          <thead><tr><th>ID</th><th>Tipo</th><th>Estado</th><th>Commits</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="id">2026-10-09_23-45<br>__spec-browser-viewer</td>
+              <td>feature</td>
+              <td><span class="tagstate">done</span></td>
+              <td class="commits">a91f3c<br>04d7e2</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <div class="spacer"></div>
+      <button class="approve">Aprobar</button>
+    </aside>
+
+  </main>
+
+</body>
+</html>

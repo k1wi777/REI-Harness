@@ -1,0 +1,103 @@
+{
+  "title": "Elige la dirección visual del visor",
+  "question": "El roll asignó «Cuadro de horarios». ¿La mantienes, eliges una alterna o vuelves a tirar?",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "Cuadro de horarios",
+      "kicker": "THE ROLL",
+      "lineage": "Señalética y horarios impresos (tradición ferroviaria)",
+      "thesis": "La spec como un cuadro de marchas: cada documento y cada requisito es una línea, con su estado y su leyenda.",
+      "palette": ["#f4efe4", "#16233b", "#c0392b", "#8a8577"],
+      "materials": ["papel impreso", "grilla tabular", "hairlines"],
+      "viewport": "Tablero-documento: wayfinding como rail de servicios, índice de secciones como líneas con marca de estado, columna de lectura calmada en papel crema.",
+      "risk": "El rigor tabular puede sentirse frío; el calor del papel debe sostener la hospitalidad.",
+      "raised": [
+        { "from": "challenger-bench", "raise": "El índice de secciones lleva marcas de estado (marca, no color), como el rail del banco de edición." },
+        { "from": "challenger-cape", "raise": "El botón Aprobar reconfigura el frame entero, no solo un badge." }
+      ],
+      "html": ".impeccable/mocks/decision/assigned.html"
+    },
+    {
+      "id": "model-pick",
+      "label": "Manual de referencia técnica",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "Manuales de servicio y ediciones de referencia",
+      "thesis": "La spec como manual de servicio: secciones numeradas, avisos para la validación, historial de revisión y pestañas.",
+      "palette": ["#ffffff", "#15171a", "#e8590c", "#5c636e"],
+      "materials": ["tinta sobre blanco", "callouts", "tablas de revisión"],
+      "viewport": "Masthead y banda de título, índice de documentos a la izquierda, columna serif calmada al centro, panel de validación/estado a la derecha y la acción Aprobar.",
+      "risk": "También es la dirección donde cae la mayoría de las ejecuciones en esta categoría.",
+      "html": ".impeccable/mocks/decision/model-pick.html"
+    },
+    {
+      "id": "challenger-bench",
+      "label": "Mesa de montaje",
+      "verdict": "competitive",
+      "lineage": "Mesas de edición fotográfica / select rails",
+      "thesis": "La spec montada en un rail: cada documento es un frame, el estado es una marca y una bandera señala dónde te detuviste.",
+      "palette": ["#0b0b0c", "#ff6b1a", "#ffffff"],
+      "materials": ["negro de película", "cinta de bandera", "ventanas perforadas"],
+      "viewport": "Rail perforado horizontal con las secciones montadas como frames; la lectura ocurre en ventanas blancas; la acción Aprobar vive en la placa naranja.",
+      "case": "Fusiona muy bien: el wayfinding y el estado del workflow ya son un rail con marcas; pierde algo de calidez para textos largos.",
+      "risk": "Sin rigor en el rail y en las ventanas, cae en novedad retro.",
+      "html": ".impeccable/mocks/decision/challenger-bench.html"
+    },
+    {
+      "id": "challenger-cape",
+      "label": "Capa de transformación",
+      "verdict": "declined",
+      "lineage": "Drawcord transforming cape (textiles)",
+      "thesis": "Un plano que un solo gesto convierte en estructura.",
+      "case": "Fusiona mal: el lector de specs no se identifica con alta costura.",
+      "kept": "La transformación de estado hecha visible por un solo gesto."
+    },
+    {
+      "id": "challenger-dive",
+      "label": "Descenso por etapas",
+      "verdict": "declined",
+      "lineage": "Inmersión técnica por estratos",
+      "thesis": "Un eje vertical gobierna el recorrido por etapas.",
+      "case": "Fusiona regular: el eje vertical ayudaría, pero el mundo es ajeno.",
+      "kept": "Un eje vertical continuo que ata wayfinding y lectura."
+    },
+    {
+      "id": "challenger-labanotation",
+      "label": "Notación del movimiento",
+      "verdict": "declined",
+      "lineage": "Labanotación (formas, niveles, duración)",
+      "thesis": "Notación donde la forma es dirección, la sombra es nivel y la longitud es duración.",
+      "case": "Fusiona regular: una notación muy precisa, pero el lector no la conoce.",
+      "kept": "Que la estructura se note, no solo se escriba."
+    },
+    {
+      "id": "challenger-dumbar",
+      "label": "Sistema modular",
+      "verdict": "declined",
+      "lineage": "Identidad modular (barras vectoriales y fotografía)",
+      "thesis": "Bloques saturados que se reacomodan sin perder reconocimiento.",
+      "case": "Fusiona mal: una identidad ruidosa pelea con la lectura calmada.",
+      "kept": "Un sistema que se reconoce a distancia, incluso desordenado."
+    },
+    {
+      "id": "challenger-ikeda",
+      "label": "Campo de datos",
+      "verdict": "declined",
+      "lineage": "Datamatics (barras, retículas, monolito B/N)",
+      "thesis": "Densidad de datos en columnas estrictas, en blanco y negro puro.",
+      "case": "Fusiona regular: la densidad ayuda, el parpadeo estorba.",
+      "kept": "Densidad tabular en columnas estrictas."
+    }
+  ],
+  "reroll": { "registers": ["safer", "bolder"] },
+  "canon": true,
+  "canonCard": {
+    "label": "El estándar de la categoría",
+    "thesis": "La documentación limpia que todo el mundo espera, ejecutada con oficio.",
+    "palette": ["#ffffff", "#111827", "#2563eb"],
+    "materials": ["grilla limpia", "jerarquía tipográfica"],
+    "viewport": "Sidebar, columna de lectura y panel de metadatos, en su mejor versión convencional.",
+    "risk": "Indistinguible de la competencia por diseño."
+  },
+  "steer": true
+}

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>REI · Visor de especificaciones</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f3ede1; --paper-2:#ece4d4; --band:#eadfca;
+    --ink:#141a29; --ink-2:#3a4152; --ink-3:#6b7385;
+    --line:#c9bfa6; --line-2:#d8cfb9;
+    --sig:#b2352a; --sig-soft:#f0dcd6;
+    --cond:"Barlow Condensed",sans-serif;
+    --read:"Source Serif 4",Georgia,serif;
+    --mono:"JetBrains Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  body{width:1440px;height:900px;overflow:hidden;margin:0;
+    background:var(--paper);color:var(--ink);
+    font-family:var(--read);display:flex;flex-direction:column}
+
+  /* ── cabecera / tablero de salidas ─────────────────────────── */
+  .head{height:76px;display:flex;align-items:center;gap:28px;
+    padding:0 32px;border-bottom:2px solid var(--ink);background:var(--paper-2)}
+  .brand{font-family:var(--cond);font-weight:700;font-size:26px;
+    letter-spacing:.02em;text-transform:uppercase;display:flex;align-items:center;gap:12px}
+  .brand .dot{width:12px;height:12px;background:var(--sig);border-radius:50%}
+  .head-meta{display:flex;flex-direction:column;gap:3px;margin-left:auto;text-align:right}
+  .head-meta .t{font-family:var(--cond);font-weight:600;font-size:21px;letter-spacing:.01em}
+  .head-meta .id{font-family:var(--mono);font-size:11.5px;color:var(--ink-3)}
+
+  /* ── rail horizontal de documentos ─────────────────────────── */
+  .rail{height:56px;display:flex;align-items:stretch;gap:0;
+    padding-left:32px;border-bottom:1px solid var(--line);background:var(--paper)}
+  .rail .lbl{font-family:var(--cond);font-weight:600;font-size:14px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ink-3);display:flex;align-items:center;padding-right:22px;margin-right:22px;
+    border-right:1px solid var(--line)}
+  .doc{font-family:var(--mono);font-size:12.5px;color:var(--ink-2);
+    display:flex;align-items:center;padding:0 20px;border-right:1px solid var(--line-2)}
+  .doc.active{background:var(--sig);color:#fbf6ee;font-weight:500}
+
+  /* ── cuerpo ────────────────────────────────────────────────── */
+  .body{flex:1;display:grid;grid-template-columns:296px 1fr 330px;min-height:0}
+
+  /* índice de secciones = líneas de servicio */
+  .index{border-right:1px solid var(--line);padding:22px 0;display:flex;flex-direction:column}
+  .ix-h{font-family:var(--cond);font-weight:600;font-size:13px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--ink-3);padding:0 24px 12px}
+  .svc{display:grid;grid-template-columns:44px 1fr 18px;align-items:center;gap:12px;
+    padding:13px 24px;border-top:1px solid var(--line-2);font-family:var(--cond);font-size:17px}
+  .svc:nth-child(even){background:var(--band)}
+  .svc .no{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--sig)}
+  .svc .nm{letter-spacing:.01em}
+  .mark{width:9px;height:9px;border-radius:1px;justify-self:end}
+  .mark.done{background:var(--ink)}
+  .mark.work{background:var(--sig)}
+  .mark.todo{background:transparent;border:1.5px solid var(--line);box-sizing:border-box}
+
+  .legend{margin-top:auto;border-top:2px solid var(--ink);padding:16px 24px 0}
+  .legend h4{font-family:var(--cond);font-weight:600;font-size:12px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--ink-3);margin:0 0 10px}
+  .legend div{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11.5px;
+    color:var(--ink-2);padding:4px 0}
+
+  /* columna de lectura (calma) */
+  .reader{overflow:hidden;padding:44px 0;display:flex;justify-content:center}
+  .col{width:600px}
+  .col h1{font-family:var(--cond);font-weight:600;font-size:24px;line-height:1.15;margin:0 0 6px}
+  .col .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--ink-3);margin-bottom:26px}
+  .col h2{font-family:var(--cond);font-weight:600;font-size:19px;letter-spacing:.02em;
+    margin:30px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+  .col p{font-size:16px;line-height:1.62;color:var(--ink-2);margin:0 0 15px;max-width:64ch}
+  .col p b{color:var(--ink);font-weight:600}
+  .col code{font-family:var(--mono);font-size:13.5px;background:var(--paper-2);
+    padding:1px 5px;border-radius:2px;color:var(--ink)}
+  .col pre{font-family:var(--mono);font-size:13px;line-height:1.6;color:var(--ink);
+    background:var(--paper-2);border:1px solid var(--line-2);border-left:3px solid var(--sig);
+    padding:14px 18px;margin:18px 0 0}
+
+  /* columna meta + acción */
+  .meta{border-left:1px solid var(--line);padding:22px 26px;display:flex;flex-direction:column;gap:22px}
+  .facts{border-top:2px solid var(--ink)}
+  .facts .row{display:grid;grid-template-columns:96px 1fr;gap:10px;padding:9px 0;
+    border-bottom:1px solid var(--line-2);align-items:baseline}
+  .facts .row:nth-child(even){}
+  .facts .k{font-family:var(--cond);font-weight:600;font-size:12px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-3)}
+  .facts .v{font-family:var(--mono);font-size:12.5px;color:var(--ink)}
+  .badge{display:inline-block;font-family:var(--cond);font-weight:700;font-size:12px;
+    letter-spacing:.1em;text-transform:uppercase;padding:2px 9px;border-radius:2px}
+  .badge.done{background:var(--ink);color:var(--paper)}
+  .badge.ft{background:var(--paper-2);border:1px solid var(--line);color:var(--ink-2)}
+
+  .valid{margin-top:6px;padding:12px 14px;background:var(--paper-2);border:1px solid var(--line-2)}
+  .valid .k{font-family:var(--cond);font-weight:600;font-size:12px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
+  .valid .v{font-size:15px;color:var(--ink)}
+  .valid .v::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;
+    background:var(--ink);margin-right:9px;vertical-align:middle}
+
+  .action{margin-top:auto}
+  .action button{width:100%;font-family:var(--cond);font-weight:700;font-size:19px;
+    letter-spacing:.06em;text-transform:uppercase;color:#fbf6ee;background:var(--sig);
+    border:0;padding:15px 0;cursor:pointer}
+  .action .hint{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);text-align:center;margin-top:9px}
+</style>
+</head>
+<body>
+  <header class="head">
+    <div class="brand"><span class="dot"></span>REI · Visor de especificaciones</div>
+    <div class="head-meta">
+      <span class="t">Visor de especificaciones en el navegador</span>
+      <span class="id">2026-10-09_23-45__spec-browser-viewer</span>
+    </div>
+  </header>
+
+  <nav class="rail">
+    <span class="lbl">Documentos</span>
+    <span class="doc active">requirements.md</span>
+    <span class="doc">design.md</span>
+    <span class="doc">tasks.md</span>
+    <span class="doc">impl.md</span>
+    <span class="doc">review.md</span>
+  </nav>
+
+  <div class="body">
+    <aside class="index">
+      <div class="ix-h">Índice de secciones</div>
+      <div class="svc"><span class="no">R1</span><span class="nm">Comando y modos</span><span class="mark done"></span></div>
+      <div class="svc"><span class="no">R2</span><span class="nm">Sesión activa</span><span class="mark done"></span></div>
+      <div class="svc"><span class="no">R3</span><span class="nm">Render del documento</span><span class="mark work"></span></div>
+      <div class="svc"><span class="no">R4</span><span class="nm">Wayfinding</span><span class="mark todo"></span></div>
+      <div class="legend">
+        <h4>Leyenda de estados</h4>
+        <div><span class="mark done"></span> redactado / aprobado</div>
+        <div><span class="mark work"></span> en revisión</div>
+        <div><span class="mark todo"></span> pendiente</div>
+      </div>
+    </aside>
+
+    <section class="reader">
+      <div class="col">
+        <h1>Requirements — Visor de especificaciones en el navegador</h1>
+        <div class="eyebrow">requirements.md · R1–R2 de 4 · actualizado 2026-10-10</div>
+        <h2>1. Comando y modos</h2>
+        <p><b>R1.</b> El sistema DEBE ofrecer el comando <code>rei view [&lt;id&gt;]</code>.</p>
+        <p><b>R2.</b> CUANDO se ejecuta <code>rei view</code> sin <code>&lt;id&gt;</code> y existe una sesión activa, el sistema DEBE mostrar el Work Item de la sesión activa.</p>
+        <pre>rei view 2026-10-09_23-45__spec-browser-viewer --section requirements</pre>
+      </div>
+    </section>
+
+    <aside class="meta">
+      <div class="facts">
+        <div class="row"><span class="k">Tipo</span><span class="v"><span class="badge ft">feature</span></span></div>
+        <div class="row"><span class="k">Estado</span><span class="v"><span class="badge done">done</span></span></div>
+        <div class="row"><span class="k">Fecha</span><span class="v">2026-10-10</span></div>
+        <div class="row"><span class="k">ID</span><span class="v">2026-10-09_23-45__spec-browser-viewer</span></div>
+      </div>
+      <div class="valid">
+        <div class="k">Validación</div>
+        <div class="v">Sin hallazgos</div>
+      </div>
+      <div class="action">
+        <button type="button">Aprobar</button>
+        <div class="hint">acción · estado actual: done</div>
+      </div>
+    </aside>
+  </div>
+</body>
+</html>
