@@ -12,3 +12,4 @@
 
 # Registro temporal del servidor del visor (`rei view --open`); se elimina al cerrarlo
 /.rei/.view-server.json
+
