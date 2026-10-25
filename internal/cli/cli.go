@@ -10,6 +10,7 @@ import (
 	"github.com/k1wi777/my-harness-SDD/internal/adapter"
 	"github.com/k1wi777/my-harness-SDD/internal/check"
 	"github.com/k1wi777/my-harness-SDD/internal/doctor"
+	"github.com/k1wi777/my-harness-SDD/internal/github"
 	"github.com/k1wi777/my-harness-SDD/internal/gitx"
 	"github.com/k1wi777/my-harness-SDD/internal/initwizard"
 	"github.com/k1wi777/my-harness-SDD/internal/meta"
@@ -79,6 +80,8 @@ func Run(args []string) int {
 		return cmdItem(rest)
 	case "view":
 		return cmdView(rest)
+	case "github":
+		return cmdGitHub(rest)
 	case "update":
 		return cmdUpdate(rest)
 	default:
@@ -314,6 +317,35 @@ func cmdView(args []string) int {
 	}
 
 	return view.Run(p, view.Options{Mode: mode, ID: id, Stdout: os.Stdout})
+}
+
+// cmdGitHub implementa `rei github <enable|disable|status>`. Valida el uso
+// (2) antes de resolver el proyecto; sin `.rei/` devuelve 1. Las acciones sobre
+// GitHub (issues, ramas, PR) son del agente, nunca de este comando.
+func cmdGitHub(args []string) int {
+	const usage = "uso: rei github <enable|disable|status>"
+	if len(args) != 1 {
+		fmt.Fprintln(os.Stderr, usage)
+		return 2
+	}
+	switch args[0] {
+	case "enable", "disable", "status":
+	default:
+		fmt.Fprintln(os.Stderr, usage)
+		return 2
+	}
+	p, code := project()
+	if p == nil {
+		return code
+	}
+	switch args[0] {
+	case "enable":
+		return github.Enable(p, github.ExecRunner{}, os.Stdout)
+	case "disable":
+		return github.Disable(p, os.Stdout)
+	default:
+		return github.Status(p, github.ExecRunner{}, os.Stdout)
+	}
 }
 
 // cmdUpdate implementa `rei update [--check]`. Solo acepta `--check` como

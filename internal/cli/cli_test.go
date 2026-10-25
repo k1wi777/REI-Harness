@@ -47,3 +47,21 @@ func TestCmdViewUsoIncorrecto(t *testing.T) {
 		}
 	}
 }
+
+// TestCmdGitHubUsoIncorrecto comprueba que el uso se valida antes de resolver
+// el proyecto (R2): sin subcomando, desconocido o con argumentos sobrantes.
+func TestCmdGitHubUsoIncorrecto(t *testing.T) {
+	cases := [][]string{
+		nil,
+		{},
+		{"bogus"},
+		{"enable", "extra"},
+		{"disable", "--force"},
+		{"status", "id"},
+	}
+	for _, args := range cases {
+		if code := cmdGitHub(args); code != 2 {
+			t.Errorf("cmdGitHub(%v) = %d, esperaba 2", args, code)
+		}
+	}
+}

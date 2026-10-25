@@ -44,7 +44,10 @@ Al recibir una nueva solicitud:
 1. Ejecuta `rei session` y `rei items status` para conocer la sesión activa y el
    estado de todos los Work Items.
 2. Si existe un Work Item en `in_progress`, consulta el Caso D.
-3. `meta.json` lo rellena `rei new`; tú solo editas `title` y `description`, y
+3. Si el usuario pide trabajar en una issue existente («trabajemos en la #N») y
+   la integración está activa, aplica la **adopción** de la sección
+   «Integración con GitHub (opcional)» antes de `rei new`.
+4. `meta.json` lo rellena `rei new`; tú solo editas `title` y `description`, y
    registras `base_commit` con `rei commit set` al aprobar (Caso C).
 
 #### Personalización del proyecto
@@ -93,6 +96,14 @@ No delegues ningún trabajo hasta completar estos pasos.
 6. Solicita al usuario una aprobación explícita indicando la ruta
    `.rei/specs/<work-item-id>/` y que responda **"aprobado"** para continuar o
    solicite los cambios necesarios.
+7. **Visor opcional en la puerta de aprobación.** Si `viewer.autoOpenOnReady`
+   de `.rei/config.json` es `true`, ejecuta `rei view <work-item-id> --open`
+   para ofrecer el visor en el navegador (metadatos + documentos renderizados +
+   validación + botón Aprobar). Es una ejecución **NO bloqueante**: no esperes
+   su salida ni dependas de ella, y **NO** sustituye la aprobación del chat. Si
+   la opción es `false` (o la clave no existe), no ejecutes nada y el flujo es
+   idéntico al actual. El disparo es siempre por CLI; **NUNCA** dependas de
+   hooks nativos del runtime.
 
 ##### Caso B — `status == ready`
 
@@ -109,13 +120,18 @@ Si el usuario solicita cambios:
 
 ##### Caso C — `status == ready` y el usuario aprobó
 
-1. Actualiza `.rei/specs/<work-item-id>/meta.json` → `status = in_progress`.
-2. Registra el punto de partida de la implementación:
+1. Si `integrations.github.enabled` es `true`, aplica la **puerta única** de la
+   sección «Integración con GitHub (opcional)». Si está desactivada o no
+   configurada, no menciones GitHub.
+2. Actualiza `.rei/specs/<work-item-id>/meta.json` → `status = in_progress`.
+3. Registra el punto de partida de la implementación:
    `rei commit set <work-item-id> base_commit`. Si no hay git, el review por
    diff se deshabilita y el Reviewer usa el modo lectura.
-3. Lanza **1 subagente `implementer`** indicando como entrada
+4. Lanza **1 subagente `implementer`** indicando como entrada
    `.rei/specs/<work-item-id>/`.
-4. Espera a que finalice.
+5. Espera a que finalice.
+6. Si la integración está activa y hay issue vinculada, publica el comentario
+   de implementación y actualiza «Próximo paso» en `current.md`.
 
 ##### Caso D — `status == in_progress`
 
@@ -133,6 +149,8 @@ NO tomes esta decisión por tu cuenta.
 
 1. Lanza **1 subagente `reviewer`**.
 2. Espera a que finalice.
+3. Si la integración está activa y hay issue vinculada, publica o actualiza el
+   comentario de revisión (idempotente) y actualiza «Próximo paso».
 
 ##### Caso F — `status == changes_requested`
 
@@ -165,6 +183,47 @@ El Work Item no puede continuar.
      `rei status set <work-item-id> ready` y relanza `spec_author` si procede.
    - **Cancelar** → no existe un estado de cancelación; deja el Work Item en
      `blocked` y acuérdalo con el usuario. NO fuerces transiciones a `done`.
+
+#### Integración con GitHub (opcional)
+
+Solo se aplica si `integrations.github.enabled` es `true` en
+`.rei/config.json`. Si la clave falta o `enabled` es `false`, **NO menciones
+GitHub**, no ejecutes `gh` y trabaja sobre la rama base como siempre.
+
+Los comandos exactos están en
+`.rei/docs/harness/integrations/github.md`; esta sección fija las reglas no
+negociables.
+
+- **Puerta única.** Al aprobar la planificación (Caso C), si no existe
+  `.rei/specs/<id>/links.json` ni una decisión registrada en `current.md`,
+  formula una sola pregunta: «¿Creo la issue y la rama `feat/<n>-<slug>`?».
+  Nunca la repitas en la misma sesión.
+  - **Sí:** busca antes el marcador `<!-- rei:work-item:<id> -->` para no
+    duplicar la issue; créala con el cuerpo autosuficiente y las labels `rei` y
+    `rei:feature`; escribe `links.json`; crea la rama solo si estás en `<base>`
+    y sin forzarla.
+  - **No:** no crees issue ni rama, trabaja en `<base>` y registra la decisión
+    en `current.md`.
+- **Comentarios automáticos.** Tras el Implementer publica el comentario
+  `<!-- rei:comment:impl:<id> -->`; tras el Reviewer, el de
+  `<!-- rei:comment:review:<id> -->`. Sin preguntar y sin duplicar: busca el
+  marcador y actualiza el existente. Nunca comentes cambios de estado. Aplica o
+  retira `rei:blocked` al entrar o salir de `blocked`, sin comentario.
+- **PR y merge.** Solo tras la revisión y con una orden explícita del usuario.
+  El PR lleva `Closes #<n>`; el merge es squash con asunto `<título> (#<n>)` y
+  borrado de rama. Nunca uses `--admin` ni auto-merge. Tras el merge verifica y
+  cierra la issue si sigue abierta. Sin orden, nunca hagas commit, push, merge
+  ni borres ramas.
+- **Adopción.** Si el usuario pide «trabajemos en la #N», lee la issue, busca
+  el marcador, pregunta lo que falte y crea el Work Item; al añadir el marcador
+  conserva el cuerpo original. Si la issue tiene el marcador de otro Work Item,
+  detente e informa del conflicto.
+- **Errores.** Informa siempre con causa y siguiente paso. Un fallo de GitHub
+  no altera `meta.json`, el estado de `current.md` ni la etapa del workflow;
+  reintenta sin duplicar issue ni comentario.
+- **Recordatorios.** Mientras haya sesión, mantén en «Próximo paso» de
+  `current.md` las acciones GitHub pendientes y retíralas al completarlas. Tras
+  `done`, repórtalas en tu respuesta.
 
 #### Delegación
 
@@ -220,6 +279,8 @@ Si una solicitud resulta demasiado grande:
 * NUNCA permitas que un subagente implemente trabajo directamente a partir de
   la conversación.
 * NUNCA continúes un trabajo sin la aprobación humana requerida.
+* NUNCA ejecutes acciones de GitHub con la integración desactivada ni crees
+  commit, push, PR o merge sin una orden explícita del usuario.
 * El `meta.json` describe QUÉ se desea construir, NO CÓMO se construirá.
 * En runtime sin adaptador nativo, transmite solo el `## Contrato` del rol;
   nunca el archivo completo.

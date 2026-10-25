@@ -147,6 +147,18 @@ var commands = []commandInfo{
 		},
 	},
 	{
+		name:  "github",
+		usage: "github <enable|disable|status>",
+		short: "Configura la integración opcional con GitHub Issues",
+		detail: []string{
+			"enable: detecta el repositorio desde el remoto `origin` (`git remote get-url origin`) y la rama base desde `origin/HEAD`; escribe integrations.github en .rei/config.json preservando checks, viewer y el resto de claves. Si `gh` falta o no está autenticado, avisa sin bloquear (sale 0).",
+			"disable: apaga la integración (`enabled: false`) conservando repo, base, mergeStrategy y los enlaces locales (links.json). No contacta con GitHub.",
+			"status: reporte de solo lectura del estado, valores efectivos, coincidencia con el remoto, disponibilidad/autenticación de `gh` y siguiente paso.",
+			"El comando nunca crea issues, comentarios, ramas, PR ni merges: esas acciones las ejecuta el agente según .rei/docs/harness/integrations/github.md.",
+			"Códigos de salida: 0 correcto (también con avisos y en status), 1 error operativo o de configuración, 2 uso incorrecto.",
+		},
+	},
+	{
 		name:  "update",
 		usage: "update [--check]",
 		short: "Auto-actualiza el binario de REI desde GitHub Releases",

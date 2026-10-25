@@ -23,6 +23,7 @@ var RequiredFiles = []string{
 	".rei/docs/harness/task.md",
 	".rei/docs/harness/meta.md",
 	".rei/docs/harness/progress.md",
+	".rei/docs/harness/integrations/github.md",
 	".rei/docs/project/architecture.md",
 	".rei/docs/project/conventions.md",
 	".rei/docs/project/verification.md",

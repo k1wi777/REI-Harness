@@ -77,6 +77,38 @@ plantillas.
 | 5. Verificación | `.rei/docs/project/verification.md` + `.rei/config.json` | los de `verification.md` |
 | 6. Cierre y validación | `rei init status` / `rei doctor` | — (verificación final) |
 
+#### Configuración del visor
+
+Durante la entrevista, pregunta al usuario si desea que el visor de
+especificaciones en el navegador (`rei view`) se abra automáticamente al aprobar
+una planificación. **Recomienda mantenerlo activo**: abrir el visor al aprobar
+facilita leer las specs en el navegador (con TOC, diff y recarga en vivo) en
+lugar de hacerlo en crudo.
+
+Registra la respuesta escribiendo la clave booleana `viewer.autoOpenOnReady` en
+`.rei/config.json`, preservando el resto del archivo (por ejemplo, `checks`). Si
+el usuario no tiene preferencia, deja el valor en `true` (recomendado). Si pide
+explícitamente desactivarlo, escribe `false`; respeta siempre esa decisión.
+
+#### Configuración de GitHub Issues
+
+En el mismo paso de configuración del visor, pregunta si desea activar la
+integración opcional con GitHub Issues. La ausencia de la clave
+`integrations.github` significa «integración desactivada».
+
+- Si responde que **sí**: ejecuta `rei github enable` y muestra el repositorio y
+  la rama base detectados, trasladando los avisos de `gh` (instalación o
+  `gh auth login`) con su siguiente paso.
+- Si responde que **no**: no escribas `integrations.github`; la ausencia de la
+  clave deja la integración desactivada.
+- Si `integrations.github` **ya existe**: muestra la configuración actual (repo,
+  base, mergeStrategy y si está activa) y pide confirmación antes de cambiarla;
+  nunca la modifiques en silencio.
+- Nunca edites `.rei/config.json` a mano para esta clave: usa
+  `rei github enable` / `rei github disable`.
+- Si `gh` no está instalado o no está autenticado, informa con causa y
+  siguiente paso sin bloquear la personalización ni el cierre del paso.
+
 #### Entrevista guiada
 
 - Haz **una pregunta o un bloque corto** de preguntas por paso.

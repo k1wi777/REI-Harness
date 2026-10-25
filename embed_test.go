@@ -8,7 +8,7 @@ import (
 )
 
 func TestSkeletonContieneArchivosRequeridos(t *testing.T) {
-	for _, path := range []string{"AGENTS.md", ".rei/config.json"} {
+	for _, path := range []string{"AGENTS.md", ".rei/config.json", ".rei/docs/harness/integrations/github.md"} {
 		if _, err := fs.Stat(Skeleton, path); err != nil {
 			t.Errorf("Skeleton no contiene %s: %v", path, err)
 		}

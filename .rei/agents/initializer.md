@@ -89,6 +89,25 @@ Registra la respuesta escribiendo la clave booleana `viewer.autoOpenOnReady` en
 el usuario no tiene preferencia, deja el valor en `true` (recomendado). Si pide
 explícitamente desactivarlo, escribe `false`; respeta siempre esa decisión.
 
+#### Configuración de GitHub Issues
+
+En el mismo paso de configuración del visor, pregunta si desea activar la
+integración opcional con GitHub Issues. La ausencia de la clave
+`integrations.github` significa «integración desactivada».
+
+- Si responde que **sí**: ejecuta `rei github enable` y muestra el repositorio y
+  la rama base detectados, trasladando los avisos de `gh` (instalación o
+  `gh auth login`) con su siguiente paso.
+- Si responde que **no**: no escribas `integrations.github`; la ausencia de la
+  clave deja la integración desactivada.
+- Si `integrations.github` **ya existe**: muestra la configuración actual (repo,
+  base, mergeStrategy y si está activa) y pide confirmación antes de cambiarla;
+  nunca la modifiques en silencio.
+- Nunca edites `.rei/config.json` a mano para esta clave: usa
+  `rei github enable` / `rei github disable`.
+- Si `gh` no está instalado o no está autenticado, informa con causa y
+  siguiente paso sin bloquear la personalización ni el cierre del paso.
+
 #### Entrevista guiada
 
 - Haz **una pregunta o un bloque corto** de preguntas por paso.

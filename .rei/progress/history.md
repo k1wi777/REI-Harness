@@ -738,3 +738,45 @@ automática y el default del esqueleto `.rei/config.json` pasa a `true`.
 Esperar la revisión del Reviewer sobre
 `.rei/progress/work-items/2026-10-13_15-51__viewer-lifecycle/impl.md`.
 
+
+## 2026-10-25 18:21 — 2026-10-25_18-00__github-issues-v1
+
+- **Work Item:** 2026-10-25_18-00__github-issues-v1
+- **Tipo:** feature
+- **Estado:** review
+- **Inicio:** 2026-10-25T18:00:56-05:00
+- **Agente activo:** implementer
+
+## Plan
+
+- `requirements.md`: 56 requisitos EARS en 8 bloques (CLI `rei github`,
+  entrevista del `initializer`, puerta única, comentarios, PR/merge, adopción,
+  errores de GitHub, documentación y recordatorios).
+- `design.md`: capa Go determinista (`internal/github`, `internal/config`,
+  CLI) + playbook del agente; modelo de config, detección de remoto/base,
+  plantillas de issue/comentarios/PR, tabla de errores y alternativas.
+- `tasks.md`: 12 tareas en 5 fases (config → paquete GitHub → CLI → playbook y
+  contratos → índice/adaptadores/verificación).
+
+## Bitácora
+
+- Planificación completada por el Spec Author.
+- Implementación iniciada (implementer).
+- T1–T5 completadas: modelo y persistencia `integrations.github`, paquete
+  `internal/github` (Runner, parseo de remotos, detección,
+  Enable/Disable/Status), dispatch `rei github` y ayuda.
+- T6–T9 completadas: playbook `.rei/docs/harness/integrations/github.md` y
+  contratos de Leader e Initializer.
+- T10–T11 completadas: playbook declarado en `RequiredFiles`/README/embed y
+  agentes nativos de OpenCode y Claude regenerados.
+- T12 completada: `gofmt`, `make vet`, `make test`, `make build`,
+  `rei check --quiet`, verificaciones de adaptadores y pruebas manuales en
+  verde. Sin contradicciones entre requisitos y diseño.
+- Integración desactivada por defecto: no se escribió `integrations.github` en
+  `.rei/config.json`, por lo que no hay acciones GitHub pendientes.
+
+## Próximo paso
+
+Esperando revisión del Work Item. El trabajo está documentado en
+`.rei/progress/work-items/2026-10-25_18-00__github-issues-v1/impl.md`.
+

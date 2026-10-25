@@ -8,7 +8,7 @@ import (
 func TestCommandHelpTextConocidos(t *testing.T) {
 	for _, name := range []string{
 		"check", "init", "doctor", "new", "session", "items", "status",
-		"commit", "validate", "review-diff", "test", "item", "view", "update",
+		"commit", "validate", "review-diff", "test", "item", "view", "github", "update",
 		"version", "help",
 	} {
 		text, ok := commandHelpText(name)
@@ -52,7 +52,7 @@ func normalize(s string) string {
 
 func TestHelpGeneralIncluyeNuevosComandos(t *testing.T) {
 	text := helpText()
-	for _, want := range []string{"test", "item", "update", "view", "init [status|opencode|claude|--update]"} {
+	for _, want := range []string{"test", "item", "update", "view", "github <enable|disable|status>", "init [status|opencode|claude|--update]"} {
 		if !strings.Contains(text, want) {
 			t.Errorf("la ayuda general no incluye %q:\n%s", want, text)
 		}
@@ -177,5 +177,18 @@ func TestCmdInitClaudeUsoIncorrecto(t *testing.T) {
 	}
 	if code := cmdInit([]string{"claude", "--check", "extra"}); code != 2 {
 		t.Fatalf("cmdInit(claude --check extra) = %d, esperaba 2", code)
+	}
+}
+
+// TestHelpGitHubDocumentaSubcomandos comprueba la ayuda de `rei github`.
+func TestHelpGitHubDocumentaSubcomandos(t *testing.T) {
+	text, ok := commandHelpText("github")
+	if !ok {
+		t.Fatal("no hay ayuda para github")
+	}
+	for _, want := range []string{"enable", "disable", "status", "integrations.github", "Códigos de salida", "0", "1", "2", "integrations/github.md"} {
+		if !strings.Contains(normalize(text), want) {
+			t.Errorf("la ayuda de github debe mencionar %q:\n%s", want, text)
+		}
 	}
 }
