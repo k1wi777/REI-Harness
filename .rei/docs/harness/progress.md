@@ -55,7 +55,7 @@ No debe rellenarse únicamente al finalizar el trabajo.
 
 Su propósito es permitir que una sesión pueda retomarse en cualquier momento, incluso durante la planificación o la espera de aprobación.
 
-Al cerrar el Work Item, `rei session archive` mueve su resumen a `history.md` y restablece este archivo a su estado inicial.
+Al cerrar el Work Item, `rei session archive` mueve su resumen a `history.md` y restablece este archivo a su estado inicial. Solo archiva si `meta.json` está en un estado terminal (`done` o `blocked`) y el `Estado` de este archivo coincide con él; en caso contrario rechaza el archivado con código 1 y explica la causa.
 
 ---
 
@@ -70,7 +70,7 @@ Su contenido es **append-only**.
 
 Nunca deben modificarse entradas anteriores.
 
-Al finalizar correctamente un Work Item, `rei session archive` añade el resumen de `current.md` al final de este archivo.
+Al finalizar correctamente un Work Item, `rei session archive` añade el resumen de `current.md` al final de este archivo. La entrada refleja el estado final registrado en `current.md` (el veredicto del Reviewer), porque el archivado ocurre después de `rei status set <id> done`.
 
 Cada entrada debe resumir:
 
@@ -141,7 +141,7 @@ Si no existen bloqueos, este archivo no debe crearse.
 |----------|-------------|------|
 | `current.md` (inicio: `pending`) | Spec Author | `rei session start <id> <type>` |
 | `current.md` (implementación: `in_progress` → `review`) | Implementer | edición directa |
-| `history.md` + reset de `current.md` | Reviewer | `rei session archive` |
+| `history.md` + reset de `current.md` | Reviewer | veredicto en `current.md` → `rei status set <id> done` → `rei validate` → `rei session archive` |
 | `work-items/<work-item-id>/impl.md` | Implementer | edición directa |
 | `work-items/<work-item-id>/review.md` | Reviewer | edición directa |
 | `work-items/<work-item-id>/spec.md` | Spec Author | edición directa (solo en bloqueo) |

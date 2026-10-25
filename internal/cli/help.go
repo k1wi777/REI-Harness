@@ -72,7 +72,7 @@ var commands = []commandInfo{
 		short: "Muestra o gestiona la sesión activa",
 		detail: []string{
 			"start <id> <feature|task>    inicia la sesión de un Work Item.",
-			"archive                       archiva la sesión en history.md y resetea current.md.",
+			"archive                       archiva la sesión si el Work Item está en done/blocked y current.md es coherente; si no, falla.",
 			"reset                         restablece current.md.",
 		},
 	},

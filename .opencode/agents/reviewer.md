@@ -94,9 +94,11 @@ finalizado, dejando el resultado documentado.
    concreción y no lo excedas. `rei validate` avisa (`WARN`) si se excede, sin
    fallar.
 2. Si todo es correcto:
+   - actualiza `current.md`: **Estado** a `done`, **Bitácora** con el veredicto y
+     las verificaciones realizadas, y **Próximo paso** indicando el cierre;
+   - ejecuta `rei status set <work-item-id> done`;
    - ejecuta `rei validate <work-item-id>`;
    - cierra la sesión con `rei session archive`;
-   - cambia `status` a `done`;
    - DETENTE.
 3. Si encuentras cualquier incumplimiento:
    - cambia `status` a `changes_requested`;
@@ -129,8 +131,9 @@ planificación:
 - SIEMPRE justifica cada rechazo de forma concreta.
 - SIEMPRE documenta el resultado en
   `.rei/progress/work-items/<work-item-id>/review.md`.
-- SIEMPRE cierra la sesión con `rei session archive` al aprobar (feature o
-  task).
+- `rei session archive` **solo** tras `rei status set <id> done`.
+- NUNCA archives antes de que `meta.json` esté en `done` (o `blocked`) y
+  `current.md` coincida.
 - NUNCA escribas plantillas a mano: usa el CLI (`rei`).
 
 ### Formato de salida

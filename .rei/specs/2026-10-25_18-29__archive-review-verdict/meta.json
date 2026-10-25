@@ -1,0 +1,10 @@
+{
+  "id": "2026-10-25_18-29__archive-review-verdict",
+  "title": "Archive: incluir el veredicto de review en history",
+  "description": "Bug de dogfooding detectado al cerrar `2026-10-25_18-00__github-issues-v1`: el Reviewer aprobó y ejecutó `rei session archive` antes de `rei status set done`, así que `history.md` registró la entrada con Estado `review` y «Próximo paso: Esperando revisión» para un Work Item que ya estaba `done`. El veredicto final solo quedó en `review.md` y `meta.json`.\n\nCausa: el contrato del Reviewer (`.rei/agents/reviewer.md`, sección Cierre) ordena `rei session archive` y **después** `status = done`; además no exige volcar el veredicto en `current.md` antes de archivar.\n\nComportamiento esperado:\n1. `rei session archive` solo archiva Work Items en estado terminal (`done` o `blocked`) y con el `Estado` de `current.md` coherente con `meta.json`. Si el Work Item sigue en `review`, `in_progress`, `ready` o `pending`, no archiva y sale 1 con causa y siguiente paso.\n2. El contrato del Reviewer se reordena: actualizar `current.md` (Estado final + bitácora con veredicto y verificaciones) → `rei status set done` → `rei validate` → `rei session archive`.\n3. La entrada de `history.md` debe reflejar el veredicto final, no el estado previo del Implementer.\n4. Añadir tests del guard (estado terminal, no terminal, `current.md` incoherente, sin sesión) y actualizar la documentación de progreso.\n5. Regenerar los agentes nativos afectados.\n\nRestricciones: cambio mínimo, sin dependencias nuevas, sin alterar el formato de `history.md`, sin reescribir entradas pasadas (la corrección aplica a futuros cierres), y sin romper `rei session archive` cuando la sesión está correctamente cerrada. Si se añade `--force`, debe ser explícito y justificado.\n\nFuera de alcance: cambiar `rei status set`, auto-archivar, rediseñar el formato de history, y corregir retroactivamente la entrada ya archivada.",
+  "type": "task",
+  "status": "done",
+  "created_at": "2026-10-25T18:29:00-05:00",
+  "base_commit": "d0b89cf3bccf546f3fb4b2a55a62048dcadddc37",
+  "last_review_commit": ""
+}

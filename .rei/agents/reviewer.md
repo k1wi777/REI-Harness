@@ -88,9 +88,11 @@ finalizado, dejando el resultado documentado.
    concreción y no lo excedas. `rei validate` avisa (`WARN`) si se excede, sin
    fallar.
 2. Si todo es correcto:
+   - actualiza `current.md`: **Estado** a `done`, **Bitácora** con el veredicto y
+     las verificaciones realizadas, y **Próximo paso** indicando el cierre;
+   - ejecuta `rei status set <work-item-id> done`;
    - ejecuta `rei validate <work-item-id>`;
    - cierra la sesión con `rei session archive`;
-   - cambia `status` a `done`;
    - DETENTE.
 3. Si encuentras cualquier incumplimiento:
    - cambia `status` a `changes_requested`;
@@ -123,8 +125,9 @@ planificación:
 - SIEMPRE justifica cada rechazo de forma concreta.
 - SIEMPRE documenta el resultado en
   `.rei/progress/work-items/<work-item-id>/review.md`.
-- SIEMPRE cierra la sesión con `rei session archive` al aprobar (feature o
-  task).
+- `rei session archive` **solo** tras `rei status set <id> done`.
+- NUNCA archives antes de que `meta.json` esté en `done` (o `blocked`) y
+  `current.md` coincida.
 - NUNCA escribas plantillas a mano: usa el CLI (`rei`).
 
 ### Formato de salida
@@ -170,7 +173,9 @@ Detalle opcional (no necesario para ejecutar el rol).
 
 - `rei validate` comprueba la consistencia interna del Work Item.
 - `rei session archive` archiva el resumen en `history.md` y restablece
-  `current.md`.
+  `current.md`. Exige que `meta.json` esté en `done`/`blocked` y que el `Estado`
+  de `current.md` coincida, y copia el resumen tal cual: por eso el veredicto
+  debe estar escrito **antes** de archivar.
 - `rei commit set <work-item-id> last_review_commit` registra el punto revisado:
   así la próxima revisión verá solo los cambios pedidos.
 - `tasks.md` mantiene la trazabilidad tarea ↔ `R-id`.

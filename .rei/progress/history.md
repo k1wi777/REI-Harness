@@ -780,3 +780,57 @@ Esperar la revisión del Reviewer sobre
 Esperando revisión del Work Item. El trabajo está documentado en
 `.rei/progress/work-items/2026-10-25_18-00__github-issues-v1/impl.md`.
 
+
+## 2026-10-25 18:38 — 2026-10-25_18-29__archive-review-verdict
+
+- **Work Item:** 2026-10-25_18-29__archive-review-verdict
+- **Tipo:** task
+- **Estado:** done
+- **Inicio:** 2026-10-25T18:29:46-05:00
+- **Agente activo:** implementer
+
+## Plan
+
+- `plan.md`: guard determinista en `rei session archive` (solo `done`/`blocked` y
+  `current.md` coherente con `meta.json`), reordenación del cierre del Reviewer
+  (veredicto en `current.md` → `status done` → `validate` → `archive`), tests,
+  documentación de progreso y regeneración de agentes nativos. Sin `--force`.
+
+## Bitácora
+
+- 2026-10-25 18:29 — Sesión iniciada (`spec_author`) para planificar la Task.
+- 2026-10-25 18:29 — Revisado el código de archivado
+  (`internal/template/render.go`), la validación (`internal/validate`), las
+  transiciones (`internal/meta`) y el contrato del Reviewer. Detectado que
+  `TestStartAndArchive` archiva sin `meta.json` y deberá adaptarse al nuevo
+  guard.
+- 2026-10-25 18:29 — Redactado `plan.md`. Planificación finalizada; espera
+  aprobación humana.
+- 2026-10-25 18:35 — Implementación iniciada (`implementer`). Guard
+  `ErrArchiveNotAllowed` en `ArchiveSession`: exige `meta.json` en `done`/`blocked`
+  y `Estado` de `current.md` coherente; no escribe nada si rechaza.
+- 2026-10-25 18:35 — `TestStartAndArchive` adaptado al camino feliz y añadidos
+  tests de tabla (terminales, no terminales, incoherencia, sin `meta.json`, sin
+  sesión). `go test ./internal/template/` pasa.
+- 2026-10-25 18:40 — Reordenado el cierre del Reviewer (veredicto en
+  `current.md` → `rei status set done` → `rei validate` → `rei session archive`)
+  y actualizados `progress.md` y la ayuda del CLI.
+- 2026-10-25 18:42 — Agentes nativos regenerados con el CLI. Verificación
+  completa: `make test`, `make vet`, `make build`, `gofmt -l .` (sin salida),
+  `rei init opencode --check`, `rei init claude --check`, `rei validate` y
+  `rei check --quiet`, todos OK.
+- 2026-10-25 18:43 — `impl.md` redactado (71 líneas). Pasa a revisión.
+- 2026-10-25 18:45 — Revisión iniciada (`reviewer`). Revisado el paquete
+  `rei review-diff --full`: guard, tests, contrato, docs, ayuda y agentes.
+- 2026-10-25 18:45 — Verificado: `go test ./...`, `go vet ./...`, build y
+  `gofmt -l .` (Go 1.27 en contenedor; el host no tiene `go`), `rei check
+  --quiet`, `rei init opencode --check` y `rei init claude --check`, todos OK.
+- 2026-10-25 18:45 — **Veredicto: aprobado (`done`).** Sin desviaciones
+  respecto a `plan.md`; guard, tests y contrato coherentes. Detalle en
+  `review.md`.
+
+## Próximo paso
+
+Work Item cerrado: veredicto registrado, `meta.json` en `done` y sesión
+archivada en `history.md`.
+
