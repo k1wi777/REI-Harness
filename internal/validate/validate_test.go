@@ -1,6 +1,7 @@
 package validate
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -121,6 +122,119 @@ func mustWrite(t *testing.T, path, content string) {
 	t.Helper()
 	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
 		t.Fatal(err)
+	}
+}
+
+// featureDocs escribe requirements.md, design.md y tasks.md con los tamaños dados.
+func featureDocs(t *testing.T, p *paths.Project, requirements, designLines, tasks int) {
+	t.Helper()
+	var req strings.Builder
+	for i := 1; i <= requirements; i++ {
+		fmt.Fprintf(&req, "- **R%d.** El sistema DEBE cumplir el requisito %d.\n", i, i)
+	}
+	mustWrite(t, filepath.Join(p.SpecDir(testID), "requirements.md"), req.String())
+
+	design := strings.Repeat("decisión de diseño\n", designLines)
+	mustWrite(t, filepath.Join(p.SpecDir(testID), "design.md"), design)
+
+	var taskDoc strings.Builder
+	for i := 1; i <= tasks; i++ {
+		fmt.Fprintf(&taskDoc, "- [ ] T%d — implementar la tarea %d.\n", i, i)
+	}
+	mustWrite(t, filepath.Join(p.SpecDir(testID), "tasks.md"), taskDoc.String())
+}
+
+func countWarnContaining(issues []Issue, sub string) int {
+	n := 0
+	for _, is := range issues {
+		if is.Level == LevelWarn && strings.Contains(is.Message, sub) {
+			n++
+		}
+	}
+	return n
+}
+
+// TestPlanningBudgetWithinLimit comprueba que el presupuesto no avisa en el límite.
+func TestPlanningBudgetWithinLimit(t *testing.T) {
+	p := &paths.Project{Root: t.TempDir()}
+	writeMeta(t, p, &meta.Meta{
+		ID: testID, Title: "t", Description: "d",
+		Type: "feature", Status: meta.StatusReady, CreatedAt: "2026-10-01T10:00:00-05:00",
+	})
+	featureDocs(t, p, maxFeatureRequirements, maxDesignLines, maxTasks)
+
+	issues, err := WorkItem(p, testID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n := countLevel(issues, LevelFail); n != 0 {
+		t.Fatalf("esperaba 0 FAIL, got %d: %+v", n, issues)
+	}
+	if n := countWarnContaining(issues, "presupuesto"); n != 0 {
+		t.Fatalf("esperaba 0 WARN de presupuesto, got %d: %+v", n, issues)
+	}
+}
+
+// TestPlanningBudgetExceededWarns comprueba los tres avisos al superar el máximo.
+func TestPlanningBudgetExceededWarns(t *testing.T) {
+	p := &paths.Project{Root: t.TempDir()}
+	writeMeta(t, p, &meta.Meta{
+		ID: testID, Title: "t", Description: "d",
+		Type: "feature", Status: meta.StatusReady, CreatedAt: "2026-10-01T10:00:00-05:00",
+	})
+	featureDocs(t, p, maxFeatureRequirements+1, maxDesignLines+1, maxTasks+1)
+
+	issues, err := WorkItem(p, testID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n := countLevel(issues, LevelFail); n != 0 {
+		t.Fatalf("esperaba 0 FAIL, got %d: %+v", n, issues)
+	}
+	if n := countWarnContaining(issues, "presupuesto"); n != 3 {
+		t.Fatalf("esperaba 3 WARN de presupuesto, got %d: %+v", n, issues)
+	}
+}
+
+// TestTaskPlanBudgetWarns comprueba el aviso por un plan.md demasiado largo.
+func TestTaskPlanBudgetWarns(t *testing.T) {
+	p := &paths.Project{Root: t.TempDir()}
+	writeMeta(t, p, &meta.Meta{
+		ID: testID, Title: "t", Description: "d",
+		Type: "task", Status: meta.StatusReady, CreatedAt: "2026-10-01T10:00:00-05:00",
+	})
+	plan := strings.Repeat("paso\n", maxPlanLines+1)
+	mustWrite(t, filepath.Join(p.SpecDir(testID), "plan.md"), plan)
+
+	issues, err := WorkItem(p, testID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n := countLevel(issues, LevelFail); n != 0 {
+		t.Fatalf("esperaba 0 FAIL, got %d: %+v", n, issues)
+	}
+	if n := countWarnContaining(issues, "presupuesto"); n != 1 {
+		t.Fatalf("esperaba 1 WARN de presupuesto, got %d: %+v", n, issues)
+	}
+}
+
+// TestPlanningBudgetDoneNoWarn fija el filtro de estados: `done` no se mide.
+func TestPlanningBudgetDoneNoWarn(t *testing.T) {
+	p := &paths.Project{Root: t.TempDir()}
+	writeMeta(t, p, &meta.Meta{
+		ID: testID, Title: "t", Description: "d",
+		Type: "feature", Status: meta.StatusDone, CreatedAt: "2026-10-01T10:00:00-05:00",
+	})
+	featureDocs(t, p, maxFeatureRequirements+1, maxDesignLines+1, maxTasks+1)
+	mustWrite(t, filepath.Join(p.WorkItemDir(testID), "impl.md"), "ok\n")
+	mustWrite(t, filepath.Join(p.WorkItemDir(testID), "review.md"), "ok\n")
+
+	issues, err := WorkItem(p, testID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n := countWarnContaining(issues, "presupuesto"); n != 0 {
+		t.Fatalf("done no debe medir el presupuesto: %+v", issues)
 	}
 }
 

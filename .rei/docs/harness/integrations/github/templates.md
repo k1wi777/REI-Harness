@@ -45,14 +45,14 @@ Base: <rama> @ <sha>
 - Work Item: `.rei/specs/<id>/`
 - Requisitos: `.rei/specs/<id>/requirements.md`
 - Tareas: `.rei/specs/<id>/tasks.md`
-
-<details>
-<summary>design.md completo</summary>
-
-<contenido íntegro de design.md>
-
-</details>
 ```
+
+El cuerpo **no** incluye el `design.md` completo: basta el contexto, los
+requisitos centrales, las decisiones con peso, el fuera de alcance y los enlaces.
+Si `.rei` **no se versiona** o el usuario pide trazabilidad completa, publica el
+design como **comentario** idempotente con el marcador
+`<!-- rei:comment:design:<id> -->` ([§7](#7-comentario-de-design-opcional)),
+nunca en el cuerpo.
 
 ---
 
@@ -68,14 +68,13 @@ Base: <rama> @ <sha>
 - Tareas: <resumen>
 - Referencias: `.rei/specs/<id>/requirements.md`, `design.md`, `tasks.md`
 
-<details>
-<summary>design.md completo</summary>
-
-<contenido íntegro de design.md>
-
-</details>
 <!-- /rei:spec:<id> -->
 ```
+
+El bloque resume requisitos y tareas y enlaza al Work Item; no incrusta el
+`design.md`. Mismo criterio que §1: el design completo solo como comentario
+idempotente `<!-- rei:comment:design:<id> -->` si `.rei` no se versiona o el
+usuario pide trazabilidad.
 
 ---
 
@@ -190,4 +189,22 @@ El marcador va en la **primera línea**.
 - Verificaciones: ...
 - Observaciones: ...
 - Detalle: `.rei/progress/work-items/<id>/review.md`
+```
+
+---
+
+# 7. Comentario de design (opcional)
+
+Solo si `.rei` **no se versiona** o el usuario pide trazabilidad completa. Nunca
+sustituye al cuerpo de la issue ni se duplica.
+
+```md
+<!-- rei:comment:design:<id> -->
+
+## Design (REI)
+
+- Work Item: `<id>`
+- Referencias: `.rei/specs/<id>/design.md`
+
+<contenido íntegro de design.md>
 ```

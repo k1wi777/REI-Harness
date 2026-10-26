@@ -155,4 +155,7 @@ Si no existen bloqueos, este archivo no debe crearse.
 - Nunca sobrescribas el historial.
 - No elimines documentación existente.
 - Utiliza siempre las plantillas canónicas de `.rei/templates/` (vía el CLI `rei`).
+- No escanees `.rei/specs/**`: usa `rei items status`/`rei item show` y abre solo
+  el Work Item activo o el indicado.
+- No leas `history.md` salvo que el usuario lo pida explícitamente.
 - Todo Work Item debe dejar evidencia suficiente para poder comprender qué ocurrió sin depender del historial del chat.

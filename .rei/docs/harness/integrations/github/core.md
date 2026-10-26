@@ -194,7 +194,10 @@ aunque el remoto sea un nombre viejo (el REST sigue el redirect del rename).
 Si el paso 1 devuelve una issue, **reutilízala**: informa de número y URL y no
 crees otra. Si devuelve más de una, detente y reporta los duplicados. Si no
 existe, escribe el cuerpo con la plantilla de [`templates.md §1`](templates.md)
-en un archivo temporal y crea:
+en un archivo temporal y crea (pasos 3-4). El cuerpo sigue §1 y **no** incluye el
+`design.md` completo por defecto; si `.rei` no se versiona o el usuario pide
+trazabilidad, publica el design como comentario idempotente
+`<!-- rei:comment:design:<id> -->` ([`templates.md §7`](templates.md)).
 
 ```bash
 # 3. Crear la issue (solo si no existe)

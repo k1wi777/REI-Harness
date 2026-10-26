@@ -29,6 +29,8 @@ finalizado, dejando el resultado documentado.
 
 - El Work Item debe encontrarse en estado `review` en
   `.rei/specs/<work-item-id>/meta.json`. Si `status != review`, DETENTE.
+- Abre solo el Work Item indicado: NO escanees `.rei/specs/**` y NO leas
+  `.rei/progress/history.md` salvo petición explícita del usuario.
 
 ### Protocolo
 
@@ -64,7 +66,10 @@ finalizado, dejando el resultado documentado.
      `.rei/docs/project/verification.md` pasa;
    - los checkpoints lentos tienen evidencia válida (CI o ejecución manual);
    - `rei check --quiet` finaliza correctamente.
-3. Aplica el **Cierre** (aprobación o rechazo).
+3. Verifica el **presupuesto de planificación** (`specs.md`/`task.md`): si
+   `rei validate` emite un `WARN` de presupuesto, exige justificación en el
+   documento o división del Work Item; el `WARN` no es rechazo automático.
+4. Aplica el **Cierre** (aprobación o rechazo).
 
 #### Caso B — `type == task`
 
@@ -83,7 +88,10 @@ finalizado, dejando el resultado documentado.
      `.rei/docs/project/verification.md` pasa;
    - los checkpoints lentos tienen evidencia válida (CI o ejecución manual);
    - `rei check --quiet` finaliza correctamente.
-3. Aplica el **Cierre** (aprobación o rechazo).
+3. Verifica el **presupuesto** (`plan.md` ≤150–200 líneas, sin
+   `requirements.md`/`design.md`): si `rei validate` emite un `WARN` de
+   presupuesto, exige justificación o división; no es rechazo automático.
+4. Aplica el **Cierre** (aprobación o rechazo).
 
 #### Cierre (común a Caso A y Caso B)
 
@@ -128,6 +136,10 @@ planificación:
 - SIEMPRE usa `rei review-diff`; si devuelve 2 (sin git/base), cae al modo
   lectura.
 - NUNCA apruebes si existe una desviación respecto a la planificación.
+- SIEMPRE verifica el presupuesto de planificación y exige justificación o
+  división si hay `WARN`; un `WARN` de presupuesto no es rechazo automático.
+- SIEMPRE abre solo el Work Item indicado: NUNCA escanees `.rei/specs/**` ni leas
+  `history.md` (salvo petición explícita del usuario).
 - SIEMPRE justifica cada rechazo de forma concreta.
 - SIEMPRE documenta el resultado en
   `.rei/progress/work-items/<work-item-id>/review.md`.

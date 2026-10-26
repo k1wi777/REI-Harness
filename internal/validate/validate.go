@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/k1wi777/my-harness-SDD/internal/meta"
@@ -24,6 +25,20 @@ const (
 const (
 	maxReportLines = 80
 	maxReportWords = 600
+)
+
+// Presupuesto de planificación (ver .rei/docs/harness/specs.md y task.md).
+// Superar el máximo produce un WARN, nunca un FAIL.
+const (
+	maxFeatureRequirements = 30
+	maxDesignLines         = 400
+	maxTasks               = 15
+	maxPlanLines           = 200
+)
+
+var (
+	requirementLine = regexp.MustCompile(`(?m)^\s*(?:[-*]\s+)?(?:\*\*)?R\d+\b`)
+	taskLine        = regexp.MustCompile(`(?m)^\s*-\s*\[[ xX]\]`)
 )
 
 // Issue es un hallazgo de la validación.
@@ -111,6 +126,32 @@ func WorkItem(p *paths.Project, id string) ([]Issue, error) {
 		fail("falta review.md (estado done)")
 	}
 
+	// Aviso blando: la planificación no debe exceder su presupuesto.
+	// Solo se evalúa en los estados de planificación activos.
+	if budgetApplicable(m.Status) {
+		switch m.Type {
+		case "feature":
+			specDir := p.SpecDir(id)
+			if n, ok := countMatches(filepath.Join(specDir, "requirements.md"), requirementLine); ok && n > maxFeatureRequirements {
+				warn("requirements.md excede el presupuesto (máximo %d; objetivo 10–20): %d requisitos. Justifica o divide.",
+					maxFeatureRequirements, n)
+			}
+			if lines, ok := fileLines(filepath.Join(specDir, "design.md")); ok && lines > maxDesignLines {
+				warn("design.md excede el presupuesto (máximo %d líneas; objetivo 150–300): %d líneas. Justifica o divide.",
+					maxDesignLines, lines)
+			}
+			if n, ok := countMatches(filepath.Join(specDir, "tasks.md"), taskLine); ok && n > maxTasks {
+				warn("tasks.md excede el presupuesto (máximo %d tareas; objetivo 8–12): %d tareas. Justifica o divide.",
+					maxTasks, n)
+			}
+		case "task":
+			if lines, ok := fileLines(filepath.Join(p.SpecDir(id), "plan.md")); ok && lines > maxPlanLines {
+				warn("plan.md excede el presupuesto (máximo %d líneas; objetivo 150–200): %d líneas. Justifica o divide.",
+					maxPlanLines, lines)
+			}
+		}
+	}
+
 	// Aviso blando: impl.md/review.md no deben exceder el tope de tamaño.
 	// Solo se evalúa en Work Items activos; el histórico ya cerrado no se mide.
 	if isActiveStatus(m.Status) {
@@ -158,6 +199,37 @@ func isActiveStatus(status string) bool {
 		return true
 	}
 	return false
+}
+
+// budgetApplicable indica si se aplica el presupuesto de planificación. Incluye
+// `ready` (a diferencia de isActiveStatus) y excluye el histórico cerrado.
+func budgetApplicable(status string) bool {
+	switch status {
+	case meta.StatusReady, meta.StatusInProgress, meta.StatusReview,
+		meta.StatusChangesRequested:
+		return true
+	}
+	return false
+}
+
+// countMatches cuenta las coincidencias de re en un archivo. Devuelve ok=false si
+// el archivo no existe o no se puede leer, para omitir la comprobación.
+func countMatches(path string, re *regexp.Regexp) (int, bool) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return 0, false
+	}
+	return len(re.FindAllIndex(data, -1)), true
+}
+
+// fileLines cuenta las líneas de un archivo con el mismo criterio que reportSize.
+func fileLines(path string) (int, bool) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return 0, false
+	}
+	lines, _ := reportSize(string(data))
+	return lines, true
 }
 
 func fileExists(path string) bool {

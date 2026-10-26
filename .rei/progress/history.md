@@ -1235,3 +1235,58 @@ en `RequiredFiles`/embed/docs. Ver
 
 Cierre del Work Item: archivar la sesión; el resumen pasa a `history.md`.
 
+
+## 2026-10-26 00:37 — 2026-10-26_00-24__specs-concisas-contexto
+
+- **Work Item:** 2026-10-26_00-24__specs-concisas-contexto
+- **Tipo:** task
+- **Estado:** done
+- **Inicio:** 2026-10-26T00:25:29-05:00
+- **Agente activo:** _—_
+
+## Plan
+
+Planificación de la Task completada en `.rei/specs/2026-10-26_00-24__specs-concisas-contexto/plan.md`
+(118 líneas, dentro del presupuesto de 150–200): presupuesto de spec en
+`specs.md`/`task.md`, criterio de tipo en `workflow.md`, roles con reglas de
+contexto, `WARN` blando en `rei validate` con tests, issue body sin design y
+reglas de contexto en `AGENTS.md`/`progress.md`.
+
+## Bitácora
+
+- Sesión iniciada con `rei session start` (tipo `task`).
+- Leídos `task.md`, `workflow.md`, roles, `progress.md`, GitHub (`templates.md`,
+  `core.md`, `backlog.md`), `AGENTS.md §9`, `internal/validate/validate.go`,
+  `internal/meta/meta.go`, `internal/paths/paths.go`, `embed.go` y
+  `validate_test.go`.
+- Redactado `plan.md` con objetivo, archivos, cambios por bloque, restricciones
+  y 9 pasos ordenados.
+- Sin bloqueos; no se ha implementado código.
+- Planificación aprobada; inicio de la implementación (paso 1 de `plan.md`).
+- Implementados los 9 pasos de `plan.md`: presupuesto en docs y roles, `WARN`
+  blando en `validate` con 4 tests, issue body sin design y reglas de contexto.
+- Regenerados los adaptadores OpenCode/Claude desde los Contratos modificados.
+- Verificación completa en verde: `gofmt`, `go vet`, `go test`, `make build`,
+  `rei check`, adaptadores `--check`, `doctor`, `init status` y `validate`.
+- Sin bloqueos. Detalle en `impl.md`.
+- Revisión: **changes_requested**. Verificaciones V1–V3, presupuesto,
+  adaptadores y CLI en verde; bloquea el criterio de tipo contradictorio en
+  `specs.md`/`task.md`/`workflow.md`/`leader.md`. Detalle en `review.md`.
+- Corrección aplicada: criterio de tipo unificado (Task = docs/contratos o cambio
+  pequeño sin cambio de comportamiento; comportamiento o arquitectura ⇒ Feature),
+  ejemplos contradictorios retirados o movidos a Feature en `workflow.md` y máximo
+  de requisitos fijado en 30 en `specs.md`. Adaptadores regenerados.
+- Reverificación en verde: `gofmt`, `go vet`, `go test`, `make build`,
+  `rei check`, adaptadores `--check`, `doctor`, `init status` y `validate` (sin
+  WARN de presupuesto). Detalle en `impl.md`.
+- Revisión final: **done**. Criterio de tipo coherente en `specs.md`,
+  `task.md`, `workflow.md` y `leader.md`; presupuesto, `WARN` de `validate`,
+  issue body sin design, comentario opcional y reglas de contexto sin
+  regresiones. V1–V3 en verde, `V4` no aplica, adaptadores `--check`, `doctor`,
+  `init status` y `validate` OK. Detalle en `review.md`.
+
+## Próximo paso
+
+Work Item cerrado. `rei session archive` mueve el resumen a `history.md` y
+restablece este archivo.
+

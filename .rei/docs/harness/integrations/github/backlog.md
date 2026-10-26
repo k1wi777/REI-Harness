@@ -91,13 +91,18 @@ Se ejecuta cuando `spec_author` termina la planificación de un Work Item
 adoptado de backlog (Caso A) y cuando una replanificación vuelve a `ready` (Caso
 B), solo si `links.json.epic != null`.
 
-1. Leer `requirements.md` y `design.md`.
-2. Construir el bloque de [`templates.md §2`](templates.md).
+1. Leer `requirements.md` y las decisiones con peso de `design.md`.
+2. Construir el bloque de [`templates.md §2`](templates.md), **sin** el design
+   completo.
 3. Leer el cuerpo actual de la issue.
 4. Si existen los delimitadores `rei:spec:<id>`, **reemplazar el bloque en
    sitio**; si no, añadirlo al final. Nunca se duplica la sección.
 5. Editar con `gh issue edit --body-file` y verificar que el delimitador de
    apertura aparece **una sola vez**.
+6. Solo si `.rei` no se versiona o el usuario pide trazabilidad completa,
+   publicar o actualizar el design como comentario idempotente
+   `<!-- rei:comment:design:<id> -->` ([`templates.md §7`](templates.md)),
+   reutilizando el marcador y sin duplicarlo. Por defecto **no** se publica.
 
 Si falla, se reporta la causa y el siguiente paso, **no** cambia el estado del
 Work Item y se puede reintentar sin duplicar la sección.

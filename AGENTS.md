@@ -231,7 +231,9 @@ Estas reglas aplican a cualquier agente del repositorio.
 - No omitas etapas del workflow.
 - Consulta la documentación antes de asumir comportamientos no especificados.
 - Si encuentras documentación contradictoria, DETENTE y repórtala.
-- Para conocer el estado de la sesión o de los Work Items, usa el CLI (`rei session`, `rei items status`); no escanees `meta.json` manualmente.
+- Para conocer el estado de la sesión o de los Work Items, usa el CLI (`rei session`, `rei items status`, `rei item show <id>`); no escanees `.rei/specs/**` ni `meta.json` manualmente.
+- Abre solo el Work Item activo o el que el usuario indique.
+- No leas `.rei/progress/history.md` salvo petición explícita del usuario.
 - No releas un archivo que ya esté en tu contexto; para localizar un dato concreto usa búsquedas en lugar de releer el archivo completo.
 - En caso de conflicto entre documentos, prevalece el orden inverso de la Sección 8:
   `.rei/specs/<work-item-id>/` > `.rei/docs/...` > `.rei/agents/<role>.md` > `AGENTS.md`.

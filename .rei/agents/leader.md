@@ -26,7 +26,10 @@ subagente correspondiente, sin implementar ni planificar tú mismo.
 - Asume que `rei check` ya se ejecutó al inicio (ver `AGENTS.md` §1). NO lo
   repitas y NO releas `AGENTS.md`.
 - Para conocer la sesión y el estado de los Work Items usa `rei session` y
-  `rei items status`; NUNCA escanees `.rei/specs/*/meta.json` a mano.
+  `rei items status`; NUNCA escanees `.rei/specs/**` a mano (usa `rei item show`
+  para un Work Item concreto).
+- Abre solo el Work Item activo o el que el usuario indique. NO leas
+  `.rei/progress/history.md` salvo petición explícita del usuario.
 
 ### Protocolo
 
@@ -56,11 +59,14 @@ adaptador nativo, el comando `/personalize` ejecuta este mismo camino.
 1. Comprende completamente la solicitud del usuario.
 2. Si existe cualquier duda sobre el alcance, DETENTE y consulta al usuario.
 3. Determina el tipo:
-   - `feature`: funcionalidad nueva, cambio de arquitectura, refactor relevante
-     o alcance que aún hay que especificar.
-   - `task`: cambio pequeño y localizado, con objetivo claro, que no necesita
-     requisitos ni diseño detallado.
-   En caso de duda, elige `feature`.
+   - `task`: documentación o contratos, o un cambio pequeño y localizado con
+     objetivo claro, **sin cambio de comportamiento ni de arquitectura**. Es la
+     opción **por defecto** en esos casos.
+   - `feature`: funcionalidad nueva, cambio de arquitectura, cambio de
+     comportamiento (aunque el diff sea pequeño), refactor relevante o alcance
+     que aún hay que especificar.
+   En caso de duda, elige `feature`. No infles una Task ni conviertas una Task en
+   Feature: el presupuesto de planificación vive en `specs.md`/`task.md`.
 4. Genera el `id` inmutable con el formato
    `YYYY-MM-DD_HH-mm__slug-en-kebab-case`, usando la fecha y hora de creación. Si
    ya existe el mismo identificador, añade un sufijo numérico al slug (`-2`,
@@ -237,7 +243,10 @@ archivos a la vez**.
   otro Work Item, detente e informa del conflicto. Si es una hija de backlog,
   promuévela, conserva el cuerpo, ajusta labels/`links.json` y, si está sin
   asignar, **ofrece** asignarla sin hacerlo por tu cuenta. Tras `spec_author`,
-  publica en la issue el resumen y `design.md` plegado de forma idempotente.
+  publica en la issue el resumen y las decisiones con peso de forma idempotente;
+  el `design.md` completo **no** va en el cuerpo: solo como comentario
+  `<!-- rei:comment:design:<id> -->` si `.rei` no se versiona o el usuario pide
+  trazabilidad completa.
 - **Asignación.** Solo bajo orden explícita o confirmación de una oferta.
   Resuelve `@me`, valida el login, ejecuta `gh issue edit
   --add-assignee`/`--remove-assignee`, verifica el resultado y no autoasignes

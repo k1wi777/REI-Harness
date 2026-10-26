@@ -30,6 +30,8 @@ dejando la evidencia necesaria para su revisión.
 - Si `type == feature`, deben existir `requirements.md`, `design.md` y
   `tasks.md`.
 - Si `type == task`, debe existir `plan.md`.
+- Abre solo el Work Item activo: NO escanees `.rei/specs/**` y NO leas
+  `.rei/progress/history.md` salvo petición explícita del usuario.
 
 ### Protocolo
 
@@ -120,6 +122,8 @@ Si durante la implementación el trabajo no puede continuar:
 - SIEMPRE documenta la implementación en
   `.rei/progress/work-items/<work-item-id>/impl.md`.
 - SIEMPRE verifica tu trabajo antes de solicitar revisión.
+- SIEMPRE abre solo el Work Item activo: NUNCA escanees `.rei/specs/**` ni leas
+  `history.md` (salvo petición explícita del usuario).
 - Si el proyecto usa git, registra los archivos nuevos del Work Item con
   `git add` (nunca `.rei/progress/`).
 

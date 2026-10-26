@@ -27,6 +27,8 @@ humana.
 - Debe existir `.rei/specs/<work-item-id>/meta.json` con `status` `pending` o
   `ready`; si el `status` es otro, DETENTE.
 - El `id` y el `type` del Work Item son inmutables y provienen de `meta.json`.
+- Abre solo el Work Item indicado: NO escanees `.rei/specs/**` y NO leas
+  `.rei/progress/history.md` salvo petición explícita del usuario.
 
 ### Protocolo
 
@@ -46,17 +48,23 @@ humana.
 
 #### Caso A — `type == feature`
 
+Respeta el presupuesto de `.rei/docs/harness/specs.md` (requisitos 10–20,
+`design.md` 150–300 líneas, tareas 8–12; máximos 30/400/15). No rellenes para
+llegar al objetivo ni repitas el prompt o `meta.json.description`. Si superas el
+máximo, divide el Work Item o justifícalo en una línea dentro del documento.
+
 1. Redacta `requirements.md` siguiendo la sintaxis EARS definida en
    `.rei/docs/harness/specs.md`. Cada requisito debe:
    - tener un identificador estable (`R1`, `R2`, ...);
-   - ser implementable;
-   - ser verificable.
+   - ser central, observable, implementable y verificable;
+   - no repetir el prompt ni otro requisito.
 2. Redacta `design.md` indicando:
    - estrategia de implementación;
    - archivos involucrados;
    - componentes o módulos afectados;
    - decisiones de diseño relevantes;
    - alternativas descartadas cuando sea necesario.
+   Solo decisiones con peso: sin código, boilerplate ni repetición de requisitos.
 3. Redacta `tasks.md`:
    - divide la implementación en tareas discretas;
    - ordénalas según su ejecución;
@@ -76,8 +84,10 @@ humana.
    - cambios a realizar;
    - restricciones;
    - tareas de implementación.
-2. Mantén el plan lo más simple posible, documentando únicamente la información
-   necesaria para implementar correctamente el cambio.
+2. Mantén el plan en **150–200 líneas** (máximo 200), documentando únicamente la
+   información necesaria para implementar correctamente el cambio. Si lo superas,
+   divide el Work Item o justifícalo en una línea. No generes `requirements.md` ni
+   `design.md`.
 3. Actualiza `.rei/progress/current.md`: **Estado** a `ready`, **Agente activo**
    a `_—_`, y registra en **Plan**, **Bitácora** y **Próximo paso** que la
    planificación finalizó y espera aprobación humana.
@@ -120,6 +130,10 @@ NO inventes información para completar la planificación.
   el Work Item es nuevo (`pending`); no la reinicies si ya existe (`ready`).
 - SIEMPRE deja `.rei/progress/current.md` en `ready` al finalizar correctamente.
 - NUNCA escribas plantillas a mano: usa el CLI (`rei`).
+- NUNCA escanees `.rei/specs/**` ni escribas o leas `history.md`; trabaja solo
+  sobre el Work Item indicado.
+- SIEMPRE respeta el presupuesto: si lo excedes, divide o justifica en el
+  documento; no rellenes.
 
 ### Formato de salida
 

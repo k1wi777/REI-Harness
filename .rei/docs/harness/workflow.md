@@ -23,7 +23,9 @@ Normalmente implica uno o varios de los siguientes casos:
 
 - incorporación de nuevas funcionalidades;
 - cambios de arquitectura;
-- modificaciones importantes del comportamiento existente;
+- modificaciones del comportamiento existente, por menores que sean;
+- pequeños ajustes de interfaz que cambian lo que el usuario ve o recibe
+  (mensajes, validaciones, textos visibles);
 - refactorizaciones relevantes;
 - trabajo cuyo alcance necesita definirse antes de implementarse.
 
@@ -34,20 +36,28 @@ Las Features utilizan el flujo completo de Spec Driven Development y generan `re
 - el trabajo todavía necesita ser especificado;
 - existen varias decisiones de diseño por tomar;
 - el cambio afecta distintas partes del proyecto;
-- el trabajo requiere documentar requisitos.
+- el trabajo requiere documentar requisitos;
+- hay un cambio de comportamiento o de arquitectura, aunque el diff sea pequeño.
+
+La documentación, los contratos y los cambios pequeños sin cambio de
+comportamiento **no** son Features: se planifican como Task.
 
 ---
 
 ## Task
 
-Una Task representa un cambio pequeño cuyo alcance puede definirse completamente mediante una planificación breve.
+Una Task representa documentación, contratos o un cambio pequeño y localizado,
+siempre que no altere el comportamiento ni la arquitectura y su alcance pueda
+definirse completamente mediante una planificación breve.
 
 Algunos ejemplos son:
 
-- pequeños ajustes de interfaz;
-- corrección de errores localizados;
-- cambios menores de comportamiento;
-- modificaciones puntuales sobre código existente.
+- documentación y contratos;
+- cambios que no alteran el comportamiento (refactor interno, formato,
+  comentarios);
+- corrección de erratas o ajustes de texto que no cambian lo que el usuario ve o
+  recibe;
+- modificaciones puntuales sobre código existente sin cambio de comportamiento.
 
 Las Tasks utilizan un flujo simplificado y generan únicamente `plan.md`.
 
@@ -55,11 +65,17 @@ Las Tasks utilizan un flujo simplificado y generan únicamente `plan.md`.
 
 - el objetivo está claramente definido;
 - el cambio es pequeño y localizado;
+- no hay cambio de comportamiento ni de arquitectura;
 - no es necesario generar requisitos ni diseño detallado.
 
 ---
 
 **Regla de desempate:** si existe cualquier duda sobre el tipo, selecciona **Feature**.
+
+Ambos tipos tienen un presupuesto de concisión: Feature en
+[`specs.md`](specs.md) (requisitos, design y tareas) y Task en
+[`task.md`](task.md) (`plan.md`). Si se excede el máximo, divide el Work Item o
+justifícalo en el propio documento. `rei validate` avisa (`WARN`) sin bloquear.
 
 ---
 

@@ -6,6 +6,28 @@ El objetivo del proceso no es producir documentación extensa, sino proporcionar
 
 ---
 
+# Presupuesto de planificación
+
+La planificación debe ser concisa pero completa: debe dar al Implementer lo
+necesario para ejecutar, no documentación de relleno.
+
+| Documento | Objetivo | Máximo | Qué evitar |
+|-----------|----------|--------|------------|
+| `requirements.md` | 10–20 requisitos | 30 | Relleno EARS, repetir el prompt/`description`, requisitos solapados |
+| `design.md` | 150–300 líneas | 400 | Código, boilerplate, arquitectura general, repetir requisitos |
+| `tasks.md` | 8–12 tareas | 15 | Tareas de relleno, duplicadas o no ejecutables |
+
+**Regla única:** si un documento supera el máximo, **divide el Work Item o
+justifícalo en una línea dentro del propio documento**. No rellenes para llegar al
+objetivo ni recortes requisitos necesarios para bajar del máximo.
+
+`rei validate` emite un `WARN` (nunca un `FAIL`) al superar el máximo en los
+estados de planificación activos (`ready`, `in_progress`, `review`,
+`changes_requested`). Un `WARN` exige justificación o división, pero no es un
+rechazo automático.
+
+---
+
 # Objetivo
 
 Todo Work Item debe ser planificado antes de implementarse.
@@ -60,6 +82,8 @@ Reglas:
 - [ ] Cada requisito representa una única responsabilidad
 - [ ] Cada requisito es verificable
 - [ ] Ningún requisito describe decisiones de implementación
+- [ ] Los requisitos son centrales, observables y testables
+- [ ] Sin relleno EARS ni repetición del prompt o de `meta.json.description`
 
 ---
 
@@ -81,7 +105,8 @@ Los requisitos pueden escribirse utilizando cualquiera de los siguientes patrone
 
 Describe **cómo se implementará** la Feature.
 
-Debe documentar únicamente las decisiones necesarias para implementar el cambio.
+Debe documentar únicamente las decisiones necesarias para implementar el cambio:
+las decisiones con peso, las alternativas descartadas y los archivos afectados.
 
 Puede incluir:
 
@@ -91,7 +116,8 @@ Puede incluir:
 - restricciones;
 - alternativas descartadas.
 
-No debe convertirse en documentación de arquitectura general.
+No debe convertirse en documentación de arquitectura general. Evita el código, el
+boilerplate y la repetición de los requisitos: eso ya vive en `requirements.md`.
 
 ---
 
@@ -100,6 +126,8 @@ No debe convertirse en documentación de arquitectura general.
 Divide la implementación en pasos concretos y ordenados.
 
 Cada tarea representa una unidad de trabajo que el Implementer ejecutará de forma secuencial.
+
+Las tareas deben ser ejecutables y no duplicarse: nada de tareas de relleno.
 
 Formato recomendado (cada tarea indica los requisitos que implementa):
 
@@ -116,7 +144,13 @@ El Implementer marcará cada tarea como completada (`[x]`) en `tasks.md` **inmed
 ## Task
 
 Las Tasks usan una planificación simplificada: el Spec Author genera únicamente
-`plan.md`. El formato se define en `.rei/docs/harness/task.md`.
+`plan.md`. El formato y el presupuesto se definen en
+`.rei/docs/harness/task.md`.
+
+**Criterio de tipo:** una Task cubre documentación o contratos, o un cambio
+pequeño y localizado, en ambos casos **sin cambio de comportamiento ni de
+arquitectura**. Cualquier cambio de comportamiento o de arquitectura es una
+**Feature**, aunque el diff sea pequeño.
 
 ---
 

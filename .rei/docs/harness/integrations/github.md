@@ -110,6 +110,7 @@ acciones pendientes».
 | Hija de backlog | `<!-- rei:backlog:<epic-slug>/<item-slug> -->` |
 | Comentario de implementación | `<!-- rei:comment:impl:<id> -->` |
 | Comentario de revisión | `<!-- rei:comment:review:<id> -->` |
+| Comentario de design (opcional) | `<!-- rei:comment:design:<id> -->` |
 | Delimitador de la task list de la épica | `<!-- rei:children -->` … `<!-- /rei:children -->` |
 | Delimitador de la spec publicada | `<!-- rei:spec:<id> -->` … `<!-- /rei:spec:<id> -->` |
 
