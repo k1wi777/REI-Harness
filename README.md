@@ -140,6 +140,7 @@ Este repositorio es **el código fuente de la herramienta**:
 ├── go.mod
 ├── cmd/rei/               # Punto de entrada del CLI
 ├── internal/              # Paquetes (paths, meta, state, gitx, check, adapter, update, ...)
+├── skeleton/              # Esqueleto neutral que despliega `rei init` (AGENTS.md, config y docs de proyecto)
 ├── embed.go               # Empaqueta el esqueleto del arnés dentro del binario
 ├── .goreleaser.yaml       # Release multi-SO/arch
 ├── .github/workflows/     # Publicación de releases con goreleaser

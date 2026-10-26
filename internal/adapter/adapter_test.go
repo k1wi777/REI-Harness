@@ -143,7 +143,7 @@ func TestContratosDeLosRolesSonEstructurados(t *testing.T) {
 		"### Documentos de referencia",
 	}
 	for _, name := range Roles {
-		data, err := fs.ReadFile(reiskel.Skeleton, ".rei/agents/"+name+".md")
+		data, err := fs.ReadFile(reiskel.Harness, ".rei/agents/"+name+".md")
 		if err != nil {
 			t.Fatalf("no se pudo leer .rei/agents/%s.md del esqueleto: %v", name, err)
 		}

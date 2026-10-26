@@ -1077,3 +1077,66 @@ Work Item cerrado (`done`). Queda pendiente que el Leader commitee los cambios
 de esta Task (docs, contrato y agentes regenerados); no se abre PR (las Tasks no
 pasan la puerta). El siguiente Work Item lo decide el usuario.
 
+
+## 2026-10-25 23:49 — 2026-10-25_23-31__skeleton-separation-verification
+
+- **Work Item:** 2026-10-25_23-31__skeleton-separation-verification
+- **Tipo:** feature
+- **Estado:** done
+- **Inicio:** 2026-10-25T23:32:55-05:00
+- **Agente activo:** implementer
+
+## Plan
+
+- Separar `skeleton/` neutral (`AGENTS.md`, `.rei/config.json` y
+  `.rei/docs/project/*` con placeholders) de los archivos vivos.
+- Embeber dos raíces (`Skeleton` y `Harness`) y mapear `skeleton/` a la raíz en
+  `initwizard` (installer, update, manifiesto).
+- Corregir los 4 asserts de `initwizard`, actualizar `embed_test` y añadir tests
+  de neutralidad, instalación limpia y preservación.
+- Dejar solo V1 en `.rei/config.json` vivo y mover V2 a checkpoints lentos en
+  `verification.md`; alinear la documentación viva con `skeleton/`.
+
+## Bitácora
+
+- Planificación completada: `requirements.md` (R1–R24), `design.md` y
+  `tasks.md` (T1–T11) redactados en `.rei/specs/<work-item-id>/`.
+- Causa confirmada: `embed.go` embebe los archivos vivos ya personalizados, por
+  eso fallan `TestInitMencionaPersonalize`, `TestInstalacionLimpiaIntegra` y
+  `TestUpdateConservaPersonalizacionYModificados`.
+- Alcance ajustado al acuerdo de `meta.json`; sin Tasks P1, CI ni release.
+- Implementación iniciada por el Implementer (T1–T9 completadas): `skeleton/`
+  neutral, dos `embed.FS` (`Skeleton`/`Harness`), mapeo con `walkEmbedded`,
+  tests corregidos/ampliados y verificación V1 rápida + V2/V3/V4 lentas.
+- T10–T11 completadas. V1 (`go vet ./...` / `rei check --quiet`) OK; V2
+  (`go test -count=1 ./...`) OK con los 3 tests antes fallidos; V3 `make build` y
+  V4 `make cross` OK. `rei doctor`, `rei init status`, `init opencode/claude
+  --check` y `rei validate` OK.
+- `rei init --update` en el repo conserva los hashes de `AGENTS.md`,
+  `.rei/config.json` y `.rei/docs/project/*` (idempotente en la 2.ª ejecución).
+- Revisión completada: `changes_requested`. V1–V4 y verificación CLI OK; la
+  separación `skeleton/`/`Harness`, el mapeo y los tests cumplen el plan. Se
+  rechaza porque `skeleton/.rei/config.json` revierte `viewer.autoOpenOnReady` a
+  `false` frente al `true` aprobado en `2026-10-13_15-51__viewer-lifecycle`.
+- Rework aplicado: `skeleton/.rei/config.json` vuelve a `autoOpenOnReady: true`;
+  R4, `design.md` (contenido neutral y asserts) y T1 alineados con `true`; los
+  asserts de `embed_test.go`/`installer_test.go` esperan `true`; la lista
+  negativa de `TestEmbedExcluyeArchivosVivosDelProyecto` incluye
+  `.rei/docs/project/README.md`.
+- Verificación del rework: `go vet ./...` y `go test ./...` OK; `make build` y
+  `make cross` OK; V1 (`rei check --quiet`) OK; `init opencode/claude --check`,
+  `doctor`, `init status` (personalizada) y `validate` OK. Smoke en proyecto
+  limpio: config con `autoOpenOnReady: true`, sin `checks`/`integrations`, docs
+  con `REI:PENDIENTE`, `init status`=1, `check`/`doctor`=0. `rei init --update`
+  en el repo conserva los hashes vivos.
+- Re-revisión completada: **aprobado (`done`)**. Las 4 acciones del rechazo
+  están aplicadas (config `true`, R4/design/T1, asserts y README en la lista
+  negativa) y no hay regresiones. V1 `go vet` y V2 `go test ./...` OK; V3
+  `make build` y V4 `make cross` OK; `rei check` solo V1; `doctor`, `init
+  status`, `init opencode|claude --check` y `validate` OK. Smoke limpio con
+  config `autoOpenOnReady: true`; `--update` preserva los docs vivos.
+
+## Próximo paso
+
+Work Item cerrado. No hay más acciones pendientes.
+

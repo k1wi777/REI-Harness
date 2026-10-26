@@ -27,36 +27,54 @@ No continúes hasta completar estos pasos.
 
 # 2. Propósito del proyecto
 
-> **Personaliza esta sección** al adaptar REI Harness a tu repositorio. Describe el producto concreto, no el arnés.
-
-<!-- REI:PENDIENTE -->
-
-*Resume aquí el objetivo del proyecto. Esta información guía las decisiones del agente y evita cambios que contradigan la visión del producto.*
-
 ## Qué construimos
 
-<Una o dos frases que describan claramente el producto y el problema que resuelve.>
+**REI Harness** es una herramienta de línea de comandos (CLI en Go, binario `rei`)
+que implanta un arnés de **Spec Driven Development (SDD)** y orquestación
+multiagente dentro de cualquier repositorio, con roles explícitos y una **puerta
+de aprobación humana obligatoria**.
+
+Resuelve el problema de que un agente implemente a ciegas: primero produce una
+planificación revisable, el humano la aprueba y solo entonces se implementa. El
+estado (planificación, implementación, revisión e historial) vive dentro del
+propio proyecto destino.
 
 ## Para quién
 
-- <Usuario principal.>
-- <Usuarios secundarios, si existen.>
-- <Otros interesados, si aplica.>
+- **Desarrolladores que trabajan con agentes de IA bajo SDD** y revisan/aprueban
+  la planificación de un Work Item antes de implementarlo, a menudo alternando
+  varios runtimes (OpenCode, Claude Code, Cursor, Codex).
+- **Mantenedores del harness**, que desarrollan el CLI `rei`, sus contratos de
+  rol y sus adaptadores.
+- **Equipos que adoptan REI** en repositorios existentes mediante `rei init`.
 
 ## Principios
 
 *Todas las decisiones deben respetar estos principios.*
 
-- **<Principio>** — <Qué implica en la práctica.>
-- **<Principio>** — <Qué implica en la práctica.>
-- **<Principio>** — <Qué implica en la práctica.>
+- **Aprobación humana obligatoria y explícita** — El Work Item no pasa a
+  implementación sin aprobación registrada en disco; nunca se asume por silencio.
+- **La documentación es la fuente de verdad** — Las decisiones viven en los
+  documentos del Work Item y en `.rei/docs/`, no en el chat.
+- **Runtime-agnóstico** — El valor reside en el contrato de rol y en el CLI; los
+  adaptadores son opcionales y no pueden convertirse en el mecanismo central.
+- **Código propio y dependencias mínimas** — Se prefiere la biblioteca estándar y
+  código propio antes que incorporar dependencias de terceros.
+- **Baja fricción de revisión** — El material debe poder revisarse de verdad:
+  legible, navegable y con evidencia clara.
 
 ## Qué NO es
 
 *Acota explícitamente el alcance del proyecto para evitar feature creep.*
 
-- <Fuera del alcance.>
-- <Otro límite importante.>
+- **No es un generador de código ni un agente autónomo** — Orquesta el workflow;
+  el código lo escriben los agentes bajo supervisión humana.
+- **No es un framework de agentes atado a un runtime concreto** — No habrá hooks
+  de un runtime como mecanismo central; los adaptadores son una capa opcional.
+- **No es un servicio alojado ni un editor web** — `rei view` es un visor local
+  de solo lectura sobre los documentos del Work Item.
+- **No incorpora JavaScript ni CSS de terceros en el visor** — Los assets son
+  propios y van embebidos en el binario.
 
 ---
 
@@ -64,26 +82,29 @@ No continúes hasta completar estos pasos.
 
 > **Personaliza esta sección** con el stack y los comandos reales de tu proyecto.
 
-<!-- REI:PENDIENTE -->
-
-*Documenta únicamente la información técnica esencial para comprender el proyecto.*
-
 ## Tecnologías principales
 
-- **Lenguaje:** <...>
-- **Framework:** <...>
-- **Base de datos:** <...>
-- **Testing:** <...>
-- **Despliegue:** <...>
+- **Lenguaje:** Go 1.27 (`go.mod`), sin `CGO`.
+- **Framework:** CLI propio sobre la biblioteca estándar (`flag`/dispatch manual,
+  `net/http` + `html/template` para `rei view`); sin framework web.
+- **Base de datos:** ninguna. El estado vive en ficheros del repositorio:
+  Markdown (`.rei/specs/`, `.rei/progress/`, `.rei/docs/`) y JSON
+  (`.rei/config.json`, `meta.json`).
+- **Testing:** `testing` de la biblioteca estándar (`go test ./...`), con tests
+  junto al código en `internal/**`.
+- **Despliegue:** binarios precompilados con GoReleaser (`.goreleaser.yaml`) al
+  publicar un tag `v*`; también `make install` para instalación local.
 
 ## Comandos principales
 
 *Comandos que cualquier agente utilizará con frecuencia.*
 
-- `<comando>` — Desarrollo.
-- `<comando>` — Tests.
-- `<comando>` — Linter.
-- `<comando>` — Build.
+- `make build` — Desarrollo: compila el binario en `bin/rei` (acepta
+  `VERSION=<v>` para sellar la versión).
+- `make test` — Tests: ejecuta `go test ./...`.
+- `make vet` — Linter: ejecuta `go vet ./...`; `make fmt` aplica `gofmt -w .`.
+- `make build` / `make cross` — Build local y build multiplataforma en `dist/`
+  (linux/darwin/windows, amd64/arm64).
 
 ---
 
@@ -99,7 +120,8 @@ No continúes hasta completar estos pasos.
 | `.rei/progress/` | Estado actual (`current.md`), historial general (`history.md`) y detalle de Work Items. |
 | `.rei/progress/work-items/` | Registros detallados de cada Work Item, organizados cronológicamente. |
 | `.rei/docs/harness/` | Documentación del arnés (workflow, specs, progreso). |
-| `.rei/docs/project/` | Documentación específica del proyecto. |
+| `.rei/docs/project/` | Documentación específica del proyecto (viva, personalizada). |
+| `skeleton/` | Esqueleto neutral desplegable por `rei init` (`AGENTS.md`, `.rei/config.json` y `.rei/docs/project/**` con placeholders). Separado del proyecto vivo. |
 | `.rei/agents/` | Roles y comportamiento de los subagentes (frontmatter + `## Contrato` + `## Referencia`). |
 | `.rei/adapters/` | Adaptadores de runtime (plantilla + mapa de herramientas); p. ej. `opencode/`. |
 | `cmd/`, `internal/` | Código del CLI `rei` (Go). |

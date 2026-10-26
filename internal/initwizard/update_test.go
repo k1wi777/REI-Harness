@@ -28,7 +28,10 @@ func newInstalledProject(t *testing.T) *paths.Project {
 
 func embeddedFile(t *testing.T, rel string) string {
 	t.Helper()
-	data, err := reiskel.Skeleton.ReadFile(rel)
+	if data, err := reiskel.Skeleton.ReadFile(skeletonPrefix + rel); err == nil {
+		return string(data)
+	}
+	data, err := reiskel.Harness.ReadFile(rel)
 	if err != nil {
 		t.Fatalf("no se pudo leer el embebido %s: %v", rel, err)
 	}

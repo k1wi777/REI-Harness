@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	reiskel "github.com/k1wi777/my-harness-SDD"
 	"github.com/k1wi777/my-harness-SDD/internal/paths"
 )
 
@@ -28,7 +27,8 @@ func isPersonalizationDoc(path string) bool {
 
 // Update refresca el esqueleto embebido en un proyecto ya inicializado sin
 // pisar la personalización del usuario ni su estado (.rei/specs/** y
-// .rei/progress/** nunca se recorren: el walk solo visita reiskel.Skeleton).
+// .rei/progress/** nunca se recorren: el walk solo visita las raíces
+// embebidas del esqueleto y del harness).
 //
 // Política (ver plan.md):
 //   - No existe -> se crea.
@@ -55,54 +55,41 @@ func Update(p *paths.Project, force bool, out io.Writer) int {
 	created, updated, unchanged, skipped := 0, 0, 0, 0
 	next := map[string]string{}
 
-	walkErr := fs.WalkDir(reiskel.Skeleton, ".", func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if path == "." || d.IsDir() {
-			return nil
-		}
+	walkErr := walkEmbedded(func(dest string, embedded []byte) error {
+		full := filepath.Join(p.Root, filepath.FromSlash(dest))
 
-		embedded, err := reiskel.Skeleton.ReadFile(path)
-		if err != nil {
-			fmt.Fprintf(out, "[FAIL]  No se pudo leer %s del esqueleto: %v\n", path, err)
-			exit = 1
-			return nil
-		}
-		dest := filepath.Join(p.Root, filepath.FromSlash(path))
-
-		current, readErr := os.ReadFile(dest)
+		current, readErr := os.ReadFile(full)
 		switch {
 		case errors.Is(readErr, fs.ErrNotExist):
-			if writeSkeletonFile(dest, embedded, path, out) != 0 {
+			if writeSkeletonFile(full, embedded, dest, out) != 0 {
 				exit = 1
 				return nil
 			}
-			fmt.Fprintf(out, "[NEW]   %s\n", path)
+			fmt.Fprintf(out, "[NEW]   %s\n", dest)
 			created++
-			next[path] = hashBytes(embedded)
+			next[dest] = hashBytes(embedded)
 
 		case readErr != nil:
-			fmt.Fprintf(out, "[FAIL]  No se pudo leer %s: %v\n", path, readErr)
+			fmt.Fprintf(out, "[FAIL]  No se pudo leer %s: %v\n", dest, readErr)
 			exit = 1
 			return nil
 
 		case bytes.Equal(current, embedded):
-			fmt.Fprintf(out, "[OK]    %s\n", path)
+			fmt.Fprintf(out, "[OK]    %s\n", dest)
 			unchanged++
-			next[path] = hashBytes(embedded)
+			next[dest] = hashBytes(embedded)
 
 		default:
-			if shouldUpdate(path, current, baseline, force) {
-				if writeSkeletonFile(dest, embedded, path, out) != 0 {
+			if shouldUpdate(dest, current, baseline, force) {
+				if writeSkeletonFile(full, embedded, dest, out) != 0 {
 					exit = 1
 					return nil
 				}
-				fmt.Fprintf(out, "[UPD]   %s\n", path)
+				fmt.Fprintf(out, "[UPD]   %s\n", dest)
 				updated++
-				next[path] = hashBytes(embedded)
+				next[dest] = hashBytes(embedded)
 			} else {
-				fmt.Fprintf(out, "[SKIP]  %s (conservado; usa --force para sobrescribir)\n", path)
+				fmt.Fprintf(out, "[SKIP]  %s (conservado; usa --force para sobrescribir)\n", dest)
 				skipped++
 			}
 		}

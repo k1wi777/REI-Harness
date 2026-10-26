@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/k1wi777/my-harness-SDD/internal/check"
+	"github.com/k1wi777/my-harness-SDD/internal/config"
 	"github.com/k1wi777/my-harness-SDD/internal/paths"
 )
 
@@ -64,8 +65,10 @@ func TestInstallSkeletonNoSobrescribeYAvisaAgents(t *testing.T) {
 	// Personalizaciones manuales que no deben perderse.
 	agents := "# AGENTS propio del usuario\n"
 	config := "{\n  \"checks\": [{\"id\": \"x\"}]\n}\n"
+	architecture := "# Arquitectura propia\n"
 	writeProjectFile(t, p, "AGENTS.md", agents)
 	writeProjectFile(t, p, ".rei/config.json", config)
+	writeProjectFile(t, p, ".rei/docs/project/architecture.md", architecture)
 
 	buf.Reset()
 	if code := InstallSkeleton(p, &buf); code != 0 {
@@ -78,6 +81,9 @@ func TestInstallSkeletonNoSobrescribeYAvisaAgents(t *testing.T) {
 	}
 	if got := readProjectFile(t, p, ".rei/config.json"); got != config {
 		t.Errorf(".rei/config.json fue sobrescrito:\n%s", got)
+	}
+	if got := readProjectFile(t, p, ".rei/docs/project/architecture.md"); got != architecture {
+		t.Errorf(".rei/docs/project/architecture.md fue sobrescrito:\n%s", got)
 	}
 	if !strings.Contains(out, "[WARN]") || !strings.Contains(out, "AGENTS.md") {
 		t.Errorf("la omisión de AGENTS.md debe emitir un aviso:\n%s", out)
@@ -138,6 +144,52 @@ func TestInstalacionLimpiaIntegra(t *testing.T) {
 	buf.Reset()
 	if code := Status(p, &buf); code != 1 {
 		t.Fatalf("Status tras instalación limpia = %d, esperaba 1:\n%s", code, buf.String())
+	}
+}
+
+func TestInstalacionLimpiaNeutral(t *testing.T) {
+	p := &paths.Project{Root: t.TempDir()}
+	var buf bytes.Buffer
+
+	if code := Init(p, &buf); code != 0 {
+		t.Fatalf("Init = %d, esperaba 0:\n%s", code, buf.String())
+	}
+
+	// El esqueleto es neutral: los cuatro documentos de personalización
+	// conservan el marcador.
+	for _, d := range Docs {
+		if got := readProjectFile(t, p, d.Path); !strings.Contains(got, marker) {
+			t.Errorf("%s debe conservar el marcador %q tras una instalación limpia", d.Path, marker)
+		}
+	}
+
+	// Config neutral: sin checks, sin integración GitHub y visor con apertura
+	// automática (default aprobado).
+	cfgPath := filepath.Join(p.Root, ".rei", "config.json")
+	cfg, err := config.Load(cfgPath)
+	if err != nil {
+		t.Fatalf("config.Load: %v", err)
+	}
+	if len(cfg.Checks) != 0 {
+		t.Errorf("una instalación limpia no debe declarar checks: %+v", cfg.Checks)
+	}
+	if cfg.Integrations.GitHub != nil {
+		t.Errorf("una instalación limpia no debe integrar GitHub: %+v", cfg.Integrations.GitHub)
+	}
+	if !cfg.Viewer.AutoOpenOnReady {
+		t.Error("viewer.autoOpenOnReady debe quedar activado")
+	}
+
+	pending, err := Pending(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(pending) != len(Docs) {
+		t.Errorf("esperaba %d documentos pendientes, obtuve %d", len(Docs), len(pending))
+	}
+
+	if out := buf.String(); !strings.Contains(out, "/personalize") || !strings.Contains(out, InitializerPath) {
+		t.Errorf("Init debe indicar /personalize y el rol initializer:\n%s", out)
 	}
 }
 

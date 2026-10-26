@@ -235,11 +235,11 @@ func TestClaudeAdapterDelEsqueletoEsValido(t *testing.T) {
 		".rei/adapters/claude/agent.tmpl",
 		".rei/adapters/claude/command.tmpl",
 	} {
-		if _, err := reiskel.Skeleton.ReadFile(path); err != nil {
+		if _, err := reiskel.Harness.ReadFile(path); err != nil {
 			t.Errorf("el esqueleto no contiene %s: %v", path, err)
 		}
 	}
-	data, err := reiskel.Skeleton.ReadFile(".rei/adapters/claude/tools.json")
+	data, err := reiskel.Harness.ReadFile(".rei/adapters/claude/tools.json")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 
-	reiskel "github.com/k1wi777/my-harness-SDD"
 	"github.com/k1wi777/my-harness-SDD/internal/paths"
 )
 
@@ -47,60 +46,39 @@ func InstallSkeleton(p *paths.Project, out io.Writer) int {
 	created, skipped := 0, 0
 	baseline := map[string]string{}
 
-	walkErr := fs.WalkDir(reiskel.Skeleton, ".", func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if path == "." {
-			return nil
-		}
-		dest := filepath.Join(p.Root, filepath.FromSlash(path))
+	walkErr := walkEmbedded(func(dest string, embedded []byte) error {
+		full := filepath.Join(p.Root, filepath.FromSlash(dest))
 
-		if d.IsDir() {
-			if err := os.MkdirAll(dest, 0o755); err != nil {
-				fmt.Fprintf(out, "[FAIL]  No se pudo crear %s: %v\n", path, err)
-				exit = 1
-			}
-			return nil
-		}
-
-		embedded, err := reiskel.Skeleton.ReadFile(path)
-		if err != nil {
-			fmt.Fprintf(out, "[FAIL]  No se pudo leer %s del esqueleto: %v\n", path, err)
-			exit = 1
-			return nil
-		}
-
-		if current, statErr := os.ReadFile(dest); statErr == nil {
+		if current, statErr := os.ReadFile(full); statErr == nil {
 			if bytes.Equal(current, embedded) {
 				// Sin cambios respecto al embebido: queda como baseline.
-				baseline[path] = hashBytes(embedded)
+				baseline[dest] = hashBytes(embedded)
 			}
-			if path == "AGENTS.md" {
-				fmt.Fprintf(out, "[WARN]  %s ya existe; se conserva sin cambios.\n", path)
+			if dest == "AGENTS.md" {
+				fmt.Fprintf(out, "[WARN]  %s ya existe; se conserva sin cambios.\n", dest)
 			}
-			fmt.Fprintf(out, "[SKIP]  %s (ya existe)\n", path)
+			fmt.Fprintf(out, "[SKIP]  %s (ya existe)\n", dest)
 			skipped++
 			return nil
 		} else if !errors.Is(statErr, fs.ErrNotExist) {
-			fmt.Fprintf(out, "[FAIL]  No se pudo comprobar %s: %v\n", path, statErr)
+			fmt.Fprintf(out, "[FAIL]  No se pudo comprobar %s: %v\n", dest, statErr)
 			exit = 1
 			return nil
 		}
 
-		if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
-			fmt.Fprintf(out, "[FAIL]  No se pudo crear el directorio de %s: %v\n", path, err)
+		if err := os.MkdirAll(filepath.Dir(full), 0o755); err != nil {
+			fmt.Fprintf(out, "[FAIL]  No se pudo crear el directorio de %s: %v\n", dest, err)
 			exit = 1
 			return nil
 		}
-		if err := os.WriteFile(dest, embedded, 0o644); err != nil {
-			fmt.Fprintf(out, "[FAIL]  No se pudo crear %s: %v\n", path, err)
+		if err := os.WriteFile(full, embedded, 0o644); err != nil {
+			fmt.Fprintf(out, "[FAIL]  No se pudo crear %s: %v\n", dest, err)
 			exit = 1
 			return nil
 		}
 		// Recién creado a partir del embebido: idéntico por construcción.
-		baseline[path] = hashBytes(embedded)
-		fmt.Fprintf(out, "[OK]    %s\n", path)
+		baseline[dest] = hashBytes(embedded)
+		fmt.Fprintf(out, "[OK]    %s\n", dest)
 		created++
 		return nil
 	})

@@ -1,5 +1,11 @@
 {
-  "checks": [],
+  "checks": [
+    {
+      "id": "V1",
+      "description": "Análisis estático (go vet)",
+      "command": ["go", "vet", "./..."]
+    }
+  ],
   "integrations": {
     "github": {
       "base": "main",
