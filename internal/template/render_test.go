@@ -49,7 +49,7 @@ func writeMeta(t *testing.T, p *paths.Project, id, status string) {
 	if err := os.MkdirAll(p.SpecDir(id), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	m := meta.Meta{ID: id, Status: status}
+	m := meta.Meta{ID: id, Type: "task", Status: status}
 	if err := m.Save(p.MetaFile(id)); err != nil {
 		t.Fatal(err)
 	}
@@ -66,6 +66,7 @@ func writeSession(t *testing.T, p *paths.Project, id, status string) {
 func TestStartAndArchive(t *testing.T) {
 	p := newProject(t)
 	id := "2026-10-01_10-00__x"
+	writeMeta(t, p, id, meta.StatusPending)
 
 	if err := StartSession(p, id, "task"); err != nil {
 		t.Fatal(err)
@@ -102,6 +103,68 @@ func TestStartAndArchive(t *testing.T) {
 	}
 	if strings.Contains(string(hist), "# Sesión actual") {
 		t.Fatal("history.md no debe incluir el encabezado de la plantilla")
+	}
+}
+
+// TestStartSessionRechazos comprueba la validación de existencia, tipo y estado
+// antes de escribir: todo rechazo deja current.md intacto (R17).
+func TestStartSessionRechazos(t *testing.T) {
+	const id = "2026-10-01_10-00__x"
+	const seed = "# Sesión actual\n\n- **Work Item:** _ninguno_\n"
+
+	cases := []struct {
+		name       string
+		metaStatus string
+		metaType   string
+		createMeta bool
+		reqType    string
+		wantText   string
+	}{
+		{"inexistente", "", "", false, "task", "no existe"},
+		{"tipo distinto", meta.StatusPending, "feature", true, "task", "tipo"},
+		{"ready", meta.StatusReady, "task", true, "task", "planificación"},
+		{"in_progress", meta.StatusInProgress, "task", true, "task", "retoma"},
+		{"review", meta.StatusReview, "task", true, "task", "retoma"},
+		{"changes_requested", meta.StatusChangesRequested, "task", true, "task", "retoma"},
+		{"done", meta.StatusDone, "task", true, "task", "cerrado"},
+		{"blocked", meta.StatusBlocked, "task", true, "task", "cerrado"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			p := newProject(t)
+			if tc.createMeta {
+				writeMeta(t, p, id, tc.metaStatus)
+				m, err := meta.Load(p.MetaFile(id))
+				if err != nil {
+					t.Fatal(err)
+				}
+				m.Type = tc.metaType
+				if err := m.Save(p.MetaFile(id)); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if err := os.WriteFile(p.CurrentFile(), []byte(seed), 0o644); err != nil {
+				t.Fatal(err)
+			}
+
+			err := StartSession(p, id, tc.reqType)
+			if err == nil {
+				t.Fatal("esperaba rechazo")
+			}
+			for _, want := range []string{tc.wantText, "Siguiente paso"} {
+				if !strings.Contains(err.Error(), want) {
+					t.Errorf("err = %q, debe contener %q", err, want)
+				}
+			}
+			after, readErr := os.ReadFile(p.CurrentFile())
+			if readErr != nil {
+				t.Fatal(readErr)
+			}
+			if string(after) != seed {
+				t.Fatalf("current.md cambió: %q", after)
+			}
+		})
 	}
 }
 

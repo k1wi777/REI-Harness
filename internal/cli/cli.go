@@ -3,6 +3,7 @@ package cli
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,6 +14,7 @@ import (
 	"github.com/k1wi777/my-harness-SDD/internal/github"
 	"github.com/k1wi777/my-harness-SDD/internal/gitx"
 	"github.com/k1wi777/my-harness-SDD/internal/initwizard"
+	"github.com/k1wi777/my-harness-SDD/internal/links"
 	"github.com/k1wi777/my-harness-SDD/internal/meta"
 	"github.com/k1wi777/my-harness-SDD/internal/paths"
 	"github.com/k1wi777/my-harness-SDD/internal/show"
@@ -319,33 +321,83 @@ func cmdView(args []string) int {
 	return view.Run(p, view.Options{Mode: mode, ID: id, Stdout: os.Stdout})
 }
 
-// cmdGitHub implementa `rei github <enable|disable|status>`. Valida el uso
-// (2) antes de resolver el proyecto; sin `.rei/` devuelve 1. Las acciones sobre
+// cmdGitHub implementa `rei github <enable|disable|status>`. Valida el uso (2)
+// antes de resolver el proyecto; sin `.rei/` devuelve 1. Las acciones sobre
 // GitHub (issues, ramas, PR) son del agente, nunca de este comando.
 func cmdGitHub(args []string) int {
-	const usage = "uso: rei github <enable|disable|status>"
-	if len(args) != 1 {
+	const usage = "uso: rei github <enable|disable|status> [--repo owner/name] [--base <rama>] [--strategy squash|merge|rebase]"
+	if len(args) == 0 {
 		fmt.Fprintln(os.Stderr, usage)
 		return 2
-	}
-	switch args[0] {
-	case "enable", "disable", "status":
-	default:
-		fmt.Fprintln(os.Stderr, usage)
-		return 2
-	}
-	p, code := project()
-	if p == nil {
-		return code
 	}
 	switch args[0] {
 	case "enable":
-		return github.Enable(p, github.ExecRunner{}, os.Stdout)
-	case "disable":
-		return github.Disable(p, os.Stdout)
-	default:
+		opts, err := parseGitHubEnable(args[1:])
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "ERROR: %v\n", err)
+			fmt.Fprintln(os.Stderr, usage)
+			return 2
+		}
+		p, code := project()
+		if p == nil {
+			return code
+		}
+		return github.Enable(p, github.ExecRunner{}, opts, os.Stdout)
+	case "disable", "status":
+		if len(args) != 1 {
+			fmt.Fprintln(os.Stderr, usage)
+			return 2
+		}
+		p, code := project()
+		if p == nil {
+			return code
+		}
+		if args[0] == "disable" {
+			return github.Disable(p, os.Stdout)
+		}
 		return github.Status(p, github.ExecRunner{}, os.Stdout)
+	default:
+		fmt.Fprintln(os.Stderr, usage)
+		return 2
 	}
+}
+
+// parseGitHubEnable parsea y valida los flags de `rei github enable`. Los flags
+// desconocidos, repetidos o sin valor son uso incorrecto. Un valor vacío (por
+// ejemplo `$VAR` sin definir) también se rechaza aquí, antes de resolver el
+// proyecto, para que no llegue a `Enable` como si el flag no se hubiera pasado.
+func parseGitHubEnable(args []string) (github.Options, error) {
+	var opts github.Options
+	seen := map[string]bool{}
+	for i := 0; i < len(args); i++ {
+		flag := args[i]
+		switch flag {
+		case "--repo", "--base", "--strategy":
+			if seen[flag] {
+				return opts, fmt.Errorf("flag repetido: %s", flag)
+			}
+			if i+1 >= len(args) || strings.HasPrefix(args[i+1], "-") {
+				return opts, fmt.Errorf("falta el valor de %s", flag)
+			}
+			i++
+			value := args[i]
+			seen[flag] = true
+			switch flag {
+			case "--repo":
+				opts.Repo, opts.RepoSet = value, true
+			case "--base":
+				opts.Base, opts.BaseSet = value, true
+			case "--strategy":
+				opts.Strategy, opts.StrategySet = value, true
+			}
+		default:
+			return opts, fmt.Errorf("argumento desconocido: %s", flag)
+		}
+	}
+	if err := github.ValidateOptions(opts); err != nil {
+		return opts, err
+	}
+	return opts, nil
 }
 
 // cmdUpdate implementa `rei update [--check]`. Solo acepta `--check` como
@@ -498,7 +550,7 @@ func cmdItems(args []string) int {
 		if it.Status == meta.StatusInProgress {
 			marker = "   << ACTIVO"
 		}
-		fmt.Printf("  - %-*s [%s]%s\n", width, it.ID, it.Status, marker)
+		fmt.Printf("  - %-*s [%s] (%s)%s\n", width, it.ID, it.Status, itemDetails(p, it), marker)
 	}
 	if len(active) > 1 {
 		fmt.Fprintf(os.Stderr, "ERROR: hay %d Work Items en in_progress (%s); solo puede haber uno.\n",
@@ -506,6 +558,31 @@ func cmdItems(args []string) int {
 		return 1
 	}
 	return 0
+}
+
+// itemDetails compone el detalle de un Work Item para `rei items status`:
+// siempre el tipo y, si links.json es válido, la issue y la base. Un índice
+// inválido se indica como nota sin impedir el listado.
+func itemDetails(p *paths.Project, it state.ItemStatus) string {
+	details := []string{"type: " + it.Type}
+	l, err := links.Read(filepath.Join(p.SpecDir(it.ID), "links.json"))
+	switch {
+	case errors.Is(err, fs.ErrNotExist):
+	case err != nil:
+		details = append(details, "links inválido")
+	default:
+		if len(links.Problems(l)) > 0 {
+			details = append(details, "links inválido")
+			break
+		}
+		if l.Issue > 0 {
+			details = append(details, fmt.Sprintf("issue: #%d", l.Issue))
+		}
+		if l.Base != nil && l.Base.Branch != "" && l.Base.SHA != "" {
+			details = append(details, fmt.Sprintf("base: %s@%s", l.Base.Branch, l.Base.SHA))
+		}
+	}
+	return strings.Join(details, ", ")
 }
 
 func cmdStatus(args []string) int {

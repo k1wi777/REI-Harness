@@ -129,8 +129,8 @@ Si el usuario solicita cambios:
 
 1. Si `integrations.github.enabled` es `true` **y** el Work Item es de tipo
    `feature`, aplica la **puerta única** de la sección «Integración con GitHub
-   (opcional)». Las `task` no pasan por la puerta ni generan issue o rama salvo
-   opt-in explícito del usuario. Si la integración está desactivada o no
+   (opcional)». Las `task` no pasan por la puerta ni generan issue o rama: no
+   existe opt-in para Tasks. Si la integración está desactivada o no
    configurada, no menciones GitHub.
 2. Pasa el Work Item a `in_progress` con `rei status set <work-item-id>
    in_progress` (nunca editando `meta.json` a mano). Si otro Work Item ya está
@@ -181,6 +181,10 @@ No continúes el trabajo.
 
 Informa al usuario que el trabajo ya ha sido completado.
 
+`done` es terminal: no fuerces una transición desde él (por ejemplo
+`done → blocked`) sin una orden explícita del usuario. Con esa orden, usa
+`rei status set <id> <estado> --force` y registra el motivo en `current.md`.
+
 ##### Caso H — `status == blocked`
 
 El Work Item no puede continuar.
@@ -226,8 +230,8 @@ archivos a la vez**.
   la planificación (Caso C), si no existe `.rei/specs/<id>/links.json` ni una
   decisión registrada en `current.md`, captura `HEAD`/sha, muestra la base y
   formula una sola pregunta: «¿Creo la issue y la rama `feat/<n>-<slug>` desde
-  `<base>` (@`<sha>`)?». Las **tasks no generan issue ni rama** y no se les
-  pregunta la puerta salvo opt-in explícito del usuario. La confirmación es
+  `<base>` (@`<sha>`)?». Las **tasks no generan issue ni rama**, no se les
+  pregunta la puerta y **no existe opt-in** para Tasks. La confirmación es
   obligatoria si la base no es la default o es `feat/*` (PR apilada).
   Nunca la repitas en la misma sesión.
   - **Sí:** busca antes el marcador `<!-- rei:work-item:<id> -->` para no
@@ -344,6 +348,8 @@ Si una solicitud resulta demasiado grande:
   haber uno y `rei status set`, `rei check`, `rei doctor` e `rei items status`
   lo rechazan (incluido `--force`). Cierra, bloquea o revisa el activo primero.
 * NUNCA asumas una aprobación implícita del usuario.
+* NUNCA fuerces una transición desde `done` sin una orden explícita del usuario;
+  `done` es terminal y `--force` es la única vía para una transición no estándar.
 * NUNCA permitas que un subagente implemente trabajo directamente a partir de
   la conversación.
 * NUNCA continúes un trabajo sin la aprobación humana requerida.

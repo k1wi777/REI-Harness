@@ -1337,3 +1337,76 @@ Work Item cerrado (`done`). Archivar la sesión y mover el resumen a
 `history.md`.
 
 
+
+## 2026-10-26 01:33 — 2026-10-26_01-06__p2-ux-validacion-docs
+
+- **Work Item:** 2026-10-26_01-06__p2-ux-validacion-docs
+- **Tipo:** feature
+- **Estado:** done
+- **Inicio:** 2026-10-26T01:07:34-05:00
+- **Agente activo:** implementer
+
+## Plan
+
+Planificación completada: `requirements.md` (18 requisitos), `design.md` y
+`tasks.md` (12 tareas) cubren los puntos 1–8 y 11–13 del acuerdo; 9 y 10 quedan
+fuera de alcance. Esperando aprobación humana.
+
+## Bitácora
+
+- Se leyó el acuerdo de `meta.json` y la documentación del harness/proyecto.
+- Se diseñó un paquete hoja `internal/links` para `show`, `items status` y
+  `validate`, la ampliación de `github enable`, el rechazo estándar de
+  `done → blocked`, la validación de `session start`, el repo canónico y la
+  limpieza de `package-lock.json`.
+- La sesión y `meta.json` quedan en `ready`.
+- Implementer inicia la ejecución de T1–T12.
+- T1 completada: paquete `internal/links` (modelo, `Read`, `Problems`) con tests
+  de forma, ausencia y JSON roto.
+- T2 completada: `item show` muestra `Enlaces:` (válido, ausente o inválido sin
+  cambiar el código de salida).
+- T3 completada: `state.ItemStatus.Type` y `items status` con tipo, issue y base,
+  conservando el marcador y el fallo con más de un `in_progress`.
+- T4 completada: cierre de `github status` como configuración completa.
+- T5 completada: opciones y precedencia de `github enable`, validación de flags
+  (2) sin escritura y preservación de claves.
+- T6 completada: `links.json` inválido es `WARN` (nunca `FAIL`) en `validate`.
+- T7 completada: `done → blocked` fuera de las transiciones estándar y permitido
+  con `--force`.
+- T8 completada: `session start` exige Work Item existente, tipo coincidente y
+  estado `pending`, sin escritura parcial.
+- T9 completada: repositorio canónico `k1wi777/REI-Harness` con test de
+  regresión.
+- T10 completada: ayuda, `README.md` y `.rei/docs/usage.md` actualizados.
+- T11 completada: documentación del harness y del Leader; agentes nativos
+  regenerados y verificados con `--check`.
+- T12 completada: `package-lock.json` eliminado; verificación final V1/V2/V3,
+  `gofmt`, `doctor`, `init status`, ambos `--check` y `validate` en verde.
+- Pruebas manuales superadas: enlaces válido/ausente/roto, flags de
+  `github enable`, `done → blocked` con y sin `--force`, y rechazos de
+  `session start`.
+- Reviewer: `changes_requested`. V1/V2/V3, `gofmt`, `check`, adaptadores,
+  `doctor`, `init status`, `validate` y las reproducciones manuales en verde;
+  bloquea R7: `--repo ""`, `--base ""` y `--strategy ""` salen 0 y escriben en
+  lugar de rechazar con 2 sin escritura. Detalle en `review.md`.
+- Rework de R7: `github.Options` distingue «flag informado» de «ausente» con
+  `RepoSet/BaseSet/StrategySet`; `ValidateOptions` rechaza el valor vacío (2)
+  antes de resolver el proyecto y sin escribir. Tests nuevos de
+  `parseGitHubEnable`/`cmdGitHub` y tabla de `Enable`; flag ausente y
+  precedencia sin cambios.
+- Verificación reejecutada: `gofmt`, `go vet`, `go test -count=1 ./...`,
+  `make build`, `check --quiet`, ambos adaptadores `--check`, `doctor`,
+  `init status` y `validate` en verde.
+- Manual en proyecto temporal: los tres flags con valor vacío → exit 2 y hash
+  idéntico de `.rei/config.json`; `enable` sin flags conserva lo previo.
+- Reviewer (re-revisión): **aprobado**. R7 resuelto (los tres flags vacíos salen
+  2 sin escribir; sin flags preserva) y sin regresiones en `links`/`item`/
+  `items`/`validate`, `github status`, `done → blocked`, `session start`, repo
+  canónico, Task sin issue, docs, adaptadores y `package-lock.json`. V1/V2/V3,
+  `gofmt`, `check`, `doctor`, `init status` y `validate` en verde; V4 no aplica.
+  Detalle en `review.md`.
+
+## Próximo paso
+
+Cierre del Work Item: aprobado, sin acciones pendientes.
+

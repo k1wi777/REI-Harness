@@ -34,14 +34,13 @@ errores/reintentos ampliados. Detalle: [`github/backlog.md`](github/backlog.md).
 Fuera de alcance: Projects, milestones, sub-issues nativas, PRs desde
 fork→upstream, sincronización bidireccional, Work Items `pending` locales como
 sustituto del backlog, autoasignación por carga, time tracking, proveedores distintos
-de GitHub, commits/push o merge automáticos, `--admin`/auto-merge y flags nuevos en
-`rei`.
+de GitHub, commits/push o merge automáticos, `--admin`/auto-merge y flags de
+acciones GitHub (issues, PR, merge) en `rei`.
 
 **Alcance por tipo de Work Item.** La puerta «issue + rama» es **solo para Work
-Items de tipo `feature`**. Una `task` **no** genera issue ni rama por defecto: se
-trabaja en la rama base sin tocar GitHub. Solo si el usuario pide explícitamente una
-issue y una rama para una `task` (opt-in) se aplica el mismo flujo, incluida la
-captura de la base de [`github/core.md §5`](github/core.md).
+Items de tipo `feature`**. Una `task` **no** genera issue ni rama: se trabaja en
+la rama base sin tocar GitHub y **no existe opt-in** para Tasks. No se pregunta la
+puerta a una `task` «por si acaso» ni se usa una label `rei:task`.
 
 **Regla dura:** si `integrations.github` no existe o `enabled` es `false`, el Leader
 **no menciona GitHub**, no ejecuta `gh`, no lee ni crea issues y trabaja sobre la rama
@@ -81,23 +80,38 @@ sigue siendo offline y **no** conoce la base efectiva de cada Work Item.
 Comandos:
 
 ```bash
-rei github enable    # detecta origin, escribe repo/base/mergeStrategy
+rei github enable [--repo owner/name] [--base <rama>] [--strategy squash|merge|rebase]
 rei github disable   # enabled: false; conserva el resto
 rei github status    # solo lectura: estado, valores, remoto, gh y siguiente paso
 ```
 
-`enable` detecta el repositorio con `git remote get-url origin` (SSH o HTTPS de
-`github.com`) y la rama base (*fallback*) con `git symbolic-ref --quiet --short
-refs/remotes/origin/HEAD`; si no puede, usa `main` y lo informa. Ese valor no decide
-la base de cada Work Item. No consulta la API de GitHub. Los avisos de `gh` ausente o
-sin autenticar **no bloquean**.
+`enable` resuelve cada valor con la precedencia **flag explícito > valor previo de
+`integrations.github` > detección desde git > valor por defecto**:
+
+- `--repo owner/name`: si falta, se usa el valor previo; si tampoco existe, se
+  detecta con `git remote get-url origin` (SSH o HTTPS de `github.com`). Sin
+  flag, valor previo ni remoto resoluble es un error operativo (1) y no escribe.
+- `--base <rama>`: si falta, se usa la base previa; si tampoco existe, se detecta
+  con `git symbolic-ref --quiet --short refs/remotes/origin/HEAD` y, si falla, se
+  usa `main` avisando. Ese valor es solo el **fallback** de la base por Work Item
+  y no decide la base de cada Work Item.
+- `--strategy squash|merge|rebase`: si falta, se usa el valor previo; por defecto
+  `squash`.
+
+No se detecta `origin` cuando ya hay un `repo` previo: un `enable` sin flags no
+sobrescribe valores ya configurados. Un flag desconocido, repetido, sin valor o
+inválido es uso incorrecto (2) y no escribe `.rei/config.json`; los fallos
+operativos (config inválida, remoto no resoluble o escritura) salen con 1. Los
+avisos de `gh` ausente o sin autenticar **no bloquean** (sale 0).
 
 `status` es **offline y de solo lectura**: no llama a `gh` ni a la API de GitHub.
 Además de estado, valores, remoto y disponibilidad de `gh`, **avisa si el remoto de
 `origin` no coincide con `integrations.github.repo`** (rename, clon viejo o fork) y
 propone el siguiente paso: resolver el nombre canónico con `gh repo view` y ponerlo
-en la config, o actualizar `origin`. Con esa discrepancia **no** concluye «Sin
-acciones pendientes».
+en la config, o actualizar `origin`. Con esa discrepancia **no** concluye que la
+configuración esté completa; cuando no hay nada que configurar indica
+«Configuración completa; sin acciones de configuración pendientes.», sin afirmar
+nada sobre issues o PRs. `disable` y `status` rechazan flags (2).
 
 # 3. Vocabulario
 
@@ -175,9 +189,9 @@ Detalle: [`github/core.md §4`](github/core.md).
 `integrations.github.enabled` es `true` **y** `type` es `feature`.
 
 La puerta «issue + rama» **no** se ejecuta para Work Items de tipo `task`: se trabajan
-en la rama base sin crear issue ni rama y no se pregunta nada. Solo con un **opt-in
-explícito** del usuario se aplica el flujo completo. No preguntes la puerta a una
-`task` «por si acaso». Procedimiento, captura de base, clasificación y tipos:
+en la rama base sin crear issue ni rama, no se pregunta nada y **no existe opt-in**
+para Tasks. No preguntes la puerta a una `task` «por si acaso» ni uses una label
+`rei:task`. Procedimiento, captura de base, clasificación y tipos:
 [`github/core.md §5`](github/core.md).
 
 # 5. Qué leer según la acción

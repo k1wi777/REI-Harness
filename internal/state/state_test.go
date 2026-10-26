@@ -193,6 +193,23 @@ func addWorkItem(t *testing.T, p *paths.Project, id, status string) {
 	}
 }
 
+// TestListWorkItemsIncluyeTipo comprueba que el modelo de listado expone el
+// tipo de cada meta.json (R3).
+func TestListWorkItemsIncluyeTipo(t *testing.T) {
+	p, _ := newProjectFixture(t, "2026-01-01_00-00__a", meta.StatusReady, false)
+	addWorkItem(t, p, "2026-01-02_00-00__b", meta.StatusDone)
+	items, err := ListWorkItems(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(items) != 2 {
+		t.Fatalf("items = %d, want 2", len(items))
+	}
+	if items[0].Type != "feature" || items[1].Type != "task" {
+		t.Fatalf("tipos = %q, %q", items[0].Type, items[1].Type)
+	}
+}
+
 func TestInProgressItems(t *testing.T) {
 	p, _ := newProjectFixture(t, "2026-01-01_00-00__a", meta.StatusReady, false)
 	addWorkItem(t, p, "2026-01-02_00-00__b", meta.StatusInProgress)
@@ -251,6 +268,44 @@ func TestTransitionSinOtroInProgressPermitida(t *testing.T) {
 	if m.Status != meta.StatusInProgress {
 		t.Fatalf("status = %q, want in_progress", m.Status)
 	}
+}
+
+// TestTransitionDoneABlocked comprueba que done -> blocked no es estándar: sin
+// --force se rechaza sin escribir y con --force se aplica como transición no
+// estándar (R14).
+func TestTransitionDoneABlocked(t *testing.T) {
+	const id = "2026-01-01_00-00__demo"
+
+	t.Run("rechazada sin force", func(t *testing.T) {
+		p, original := newProjectFixture(t, id, meta.StatusDone, true)
+		_, _, err := Transition(p, id, meta.StatusBlocked, false)
+		if !errors.Is(err, ErrTransitionNotAllowed) {
+			t.Fatalf("err = %v, want ErrTransitionNotAllowed", err)
+		}
+		m, _ := meta.Load(p.MetaFile(id))
+		if m.Status != meta.StatusDone {
+			t.Fatalf("meta.json no debería cambiar: %q", m.Status)
+		}
+		after, _ := os.ReadFile(p.CurrentFile())
+		if string(after) != original {
+			t.Fatal("current.md no debería cambiar")
+		}
+	})
+
+	t.Run("permitida con force", func(t *testing.T) {
+		p, _ := newProjectFixture(t, id, meta.StatusDone, true)
+		from, forced, err := Transition(p, id, meta.StatusBlocked, true)
+		if err != nil {
+			t.Fatalf("Transition: %v", err)
+		}
+		if from != meta.StatusDone || !forced {
+			t.Fatalf("from=%q forced=%v, want done/true", from, forced)
+		}
+		m, _ := meta.Load(p.MetaFile(id))
+		if m.Status != meta.StatusBlocked {
+			t.Fatalf("status = %q, want blocked", m.Status)
+		}
+	})
 }
 
 func TestTransitionChangesRequestedAInProgress(t *testing.T) {

@@ -129,10 +129,12 @@ func replaceMarkdownField(content, label, value string) string {
 // ItemStatus resume el estado de un Work Item.
 type ItemStatus struct {
 	ID     string
+	Type   string
 	Status string
 }
 
-// ListWorkItems lee todos los meta.json y devuelve su estado (ordenado por id).
+// ListWorkItems lee todos los meta.json y devuelve su tipo y estado (ordenado
+// por id).
 func ListWorkItems(p *paths.Project) ([]ItemStatus, error) {
 	files, err := p.MetaFiles()
 	if err != nil {
@@ -141,16 +143,20 @@ func ListWorkItems(p *paths.Project) ([]ItemStatus, error) {
 	items := make([]ItemStatus, 0, len(files))
 	for _, f := range files {
 		id := idFromMetaPath(f)
+		typ := "desconocido"
 		status := "desconocido"
 		if m, err := meta.Load(f); err == nil {
 			if m.ID != "" {
 				id = m.ID
 			}
+			if m.Type != "" {
+				typ = m.Type
+			}
 			if m.Status != "" {
 				status = m.Status
 			}
 		}
-		items = append(items, ItemStatus{ID: id, Status: status})
+		items = append(items, ItemStatus{ID: id, Type: typ, Status: status})
 	}
 	sort.Slice(items, func(i, j int) bool { return items[i].ID < items[j].ID })
 	return items, nil

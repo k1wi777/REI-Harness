@@ -50,8 +50,24 @@ func ResetCurrent(p *paths.Project) error {
 	})
 }
 
-// StartSession inicia la sesión activa para un Work Item nuevo.
+// StartSession inicia la sesión activa para un Work Item nuevo. Antes de tocar
+// el disco comprueba que el Work Item existe, que el tipo coincide con meta.json
+// y que su estado es pending; cualquier rechazo incluye causa y siguiente paso y
+// deja current.md intacto.
 func StartSession(p *paths.Project, id, typ string) error {
+	m, err := meta.Load(p.MetaFile(id))
+	if err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("el Work Item %q no existe. Siguiente paso: créalo con `rei new %s <feature|task>` y vuelve a iniciar la sesión", id, id)
+		}
+		return fmt.Errorf("no se pudo leer .rei/specs/%s/meta.json: %v. Siguiente paso: corrige el meta.json o crea un Work Item nuevo con `rei new`", id, err)
+	}
+	if m.Type != typ {
+		return fmt.Errorf("el Work Item %s es de tipo %q y la sesión pide %q. Siguiente paso: inicia la sesión con el tipo real (`rei session start %s %s`)", id, m.Type, typ, id, m.Type)
+	}
+	if m.Status != meta.StatusPending {
+		return fmt.Errorf("el Work Item %s está en %q y solo se inicia una sesión nueva en %q. %s", id, m.Status, meta.StatusPending, startSessionNextStep(id, m.Status))
+	}
 	if err := os.MkdirAll(p.ProgressDir(), 0o755); err != nil {
 		return err
 	}
@@ -65,6 +81,21 @@ func StartSession(p *paths.Project, id, typ string) error {
 		"LOG":       Empty,
 		"NEXT":      "Planificación pendiente.",
 	})
+}
+
+// startSessionNextStep sugiere qué hacer cuando el Work Item ya no está en
+// pending, para acompañar siempre el rechazo con una salida.
+func startSessionNextStep(id, status string) string {
+	switch status {
+	case meta.StatusReady:
+		return "Siguiente paso: la planificación ya está lista; apruébala o solicita cambios (Caso C), no reinicies la sesión."
+	case meta.StatusInProgress, meta.StatusReview, meta.StatusChangesRequested:
+		return "Siguiente paso: retoma la sesión/etapa existente con `rei item show " + id + "`; no crees una sesión nueva."
+	case meta.StatusDone, meta.StatusBlocked:
+		return "Siguiente paso: el Work Item está cerrado; crea uno nuevo con `rei new`."
+	default:
+		return "Siguiente paso: revisa el estado del Work Item con `rei item show " + id + "`."
+	}
 }
 
 // ArchiveSession mueve el resumen de current.md a history.md y restablece

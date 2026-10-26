@@ -118,6 +118,57 @@ func TestReportTooLargeDoneNoWarn(t *testing.T) {
 	}
 }
 
+// TestLinksInvalidosWarn comprueba que un links.json roto o incompleto emite
+// WARN, nunca FAIL, y que el archivo ausente no genera hallazgo (R16).
+func TestLinksInvalidosWarn(t *testing.T) {
+	cases := []struct {
+		name, content string
+		warn          bool
+	}{
+		{"json roto", `{"provider":`, true},
+		{"forma inválida", `{"provider":"github","repo":"owner","issue":0,"url":"nope"}`, true},
+		{"válido", `{"provider":"github","repo":"o/n","issue":1,"url":"https://github.com/o/n/issues/1"}`, false},
+		{"ausente", "", false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			p := &paths.Project{Root: t.TempDir()}
+			writeMeta(t, p, &meta.Meta{
+				ID: testID, Title: "t", Description: "d",
+				Type: "task", Status: meta.StatusPending, CreatedAt: "2026-10-01T10:00:00-05:00",
+			})
+			if tc.content != "" {
+				mustWrite(t, filepath.Join(p.SpecDir(testID), "links.json"), tc.content)
+			}
+			issues, err := WorkItem(p, testID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if n := countLevel(issues, LevelFail); n != 0 {
+				t.Fatalf("links.json nunca debe producir FAIL: %+v", issues)
+			}
+			got := countWarnContaining(issues, "links.json")
+			if tc.warn && got == 0 {
+				t.Fatalf("esperaba WARN de links.json: %+v", issues)
+			}
+			if !tc.warn && got != 0 {
+				t.Fatalf("no esperaba WARN de links.json: %+v", issues)
+			}
+			if tc.warn && !strings.Contains(strings.Join(issueMessages(issues), " "), "recuperable") {
+				t.Fatalf("el WARN debe indicar que es recuperable: %+v", issues)
+			}
+		})
+	}
+}
+
+func issueMessages(issues []Issue) []string {
+	msgs := make([]string, 0, len(issues))
+	for _, is := range issues {
+		msgs = append(msgs, is.Message)
+	}
+	return msgs
+}
+
 func mustWrite(t *testing.T, path, content string) {
 	t.Helper()
 	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {

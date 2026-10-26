@@ -44,8 +44,19 @@ Representa el estado **actual** de la sesión.
 > `.rei/specs/<work-item-id>/meta.json` (consulta `rei items status`).
 
 El **Spec Author** lo inicializa ejecutando
-`rei session start <work-item-id> <type>` al comenzar la
-planificación (`pending`) y lo deja en `ready` al terminar, esperando aprobación humana.
+`rei session start <work-item-id> <type>` al comenzar la planificación, **solo si
+el Work Item existe, el tipo coincide y su estado es `pending`** (es el único
+estado que inicia una sesión nueva). Si el estado es otro, el comando rechaza con
+causa y siguiente paso sin escribir el archivo:
+
+| Estado | Qué hacer |
+|--------|-----------|
+| `pending` | `rei session start <id> <type>` inicia la sesión. |
+| `ready` | No reinicies: la planificación ya está lista; apruébala o pide cambios (Caso C). |
+| `in_progress`, `review`, `changes_requested` | Retoma la sesión/etapa existente con `rei item show <id>`; no crees una sesión nueva. |
+| `done`, `blocked` | Work Item cerrado: crea uno nuevo con `rei new`. |
+
+Al terminar la planificación lo deja en `ready`, esperando aprobación humana.
 
 El **Implementer** lo actualiza al iniciar la implementación (`in_progress`) y lo mantiene durante toda la ejecución hasta pasar a `review`.
 

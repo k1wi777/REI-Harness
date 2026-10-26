@@ -16,7 +16,7 @@ Incluido en v1:
 - configuración y diagnóstico (`rei github enable|disable|status`);
 - vínculo issue ↔ Work Item con marcador y `links.json`;
 - puerta única al aprobar la planificación de una **feature** (issue + rama; las
-  tasks no la ejecutan por defecto);
+  tasks no la ejecutan ni tienen opt-in);
 - comentarios automáticos de implementación y revisión;
 - PR y merge bajo orden explícita;
 - adopción de issues existentes;
@@ -51,7 +51,9 @@ de verdad:
 Sin épica, `epic` es `null` (compatible con v1). El objeto `epic` evita la
 ambigüedad entre slug y número y permite recuperar la épica sin releer el
 cuerpo. Si el archivo falta, está corrupto o se desincroniza, **no bloquea** el
-Work Item: se recupera la issue por su marcador y se reescribe.
+Work Item: se recupera la issue por su marcador y se reescribe. `rei validate`
+lo avisa como `WARN` recuperable (nunca como `FAIL`) y `rei item show` /
+`rei items status` lo indican como nota sin romper la ficha ni el listado.
 
 `base` (opcional, aditivo y compatible con v1) registra la base del Work Item
 capturada en la puerta:
@@ -117,14 +119,13 @@ operar sobre el upstream hay que ponerlo explícitamente en
 
 **Solo features.** La puerta «issue + rama» **no** se ejecuta para Work Items de
 tipo `task`: una task se trabaja en la rama base sin crear issue ni rama, y no se
-pregunta nada. Solo con un **opt-in explícito** del usuario (pide issue y rama
-para la task) se aplica esta sección completa. No preguntes la puerta a una
-`task` «por si acaso».
+pregunta nada. **No existe opt-in** para Tasks ni se usa una label `rei:task`. No
+preguntes la puerta a una `task` «por si acaso».
 
 Antes de `rei status set <id> in_progress`:
 
 1. Lee `.rei/config.json` y comprueba `enabled`.
-2. Comprueba `type == feature` (o el opt-in explícito de una task).
+2. Comprueba `type == feature`; si es `task`, no apliques esta sección.
 3. Si ya existe `.rei/specs/<id>/links.json`, no preguntes issue ni rama; si le
    falta `base`, resuélvela (§2) y añádela sin repreguntar.
 4. Si `current.md` ya registra la decisión de este Work Item (base, sha y tipo),

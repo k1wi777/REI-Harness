@@ -76,6 +76,11 @@ Valores válidos:
 Define la etapa actual del workflow.
 Los estados válidos y sus transiciones se definen en `workflow.md`.
 
+`done` es un estado **terminal**: las transiciones estándar no salen de él
+(`done → blocked` no está permitida). La única vía es `rei status set <id>
+<estado> --force`, reservada a una transición no estándar con una orden explícita
+del usuario.
+
 > `meta.json` es el **registro duradero** de cada Work Item y la referencia para
 > diagnosticar el conjunto de Work Items (`rei items status`).
 > El contexto vivo de la sesión activa vive en `.rei/progress/current.md` (para

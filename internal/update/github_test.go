@@ -42,3 +42,14 @@ func TestFindChecksumsAusente(t *testing.T) {
 		t.Fatal("findChecksums no debe encontrar nada")
 	}
 }
+
+// TestRepositorioCanonico fija el repositorio de auto-actualización y detecta
+// una regresión al nombre anterior (R13).
+func TestRepositorioCanonico(t *testing.T) {
+	if repoPath != "k1wi777/REI-Harness" {
+		t.Fatalf("repoPath = %q, want k1wi777/REI-Harness", repoPath)
+	}
+	if releasesPage != "https://github.com/k1wi777/REI-Harness/releases" {
+		t.Fatalf("releasesPage = %q", releasesPage)
+	}
+}

@@ -21,6 +21,7 @@ paso**. Nunca se silencia ni se afirma un éxito sin verificarlo.
 | Integración no configurada | `GitHub == nil` | «GitHub no está configurado» | `rei github enable` |
 | Integración desactivada | `enabled: false` | «GitHub está desactivado» | `rei github enable` si se desea |
 | Config incompleta | `repo` vacío o inválido | «Falta `integrations.github.repo`» | `rei github enable` o editar la config |
+| `links.json` inválido | JSON roto o forma inválida (`provider`, `repo`, `issue`, `url`, `base`, `epic`) | «`links.json` inválido: <causa>; es un índice recuperable» | `rei validate` lo avisa como `WARN` (nunca `FAIL`); reconstruir la issue por su marcador y reescribir `links.json`. Nunca bloquea el Work Item |
 | `gh` ausente | `LookPath` falla | «GitHub CLI no está instalado» | Instalar `gh` |
 | `gh` sin auth | `gh auth status` falla | «GitHub CLI no está autenticado» | `gh auth login` |
 | Repo no detectado / ambiguo | `git remote get-url origin` falla o host inválido | «No se pudo detectar el repositorio» | Revisar `git remote -v` / configurar `repo` |
@@ -62,6 +63,9 @@ Reglas transversales:
   spec.
 - **Rate limit / red:** no reintentar en bucle; mostrar el reset si `gh` lo
   proporciona.
+- **Índice recuperable:** un `links.json` ausente, roto o incompleto se informa
+  con causa y se reconstruye; `rei validate` lo avisa como `WARN` y nunca cambia
+  el estado del Work Item.
 - **Lote parcial:** indicar issue por issue qué quedó hecho y qué no.
 
 ---

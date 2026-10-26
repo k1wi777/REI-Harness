@@ -17,9 +17,9 @@ const (
 	// defaultAPIBase es la raíz de la API de GitHub.
 	defaultAPIBase = "https://api.github.com"
 	// releasesPage es la página de releases, usada como fallback informativo.
-	releasesPage = "https://github.com/k1wi777/my-harness-SDD/releases"
-	// repoPath es la ruta del repositorio dentro de la API de GitHub.
-	repoPath = "k1wi777/my-harness-SDD"
+	releasesPage = "https://github.com/k1wi777/REI-Harness/releases"
+	// repoPath es la ruta del repositorio canónico dentro de la API de GitHub.
+	repoPath = "k1wi777/REI-Harness"
 	// userAgent es exigido por la API de GitHub.
 	userAgent = "rei-update"
 )

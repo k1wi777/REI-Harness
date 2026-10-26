@@ -3,11 +3,15 @@
 package show
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 
+	"github.com/k1wi777/my-harness-SDD/internal/links"
 	"github.com/k1wi777/my-harness-SDD/internal/meta"
 	"github.com/k1wi777/my-harness-SDD/internal/paths"
 	"github.com/k1wi777/my-harness-SDD/internal/state"
@@ -49,6 +53,9 @@ func WorkItem(p *paths.Project, id string, out io.Writer) int {
 	fmt.Fprintf(out, "  %-19s %s\n", "last_review_commit:", orEmpty(m.LastReviewCommit))
 
 	fmt.Fprintln(out)
+	writeLinks(out, p, id)
+
+	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Documentos:")
 	for _, name := range documentos {
 		fmt.Fprintf(out, "  %-19s %s\n", name, present(docPath(p, id, name)))
@@ -88,6 +95,38 @@ func WorkItem(p *paths.Project, id string, out io.Writer) int {
 	}
 	fmt.Fprintln(out, "Resultado: OK")
 	return 0
+}
+
+// writeLinks imprime la sección Enlaces a partir de links.json. Un archivo
+// ausente, ilegible o inválido se informa como nota y no altera el código de
+// salida de la ficha.
+func writeLinks(out io.Writer, p *paths.Project, id string) {
+	l, err := links.Read(filepath.Join(p.SpecDir(id), "links.json"))
+	switch {
+	case errors.Is(err, fs.ErrNotExist):
+		fmt.Fprintln(out, "Enlaces: (sin links.json)")
+	case err != nil:
+		fmt.Fprintf(out, "Enlaces: nota: links.json inválido (%v); se ignora\n", err)
+	default:
+		if problems := links.Problems(l); len(problems) > 0 {
+			fmt.Fprintf(out, "Enlaces: nota: links.json inválido (%s); se ignora\n", strings.Join(problems, "; "))
+			return
+		}
+		fmt.Fprintln(out, "Enlaces:")
+		fmt.Fprintf(out, "  %-19s #%d\n", "issue:", l.Issue)
+		fmt.Fprintf(out, "  %-19s %s\n", "url:", l.URL)
+		base := "(sin registrar)"
+		if l.Base != nil {
+			base = l.Base.Branch + " @ " + l.Base.SHA
+		}
+		fmt.Fprintf(out, "  %-19s %s\n", "base:", base)
+		if l.Epic != nil {
+			fmt.Fprintf(out, "  %-19s %s (#%d)\n", "epic:", l.Epic.Slug, l.Epic.Issue)
+			fmt.Fprintf(out, "  %-19s %s\n", "epic url:", l.Epic.URL)
+		} else {
+			fmt.Fprintf(out, "  %-19s %s\n", "epic:", "(sin épica)")
+		}
+	}
 }
 
 // docPath resuelve la ubicación de cada documento: los de planificación viven

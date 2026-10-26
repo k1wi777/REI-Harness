@@ -21,7 +21,7 @@ Ninguna de las dos es un trámite. Son los dos puntos donde el proceso se detien
 # 1. Primera vez en el repositorio
 
 1. Obtén el binario `rei` para tu sistema operativo descargándolo de la
-   [página de releases](https://github.com/k1wi777/my-harness-SDD/releases)
+   [página de releases](https://github.com/k1wi777/REI-Harness/releases)
    (elige el archive `rei_<versión>_<os>_<arch>`) y colócalo en tu `PATH`.
    El binario **no necesita Go ni ninguna dependencia** para ejecutarse. Si
    desarrollas sobre el propio repositorio y tienes Go, también puedes
@@ -170,7 +170,34 @@ No, pero funciona mejor con él. Si el repositorio usa git, el Reviewer revisa s
 
 ---
 
-# 7. Subagentes nativos (OpenCode y Claude Code)
+# 7. Comandos
+
+Los comandos de uso diario (todos aceptan `rei <comando> --help`):
+
+| Comando | Qué hace |
+|---------|----------|
+| `rei new <id> <feature\|task> [title]` | Crea un Work Item en estado `pending`. |
+| `rei session` / `rei session status` | Muestra la sesión activa. |
+| `rei session start <id> <tipo>` | Inicia la sesión de un Work Item **solo si existe, el tipo coincide y su estado es `pending`**; en cualquier otro caso rechaza con causa y siguiente paso sin tocar `current.md`. |
+| `rei session archive` / `rei session reset` | Archiva la sesión cuando el Work Item está cerrado o restablece `current.md`. |
+| `rei commit set <id> <campo>` | Registra el commit actual en `base_commit` o `last_review_commit`. |
+| `rei github enable` | Activa la integración con GitHub. Acepta `--repo owner/name`, `--base <rama>` y `--strategy squash\|merge\|rebase`; sin flags detecta `origin` y `origin/HEAD`. |
+| `rei github disable` / `rei github status` | Desactiva la integración conservando los valores, o muestra el estado sin escribir. |
+| `rei item show <id>` | Ficha del Work Item con la sección `Enlaces:` (issue, URL, base y épica) si existe `links.json`. |
+| `rei items status` | Lista cada Work Item con su tipo y, si `links.json` es válido, su issue y base. |
+| `rei status set <id> <estado> [--force]` | Cambia el estado. `done` es terminal: salir de `done` (por ejemplo `done → blocked`) solo se permite con `--force` como transición no estándar. |
+| `rei validate [<id>]` | Valida el Work Item; un `links.json` inválido se informa como `WARN` recuperable, nunca como `FAIL`. |
+
+`rei github enable` resuelve cada valor con la precedencia **flag explícito >
+valor previo de `integrations.github` > detección desde git > valor por defecto**.
+`base` usa `main` y `mergeStrategy` usa `squash` cuando no hay nada mejor; `repo`
+no tiene valor por defecto y, sin flag ni valor previo, exige un remoto `origin`
+resoluble. Un flag desconocido, repetido o inválido es uso incorrecto (código 2)
+y no escribe la configuración.
+
+---
+
+# 8. Subagentes nativos (OpenCode y Claude Code)
 
 REI Harness define sus roles en `.rei/agents/`: el `leader` coordina el workflow y delega en el Spec Author, el Implementer, el Reviewer y el Initializer. Si tu runtime dispone de un adaptador nativo, puedes instalarlos como **subagentes nativos** para invocarlos directamente, sin que el Leader tenga que reenviarles el contrato cada vez.
 

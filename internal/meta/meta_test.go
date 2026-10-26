@@ -92,6 +92,7 @@ func TestTransitionAllowed(t *testing.T) {
 	rejected := []struct{ from, to string }{
 		{StatusPending, StatusInProgress},
 		{StatusDone, StatusInProgress},
+		{StatusDone, StatusBlocked},
 		{StatusBlocked, StatusDone},
 		{StatusReady, StatusDone},
 	}
@@ -102,6 +103,9 @@ func TestTransitionAllowed(t *testing.T) {
 	}
 
 	for _, from := range ValidStatuses {
+		if from == StatusDone {
+			continue
+		}
 		if !TransitionAllowed(from, StatusBlocked) {
 			t.Errorf("%s -> blocked debería estar permitida", from)
 		}

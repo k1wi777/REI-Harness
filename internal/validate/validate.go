@@ -1,12 +1,15 @@
 package validate
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 
+	"github.com/k1wi777/my-harness-SDD/internal/links"
 	"github.com/k1wi777/my-harness-SDD/internal/meta"
 	"github.com/k1wi777/my-harness-SDD/internal/paths"
 	"github.com/k1wi777/my-harness-SDD/internal/state"
@@ -95,6 +98,16 @@ func WorkItem(p *paths.Project, id string) ([]Issue, error) {
 		if prefix := createdAtPrefix(id); prefix != "" && !strings.HasPrefix(m.CreatedAt, prefix) {
 			warn("created_at ('%s') no coincide con el prefijo del id (%s...)", m.CreatedAt, prefix)
 		}
+	}
+
+	// links.json es un índice opcional y recuperable: un archivo inválido se
+	// informa como WARN y nunca bloquea el Work Item.
+	if l, err := links.Read(filepath.Join(p.SpecDir(id), "links.json")); err != nil {
+		if !errors.Is(err, fs.ErrNotExist) {
+			warn("links.json inválido (%v); es un índice recuperable (se reconstruye por el marcador) y no bloquea el Work Item", err)
+		}
+	} else if problems := links.Problems(l); len(problems) > 0 {
+		warn("links.json inválido (%s); es un índice recuperable (se reconstruye por el marcador) y no bloquea el Work Item", strings.Join(problems, "; "))
 	}
 
 	if fi, err := os.Stat(p.WorkItemDir(id)); err != nil || !fi.IsDir() {

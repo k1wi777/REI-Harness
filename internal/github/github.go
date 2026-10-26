@@ -165,9 +165,89 @@ func DetectBase(dir string, r Runner) (base string, fallback bool) {
 	return strings.TrimSpace(m[1]), false
 }
 
-// Enable detecta el repositorio y la rama base y escribe integrations.github,
-// preservando el resto de la configuración. Los avisos de `gh` no bloquean.
-func Enable(p *paths.Project, r Runner, out io.Writer) int {
+// Options son los valores explícitos de `rei github enable`. Un campo de valor
+// vacío significa «no informado»: se resuelve con el valor previo, la detección
+// o el valor por defecto. Los campos *Set distinguen «flag informado» de «flag
+// ausente» para que un valor vacío (`--repo ""`) sea uso incorrecto (2) en lugar
+// de caer silenciosamente en la precedencia.
+type Options struct {
+	Repo     string
+	Base     string
+	Strategy string
+
+	RepoSet     bool
+	BaseSet     bool
+	StrategySet bool
+}
+
+// repoSent, baseSent y strategySent indican si el llamante informó el valor,
+// bien con el flag (aunque venga vacío) o bien con un valor no vacío.
+func (o Options) repoSent() bool     { return o.RepoSet || o.Repo != "" }
+func (o Options) baseSent() bool     { return o.BaseSet || o.Base != "" }
+func (o Options) strategySent() bool { return o.StrategySet || o.Strategy != "" }
+
+// ValidStrategies son las estrategias de merge admitidas por `--strategy`.
+var ValidStrategies = []string{"squash", "merge", "rebase"}
+
+// ValidateOptions comprueba la forma de los valores explícitos. Se ejecuta antes
+// de resolver el proyecto: un valor inválido —incluido un flag informado con
+// valor vacío— es uso incorrecto (2) y no debe escribirse nada.
+func ValidateOptions(o Options) error {
+	if o.repoSent() && !validRepo(o.Repo) {
+		return fmt.Errorf("--repo %q inválido: se espera owner/name", o.Repo)
+	}
+	if o.baseSent() {
+		if strings.TrimSpace(o.Base) == "" || strings.ContainsAny(o.Base, " \t") {
+			return fmt.Errorf("--base %q inválida: se espera un nombre de rama no vacío y sin espacios", o.Base)
+		}
+	}
+	if o.strategySent() && !validStrategy(o.Strategy) {
+		return fmt.Errorf("--strategy %q inválida: se espera squash, merge o rebase", o.Strategy)
+	}
+	return nil
+}
+
+// validRepo indica si s tiene la forma owner/name del remoto de GitHub, sin
+// host, `.git` ni barra extra.
+func validRepo(s string) bool {
+	if s != strings.TrimSpace(s) || strings.Contains(s, "://") || strings.ContainsAny(s, "@:") {
+		return false
+	}
+	if strings.HasSuffix(s, ".git") {
+		return false
+	}
+	parts := strings.Split(s, "/")
+	if len(parts) != 2 {
+		return false
+	}
+	for _, part := range parts {
+		if part == "." || part == ".." || !identRe.MatchString(part) {
+			return false
+		}
+	}
+	return true
+}
+
+func validStrategy(s string) bool {
+	for _, v := range ValidStrategies {
+		if v == s {
+			return true
+		}
+	}
+	return false
+}
+
+// Enable escribe integrations.github resolviendo repo, base y mergeStrategy con
+// la precedencia flag explícito > valor previo > detección desde git > valor por
+// defecto. Preserva el resto de la configuración. Los avisos de `gh` no
+// bloquean.
+func Enable(p *paths.Project, r Runner, opts Options, out io.Writer) int {
+	if err := ValidateOptions(opts); err != nil {
+		fmt.Fprintf(out, "[FAIL]  %v\n", err)
+		fmt.Fprintln(out, "        Uso: rei github enable [--repo owner/name] [--base <rama>] [--strategy squash|merge|rebase]")
+		return 2
+	}
+
 	path := filepath.Join(p.ReiDir(), "config.json")
 	cfg, err := config.Load(path)
 	if err != nil {
@@ -176,28 +256,39 @@ func Enable(p *paths.Project, r Runner, out io.Writer) int {
 		return 1
 	}
 
-	remote, err := DetectOrigin(p.Root, r)
-	if err != nil {
-		fmt.Fprintf(out, "[FAIL]  %v\n", err)
-		return 1
+	prev := cfg.Integrations.GitHub
+
+	repo := opts.Repo
+	if repo == "" && prev != nil {
+		repo = prev.Repo
+	}
+	if repo == "" {
+		remote, err := DetectOrigin(p.Root, r)
+		if err != nil {
+			fmt.Fprintf(out, "[FAIL]  %v\n", err)
+			return 1
+		}
+		repo = remote.String()
 	}
 
-	prev := cfg.Integrations.GitHub
-	base := ""
-	strategy := ""
-	if prev != nil {
-		base = prev.Base
-		strategy = prev.MergeStrategy
-	}
+	base := opts.Base
 	fallback := false
+	if base == "" && prev != nil {
+		base = prev.Base
+	}
 	if base == "" {
 		base, fallback = DetectBase(p.Root, r)
+	}
+
+	strategy := opts.Strategy
+	if strategy == "" && prev != nil {
+		strategy = prev.MergeStrategy
 	}
 	if strategy == "" {
 		strategy = "squash"
 	}
 
-	gh := config.GitHub{Enabled: true, Repo: remote.String(), Base: base, MergeStrategy: strategy}
+	gh := config.GitHub{Enabled: true, Repo: repo, Base: base, MergeStrategy: strategy}
 	if err := config.SetGitHub(path, gh); err != nil {
 		fmt.Fprintf(out, "[FAIL]  No se pudo escribir .rei/config.json: %v\n", err)
 		fmt.Fprintln(out, "        Siguiente paso: revisa los permisos de .rei/config.json; el archivo no se ha modificado.")
@@ -316,7 +407,7 @@ func Status(p *paths.Project, r Runner, out io.Writer) int {
 		fmt.Fprintln(out, "Siguiente paso: pon el nombre canónico (`gh repo view <repo> --json nameWithOwner --jq .nameWithOwner`)")
 		fmt.Fprintln(out, "en integrations.github.repo, o actualiza `origin` a ese repositorio.")
 	default:
-		fmt.Fprintln(out, "Sin acciones pendientes.")
+		fmt.Fprintln(out, "Configuración completa; sin acciones de configuración pendientes.")
 	}
 	return 0
 }

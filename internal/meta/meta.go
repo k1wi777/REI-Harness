@@ -91,9 +91,10 @@ func IsValidType(s string) bool {
 }
 
 // allowedTransitions describe las transiciones estándar de workflow.md.
-// Cualquier estado puede pasar a blocked (ver TransitionAllowed); desde
-// blocked se puede reanudar a ready (volver a planificación) o a in_progress
-// (retomar la implementación).
+// Cualquier estado salvo `done` puede pasar a blocked (ver TransitionAllowed);
+// desde blocked se puede reanudar a ready (volver a planificación) o a
+// in_progress (retomar la implementación). `done` es terminal: solo se sale con
+// `--force` como transición no estándar.
 var allowedTransitions = map[string][]string{
 	StatusPending:          {StatusReady},
 	StatusReady:            {StatusInProgress},
@@ -105,7 +106,7 @@ var allowedTransitions = map[string][]string{
 
 // TransitionAllowed indica si from -> to es una transición estándar.
 func TransitionAllowed(from, to string) bool {
-	if to == StatusBlocked {
+	if to == StatusBlocked && from != StatusDone {
 		return true
 	}
 	for _, s := range allowedTransitions[from] {

@@ -11,11 +11,11 @@ Con un solo comando (`rei init`), la herramienta **inicializa un arnés completo
 # Instalación
 
 El CLI `rei` se distribuye como **binario precompilado** en las
-[releases de GitHub](https://github.com/k1wi777/my-harness-SDD/releases); no
+[releases de GitHub](https://github.com/k1wi777/REI-Harness/releases); no
 necesita Go ni ninguna dependencia para ejecutarse.
 
 1. Entra en la página de releases:
-   <https://github.com/k1wi777/my-harness-SDD/releases>.
+   <https://github.com/k1wi777/REI-Harness/releases>.
 2. Descarga el archive correspondiente a tu sistema operativo y arquitectura:
    `rei_<versión>_<os>_<arch>.tar.gz` (en Windows, `rei_<versión>_windows_<arch>.zip`).
 3. Descomprímelo y mueve el binario `rei` a un directorio de tu `PATH`
@@ -101,10 +101,16 @@ Los más usados (todos aceptan `rei <comando> --help`):
 | `rei init opencode` / `rei init claude` | Genera los subagentes nativos del runtime. |
 | `rei init --update [--force]` | Actualiza el arnés de un proyecto ya inicializado (marker-aware). |
 | `rei doctor` | Diagnóstico de solo lectura del arnés. |
-| `rei items status` | Lista los Work Items y su estado. |
-| `rei item show <id>` | Ficha de un Work Item (metadatos, documentos, validación). |
-| `rei status set <id> <estado>` | Cambia el estado de un Work Item. |
-| `rei validate [<id>]` | Comprueba la consistencia interna de un Work Item. |
+| `rei new <id> <feature\|task> [title]` | Crea un Work Item en estado `pending`. |
+| `rei session [status]` | Muestra la sesión activa. |
+| `rei session start <id> <tipo>` | Inicia la sesión de un Work Item solo si existe, el tipo coincide y está en `pending`. |
+| `rei session archive` / `rei session reset` | Archiva una sesión cerrada o restablece `current.md`. |
+| `rei commit set <id> <campo>` | Registra el commit actual en `base_commit` o `last_review_commit`. |
+| `rei github <enable\|disable\|status>` | Integración opcional con GitHub; `enable` acepta `--repo owner/name`, `--base <rama>` y `--strategy squash\|merge\|rebase`. |
+| `rei items status` | Lista tipo, estado, issue y base de cada Work Item. |
+| `rei item show <id>` | Ficha de un Work Item (metadatos, enlaces, documentos, sesión y validación). |
+| `rei status set <id> <estado> [--force]` | Cambia el estado de un Work Item; `done` es terminal y salir de él requiere `--force`. |
+| `rei validate [<id>]` | Comprueba la consistencia interna de un Work Item (un `links.json` inválido es un aviso recuperable). |
 | `rei review-diff <id>` | Genera el paquete de revisión por diff. |
 | `rei view [<id>]` | Abre el visor local de solo lectura del Work Item (documentos, validación, sesión, TOC y diff; sin aprobar). |
 | `rei test` | Ejecuta los checks declarados en `.rei/config.json`. |

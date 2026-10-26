@@ -97,7 +97,7 @@ Todos los Work Items utilizan los mismos estados.
 | `ready` | Planificación terminada y esperando aprobación humana. |
 | `in_progress` | Implementación en curso. |
 | `review` | Implementación finalizada, pendiente de revisión. |
-| `done` | Trabajo completado y aprobado. |
+| `done` | Trabajo completado y aprobado (estado terminal). |
 | `blocked` | El trabajo no puede continuar. |
 | `changes_requested` | La revisión rechazó la implementación y requiere modificaciones. |
 
@@ -118,7 +118,7 @@ Durante todo el flujo, `.rei/progress/current.md` refleja el estado vivo del Wor
 **Ramificaciones:**
 
 - Si el Reviewer rechaza el trabajo: `review → changes_requested`. El Leader relanza al Implementer y el Work Item vuelve a `in_progress`.
-- Si en cualquier punto el trabajo no puede continuar: `* → blocked`.
+- Si en cualquier punto el trabajo no puede continuar: `* → blocked`, salvo desde `done`, que es terminal: `done → blocked` solo se permite con `--force` como transición no estándar.
 ---
 
 # Reglas generales
@@ -131,3 +131,6 @@ Durante todo el flujo, `.rei/progress/current.md` refleja el estado vivo del Wor
 - Todo Work Item debe pasar por `spec_author`.
 - Ningún Work Item puede omitir la aprobación humana.
 - Ningún Work Item puede finalizar sin pasar por `reviewer`.
+- `done` es terminal: no se sale de él por una transición estándar. `rei status
+  set <id> blocked --force` es la vía explícita para una transición no estándar y
+  solo se usa con una orden del usuario.

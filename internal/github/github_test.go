@@ -199,7 +199,7 @@ func TestEnableExito(t *testing.T) {
 	r.runs["gh auth status"] = runResult{}
 
 	var out strings.Builder
-	if code := Enable(p, r, &out); code != 0 {
+	if code := Enable(p, r, Options{}, &out); code != 0 {
 		t.Fatalf("Enable = %d:\n%s", code, out.String())
 	}
 	cfg := loadConfig(t, p)
@@ -221,7 +221,7 @@ func TestEnableAvisoSinGh(t *testing.T) {
 	p := newProject(t, `{"checks":[]}`)
 	r := fakeRunner{runs: gitOK()}
 	var out strings.Builder
-	if code := Enable(p, r, &out); code != 0 {
+	if code := Enable(p, r, Options{}, &out); code != 0 {
 		t.Fatalf("Enable = %d, esperaba 0:\n%s", code, out.String())
 	}
 	if !strings.Contains(out.String(), "no está instalado") || !strings.Contains(out.String(), "cli.github.com") {
@@ -237,7 +237,7 @@ func TestEnableAvisoSinAuth(t *testing.T) {
 	r := fakeRunner{paths: ghOK(), runs: gitOK()}
 	r.runs["gh auth status"] = runResult{stderr: "You are not logged into any GitHub hosts.", err: errors.New("exit 1")}
 	var out strings.Builder
-	if code := Enable(p, r, &out); code != 0 {
+	if code := Enable(p, r, Options{}, &out); code != 0 {
 		t.Fatalf("Enable = %d, esperaba 0:\n%s", code, out.String())
 	}
 	if !strings.Contains(out.String(), "no está autenticado") || !strings.Contains(out.String(), "gh auth login") {
@@ -251,7 +251,7 @@ func TestEnableSinOriginNoEscribe(t *testing.T) {
 		"git remote get-url origin": {stderr: "No such remote", err: errors.New("exit 2")},
 	}}
 	var out strings.Builder
-	if code := Enable(p, r, &out); code != 1 {
+	if code := Enable(p, r, Options{}, &out); code != 1 {
 		t.Fatalf("Enable = %d, esperaba 1", code)
 	}
 	if loadConfig(t, p).Integrations.GitHub != nil {
@@ -265,7 +265,7 @@ func TestEnableHostInvalidoNoEscribe(t *testing.T) {
 		"git remote get-url origin": {stdout: "git@gitlab.com:owner/name.git"},
 	}}
 	var out strings.Builder
-	if code := Enable(p, r, &out); code != 1 {
+	if code := Enable(p, r, Options{}, &out); code != 1 {
 		t.Fatalf("Enable = %d, esperaba 1", code)
 	}
 	if loadConfig(t, p).Integrations.GitHub != nil {
@@ -276,19 +276,150 @@ func TestEnableHostInvalidoNoEscribe(t *testing.T) {
 	}
 }
 
-func TestEnableConservaBaseYMergeStrategy(t *testing.T) {
+func TestEnableConservaValoresPrevios(t *testing.T) {
 	p := newProject(t, `{"integrations":{"github":{"enabled":false,"repo":"viejo/repo","base":"develop","mergeStrategy":"merge"}}}`)
 	r := fakeRunner{paths: ghOK(), runs: gitOK()}
 	var out strings.Builder
-	if code := Enable(p, r, &out); code != 0 {
+	if code := Enable(p, r, Options{}, &out); code != 0 {
 		t.Fatalf("Enable = %d:\n%s", code, out.String())
 	}
 	gh := loadConfig(t, p).Integrations.GitHub
 	if gh.Base != "develop" || gh.MergeStrategy != "merge" {
 		t.Fatalf("debía conservar base/mergeStrategy: %+v", gh)
 	}
-	if gh.Repo != "owner/name" {
-		t.Fatalf("repo debía actualizarse al detectado: %+v", gh)
+	if gh.Repo != "viejo/repo" {
+		t.Fatalf("con repo previo no debe detectar ni sobrescribir: %+v", gh)
+	}
+}
+
+func TestValidateOptions(t *testing.T) {
+	valid := []Options{
+		{},
+		{Repo: "owner/name"},
+		{Base: "develop"},
+		{Strategy: "squash"},
+		{Repo: "a/b", Base: "main", Strategy: "rebase"},
+	}
+	for _, o := range valid {
+		if err := ValidateOptions(o); err != nil {
+			t.Errorf("ValidateOptions(%+v) = %v, want nil", o, err)
+		}
+	}
+	invalid := []Options{
+		{Repo: "owner"},
+		{Repo: "https://github.com/owner/name"},
+		{Repo: "owner/name.git"},
+		{Base: " "},
+		{Base: "feat con espacios"},
+		{Strategy: "octopus"},
+		{RepoSet: true},
+		{BaseSet: true},
+		{StrategySet: true},
+	}
+	for _, o := range invalid {
+		if err := ValidateOptions(o); err == nil {
+			t.Errorf("ValidateOptions(%+v) = nil, want error", o)
+		}
+	}
+}
+
+// TestEnableFlagsGananPrecedencia comprueba flag > previo y que no se consulta
+// git cuando el flag ya resuelve cada valor.
+func TestEnableFlagsGananPrecedencia(t *testing.T) {
+	p := newProject(t, `{"integrations":{"github":{"enabled":true,"repo":"previo/repo","base":"prev-base","mergeStrategy":"merge"}}}`)
+	r := fakeRunner{paths: ghOK(), runs: map[string]runResult{"gh auth status": {}}}
+	var out strings.Builder
+	code := Enable(p, r, Options{Repo: "flag/repo", Base: "flag-base", Strategy: "rebase"}, &out)
+	if code != 0 {
+		t.Fatalf("Enable = %d:\n%s", code, out.String())
+	}
+	gh := loadConfig(t, p).Integrations.GitHub
+	if gh.Repo != "flag/repo" || gh.Base != "flag-base" || gh.MergeStrategy != "rebase" {
+		t.Fatalf("los flags debían ganar: %+v", gh)
+	}
+	if !gh.Enabled {
+		t.Fatal("enable debía activar la integración")
+	}
+}
+
+// TestEnableFlagsSinGit comprueba que con todos los flags no hace falta ni
+// `origin` ni `origin/HEAD`.
+func TestEnableFlagsSinGit(t *testing.T) {
+	p := newProject(t, `{"checks":[]}`)
+	r := fakeRunner{paths: ghOK(), runs: map[string]runResult{"gh auth status": {}}}
+	var out strings.Builder
+	code := Enable(p, r, Options{Repo: "o/n", Base: "main", Strategy: "squash"}, &out)
+	if code != 0 {
+		t.Fatalf("Enable = %d, no debía necesitar git:\n%s", code, out.String())
+	}
+	gh := loadConfig(t, p).Integrations.GitHub
+	if gh == nil || gh.Repo != "o/n" || gh.Base != "main" || gh.MergeStrategy != "squash" {
+		t.Fatalf("config inesperada: %+v", gh)
+	}
+}
+
+// TestEnableRepoPrevioSinGit comprueba que un repo previo evita la detección.
+func TestEnableRepoPrevioSinGit(t *testing.T) {
+	p := newProject(t, `{"integrations":{"github":{"enabled":false,"repo":"o/n"}}}`)
+	r := fakeRunner{paths: ghOK(), runs: map[string]runResult{
+		"git symbolic-ref --quiet --short refs/remotes/origin/HEAD": {stdout: "origin/main\n"},
+		"gh auth status": {},
+	}}
+	var out strings.Builder
+	if code := Enable(p, r, Options{}, &out); code != 0 {
+		t.Fatalf("Enable = %d:\n%s", code, out.String())
+	}
+	gh := loadConfig(t, p).Integrations.GitHub
+	if gh.Repo != "o/n" || gh.Base != "main" {
+		t.Fatalf("config inesperada: %+v", gh)
+	}
+}
+
+func TestEnableOpcionInvalidaNoEscribe(t *testing.T) {
+	original := `{"checks":[]}`
+	cases := []Options{
+		{Strategy: "octopus"},
+		{RepoSet: true},
+		{BaseSet: true},
+		{StrategySet: true},
+	}
+	for _, opts := range cases {
+		p := newProject(t, original)
+		r := fakeRunner{paths: ghOK(), runs: gitOK()}
+		var out strings.Builder
+		code := Enable(p, r, opts, &out)
+		if code != 2 {
+			t.Errorf("Enable(%+v) = %d, esperaba 2", opts, code)
+		}
+		if !strings.Contains(out.String(), "Uso: rei github enable") {
+			t.Errorf("Enable(%+v) debía indicar el uso correcto:\n%s", opts, out.String())
+		}
+		data, err := os.ReadFile(configPath(p))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if string(data) != original {
+			t.Errorf("Enable(%+v) no debía escribir: %q", opts, data)
+		}
+	}
+}
+
+func TestEnablePreservaClavesAjenas(t *testing.T) {
+	p := newProject(t, `{"checks":[],"viewer":{"autoOpenOnReady":true},"extra":{"x":1}}`)
+	r := fakeRunner{paths: ghOK(), runs: gitOK()}
+	r.runs["gh auth status"] = runResult{}
+	var out strings.Builder
+	if code := Enable(p, r, Options{}, &out); code != 0 {
+		t.Fatalf("Enable = %d:\n%s", code, out.String())
+	}
+	data, err := os.ReadFile(configPath(p))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{`"extra"`, `"autoOpenOnReady": true`, `"checks"`, `"integrations"`} {
+		if !strings.Contains(string(data), want) {
+			t.Errorf("config no conserva %q:\n%s", want, data)
+		}
 	}
 }
 
@@ -300,7 +431,7 @@ func TestEnableBaseFallback(t *testing.T) {
 		"gh auth status": {},
 	}}
 	var out strings.Builder
-	if code := Enable(p, r, &out); code != 0 {
+	if code := Enable(p, r, Options{}, &out); code != 0 {
 		t.Fatalf("Enable = %d:\n%s", code, out.String())
 	}
 	if !strings.Contains(out.String(), "se usa `main`") {
@@ -316,7 +447,7 @@ func TestEnableJSONInvalidoIntacto(t *testing.T) {
 	p := newProject(t, original)
 	r := fakeRunner{paths: ghOK(), runs: gitOK()}
 	var out strings.Builder
-	if code := Enable(p, r, &out); code != 1 {
+	if code := Enable(p, r, Options{}, &out); code != 1 {
 		t.Fatalf("Enable = %d, esperaba 1", code)
 	}
 	data, err := os.ReadFile(configPath(p))
@@ -448,7 +579,7 @@ func TestStatusRemoto(t *testing.T) {
 			name:      "coincide",
 			cfg:       `{"integrations":{"github":{"enabled":true,"repo":"owner/name"}}}`,
 			wantAviso: false,
-			wantStep:  "Sin acciones pendientes.",
+			wantStep:  "Configuración completa; sin acciones de configuración pendientes.",
 		},
 		{
 			name:      "no coincide",
@@ -466,7 +597,7 @@ func TestStatusRemoto(t *testing.T) {
 			name:      "repo vacío no compara ni avisa",
 			cfg:       `{"integrations":{"github":{"enabled":true}}}`,
 			wantAviso: false,
-			wantStep:  "Sin acciones pendientes.",
+			wantStep:  "Configuración completa; sin acciones de configuración pendientes.",
 		},
 	}
 	for _, tc := range cases {

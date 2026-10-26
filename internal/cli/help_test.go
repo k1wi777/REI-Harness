@@ -73,6 +73,33 @@ func TestHelpViewDocumentaModos(t *testing.T) {
 	}
 }
 
+// TestHelpDocumentaP2 comprueba que la ayuda de los comandos afectados describe
+// enlaces, validación de session start, done terminal y flags de github (R10).
+func TestHelpDocumentaP2(t *testing.T) {
+	cases := []struct {
+		command string
+		want    []string
+	}{
+		{"item", []string{"Enlaces", "links.json", "épica"}},
+		{"items", []string{"tipo", "issue", "base", "in_progress"}},
+		{"session", []string{"pending", "tipo", "current.md"}},
+		{"status", []string{"done", "terminal", "--force", "blocked"}},
+		{"github", []string{"--repo", "--base", "--strategy", "Precedencia", "squash"}},
+	}
+	for _, tc := range cases {
+		text, ok := commandHelpText(tc.command)
+		if !ok {
+			t.Fatalf("no hay ayuda para %s", tc.command)
+		}
+		flat := normalize(text)
+		for _, want := range tc.want {
+			if !strings.Contains(flat, want) {
+				t.Errorf("la ayuda de %s debe mencionar %q:\n%s", tc.command, want, text)
+			}
+		}
+	}
+}
+
 func TestTwoColumnAlinea(t *testing.T) {
 	out := twoColumn([][2]string{{"a", "x"}, {"bbb", "y"}}, "  ", 3)
 	lines := strings.Split(strings.TrimRight(out, "\n"), "\n")
