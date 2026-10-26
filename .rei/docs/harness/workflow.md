@@ -9,7 +9,48 @@
 
 No todos los cambios requieren el mismo nivel de planificación.
 
-Antes de crear un nuevo Work Item, el Leader debe decidir si la solicitud corresponde a una **Feature** o a una **Task**, aplicando siempre el flujo más simple que permita mantener la calidad del proyecto.
+Antes de crear un nuevo Work Item, el Leader debe decidir si la solicitud corresponde a una **Feature**, a una **Task** o a un **cambio directo** autorizado, aplicando siempre el flujo más simple que permita mantener la calidad del proyecto.
+
+---
+
+# Modo directo (fuera del workflow)
+
+El modo directo permite al Leader aplicar un cambio trivial solicitado
+explícitamente, sin planificación ni estado. **No es un tipo de Work Item ni un
+estado del ciclo**: es una vía fuera del workflow, sobre la rama y el árbol de
+trabajo actuales.
+
+**Disparador.** Solo se activa cuando el usuario pide un «cambio directo» o «sin
+Work Item». El Leader nunca lo inicia por iniciativa propia ni a partir de una
+petición que no lo solicite de forma explícita.
+
+**Elegibilidad.** El cambio debe limitarse a documentación, erratas, formato,
+comentarios o ajustes triviales sin cambio de comportamiento.
+
+**Negativa.** Si el cambio afecta comportamiento, seguridad, datos, dependencias,
+API pública, arquitectura, más de un archivo o cualquier cosa que necesite
+especificación o revisión, el Leader **debe negarse** a aplicarlo en modo directo
+y ofrecer continuar como **Task** o **Feature** mediante el workflow. La
+insistencia del usuario no es autorización: no existe override de la negativa.
+
+**Autorización.** Incluso si el cambio es elegible, el Leader pide confirmación
+explícita antes de tocar nada e informa de que no habrá planificación, rama ni
+registro. Si duda de la elegibilidad, avisa y exige esa confirmación. El silencio
+o una respuesta ambigua no son autorización; el defecto es **no** aplicar el modo
+directo.
+
+**Sin registro.** El modo directo no crea Work Item, spec, `meta.json`,
+`current.md`, `history.md`, `direct.md`, sesión, issue ni rama, y no modifica el
+estado ni los documentos de ningún Work Item existente. La única traza es el
+diff/commit que el usuario decida y la conversación. Si hay un Work Item en
+`in_progress`, el Leader avisa de que el cambio compartirá árbol y diff antes de
+aplicarlo.
+
+**Verificación.** Siempre `rei check`; además `go test` o `make build` según el
+cambio. El Leader reporta los comandos ejecutados y su resultado. El modo directo
+no lanza al Reviewer salvo petición explícita del usuario.
+
+**Entrega.** Sin orden explícita del usuario no hay commit, push, PR ni merge.
 
 ---
 
@@ -131,6 +172,9 @@ Durante todo el flujo, `.rei/progress/current.md` refleja el estado vivo del Wor
 - Todo Work Item debe pasar por `spec_author`.
 - Ningún Work Item puede omitir la aprobación humana.
 - Ningún Work Item puede finalizar sin pasar por `reviewer`.
+- El modo directo autorizado es una vía ajena a los Work Items y no exime del
+  resto de reglas: no crea ni altera Work Items y se rige por la sección «Modo
+  directo (fuera del workflow)».
 - `done` es terminal: no se sale de él por una transición estándar. `rei status
   set <id> blocked --force` es la vía explícita para una transición no estándar y
   solo se usa con una orden del usuario.

@@ -188,14 +188,16 @@ transmite a cada subagente solo el `## Contrato` de su rol.
 
 ## 3. Spec Driven Development
 
-Todo trabajo sigue el mismo flujo base:
+Todo trabajo con Work Item sigue el mismo flujo base:
 
 ```
 Usuario → Leader → meta.json → Spec Author → Planificación
         → ⏸ Aprobación humana → Implementer → Reviewer → Finalización
 ```
 
-El código nunca se implementa antes de existir una planificación aprobada.
+El código nunca se implementa antes de existir una planificación aprobada,
+salvo en **modo directo autorizado** para cambios triviales (ver
+[Work Items](#work-items)).
 
 > Este diagrama muestra la ruta principal. Las ramificaciones (rechazo en
 > revisión, bloqueos) están en `.rei/docs/harness/workflow.md`.
@@ -213,6 +215,18 @@ REI Harness trabaja sobre **Work Items**, de dos tipos: **Feature** (planificaci
 completa: `requirements.md`, `design.md`, `tasks.md`) y **Task** (planificación
 breve: `plan.md`). Los criterios, estados y transiciones están en
 `.rei/docs/harness/workflow.md`.
+
+Fuera de esos dos tipos existe el **modo directo autorizado** para cambios
+triviales. Solo se activa cuando el usuario pide un **«cambio directo»** o algo
+**«sin Work Item»**: para documentación, erratas, formato, comentarios o ajustes
+equivalentes sin cambio de comportamiento, el Leader aplica el cambio sin Work
+Item, planificación, rama ni registro. Si el cambio toca comportamiento,
+seguridad, datos, dependencias, API pública, arquitectura, más de un archivo o
+cualquier cosa que necesite especificación o revisión, el Leader se niega y ofrece
+una Task o una Feature; la verificación se limita a los checks del proyecto y no
+pasa por el Reviewer salvo petición explícita. **Sin una orden explícita del
+usuario no hay commit, push, PR ni merge.** Detalle en
+[`.rei/docs/harness/workflow.md`](.rei/docs/harness/workflow.md).
 
 ---
 

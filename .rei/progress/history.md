@@ -1513,3 +1513,67 @@ gracia) y `tasks.md` (11 tareas). Planificación aprobada por el usuario.
 
 Work Item cerrado en `done`; sesión archivada.
 
+
+## 2026-10-26 03:06 — 2026-10-26_02-51__direct-change-mode
+
+- **Work Item:** 2026-10-26_02-51__direct-change-mode
+- **Tipo:** feature
+- **Estado:** done
+- **Inicio:** 2026-10-26T02:52:53-05:00
+- **Agente activo:** implementer
+
+## Plan
+
+1. `requirements.md`: 19 requisitos EARS (definición, disparador, elegibilidad,
+   autorización, negativa sin override, sin registro, verificación, límites de la
+   excepción y documentación).
+2. `design.md`: norma canónica en `workflow.md`; operacionalización en
+   `leader.md`; reflejo en `AGENTS.md` (vivo y plantilla), `usage.md` y `README.md`;
+   contradicciones a corregir; regeneración de agentes nativos y verificación.
+3. `tasks.md`: 11 tareas documentales ordenadas, de `workflow.md` a la
+   verificación final del arnés.
+
+## Bitácora
+
+- Planificación completada: `requirements.md`, `design.md` y `tasks.md` redactados
+  dentro del presupuesto (19 requisitos, 224 líneas de diseño, 11 tareas).
+- Decisiones clave: modo directo como política de contrato (no CLI), lista de
+  elegibilidad estrecha con defecto negativo, confirmación explícita incluso en
+  casos elegibles, sin artefactos de estado y regeneración de ambos adaptadores.
+- Sin cambios de alcance: no se toca el flujo Feature/Task, el CLI ni `skeleton/`
+  salvo `skeleton/AGENTS.md`.
+- Implementación (T1–T11): sección canónica «Modo directo (fuera del workflow)» en
+  `workflow.md` (antes de «Tipos de Work Item», bullet en Reglas generales y
+  ajuste del Objetivo); subprotocolo, Identidad, `description` y Reglas duras del
+  Leader; subsección equivalente en `AGENTS.md` y `skeleton/AGENTS.md` (neutral);
+  atajo y FAQ en `usage.md`; nota y párrafo en `README.md`.
+- Coherencia: una sola formulación de elegibilidad y negativa replicada; se
+  acotaron las frases absolutas («todo trabajo sigue el mismo flujo», «sin
+  implementar ni planificar tú mismo»).
+- Agentes nativos regenerados con `rei init opencode` y `rei init claude`;
+  `--check` de ambos devuelve `0`.
+- Verificación en verde: `gofmt -l .`, `go vet ./...`, `go test ./...`,
+  `make build`, `rei check`, `rei doctor`, `rei init status` y `rei validate`.
+- Diff acotado a 6 documentos, 2 agentes nativos y `skeleton/AGENTS.md`; sin
+  cambios en `cmd/`, `internal/`, `embed.go`, `.rei/adapters/` ni resto del
+  skeleton.
+- Revisión (2026-10-26): `changes_requested`. V1–V3, `rei check`, adaptadores,
+  `doctor`, `init status` y `validate` en verde; R17 incompleto en `README.md`
+  (falta el disparador explícito y la ausencia de commit). Detalle en
+  `review.md`.
+- Corrección de rework (2026-10-26): en `README.md` el párrafo de «Work Items»
+  nombra el disparador («cambio directo» / «sin Work Item») y añade «sin una
+  orden explícita del usuario no hay commit, push, PR ni merge», conservando
+  elegibilidad y negativa. Observación no bloqueante aplicada: `workflow.md`
+  pasa de «la única vía ajena a los Work Items» a «una vía ajena». T7 y T8
+  reabiertas y remarcadas. Verificación completa en verde.
+- Re-revisión (2026-10-26): `done`. R17 corregido en `README.md` (disparador y
+  ausencia de commit); observación de `workflow.md` aplicada. V1–V3, `rei check`,
+  adaptadores, `doctor`, `init status` y `validate` en verde, sin regresiones.
+  Veredicto en `review.md`.
+
+## Próximo paso
+
+Work Item cerrado (`done`). Sin commit, push, PR ni merge hasta que el usuario lo
+ordene explícitamente.
+

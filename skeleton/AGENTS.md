@@ -117,6 +117,35 @@ Antes de comenzar cualquier trabajo consulta:
 
 **No omitas ninguna etapa del workflow.**
 
+### Modo directo autorizado
+
+El **modo directo** es una vía fuera del workflow de Work Items —no un tipo ni un
+estado— para que el Leader aplique un cambio trivial solicitado explícitamente.
+Solo se activa si el usuario pide un «cambio directo» o «sin Work Item»; el
+Leader nunca lo inicia por iniciativa propia.
+
+- **Elegible:** documentación, erratas, formato, comentarios o ajustes triviales
+  sin cambio de comportamiento.
+- **Negativa:** si afecta comportamiento, seguridad, datos, dependencias, API
+  pública, arquitectura, más de un archivo o necesita especificación o revisión,
+  el Leader se niega y ofrece Task o Feature. La insistencia del usuario no es
+  autorización: no hay override.
+- **Autorización:** aun siendo elegible, el Leader pide confirmación explícita e
+  informa de que no habrá planificación, rama ni registro. Si duda, avisa y exige
+  esa confirmación; el defecto es **no** aplicar el modo directo.
+- **Sin registro:** no crea Work Item, spec, `meta.json`, `current.md`,
+  `history.md`, `direct.md`, sesión, issue ni rama, ni altera Work Items
+  existentes; opera sobre la rama y el árbol actuales y su única traza es el
+  diff/commit y la conversación.
+- **Verificación:** siempre `rei check` y, según el cambio, los checks del
+  proyecto declarados en `.rei/config.json`/`verification.md`; el Leader reporta
+  comandos y resultado. Sin Reviewer salvo petición explícita del usuario.
+- **Entrega:** sin una orden explícita no hay commit, push, PR ni merge.
+
+Esta es la única excepción a «no omitas etapas» y a la prohibición de implementar
+del rol Leader; el resto de reglas duras sigue vigente. Ver
+`.rei/docs/harness/workflow.md`.
+
 ---
 
 # 6. Rol del agente principal
@@ -203,7 +232,9 @@ Carga únicamente el contexto necesario para completar la tarea actual.
 Estas reglas aplican a cualquier agente del repositorio.
 
 - La documentación es la fuente de verdad.
-- Trabaja sobre un único Work Item por sesión.
+- Trabaja sobre un único Work Item por sesión. El **modo directo autorizado**
+  (§5) es la excepción: no abre ni modifica Work Items ni sesión, y solo se usa
+  con disparador y confirmación explícitos.
 - No omitas etapas del workflow.
 - Consulta la documentación antes de asumir comportamientos no especificados.
 - Si encuentras documentación contradictoria, DETENTE y repórtala.

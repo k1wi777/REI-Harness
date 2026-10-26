@@ -120,6 +120,19 @@ En la práctica, esto es lo que vas a ver:
 4. **Revisión.** El Reviewer valida el trabajo contra la planificación y los checkpoints de `.rei/docs/project/verification.md`.
 5. **Finalización.** Si todo pasa, el Work Item queda `done` y su resumen se archiva en `.rei/progress/history.md`.
 
+### Atajo: cambios directos sin Work Item
+
+Para un cambio trivial puedes pedir un **cambio directo** («hazlo en modo directo» o «sin Work Item»). Es una vía fuera del workflow: no crea Work Item, planificación, sesión, issue ni rama, y trabaja sobre la rama y el árbol actuales.
+
+- **Qué es elegible:** documentación, erratas, formato, comentarios o ajustes triviales sin cambio de comportamiento.
+- **Qué se niega:** si afecta comportamiento, seguridad, datos, dependencias, API pública, arquitectura, más de un archivo o necesita especificación o revisión, el Leader se niega y te ofrece continuar como Task o Feature. No hay override: insistir no cambia la negativa.
+- **Confirmación:** aunque sea elegible, el Leader te pide confirmación explícita antes de tocar nada y te avisa de que no habrá planificación, rama ni registro. Si duda, te lo dice y espera tu confirmación; el defecto es no aplicar el cambio.
+- **Sin registro:** la única traza es el diff/commit que decidas y la conversación; no se escribe `current.md`, `meta.json`, `history.md` ni `direct.md`.
+- **Verificación:** el Leader ejecuta `rei check` y, según el cambio, los checks del proyecto, y te reporta comandos y resultado. No pasa por el Reviewer salvo que lo pidas.
+- **Entrega:** no hay commit, push, PR ni merge sin una orden explícita tuya.
+
+Si el cambio deja de ser trivial en cualquier punto, el Leader se detiene y propone Task o Feature.
+
 ---
 
 # 4. Cómo aprobar o pedir cambios
@@ -156,6 +169,9 @@ La próxima vez que ejecutes `rei check` y hables con el agente, el Leader consu
 
 **¿Puedo tener varios Work Items en paralelo?**
 No al mismo tiempo en estado `in_progress` — REI Harness solo permite uno activo a la vez (ver `.rei/docs/harness/workflow.md`). Sí puedes tener varios `pending` esperando su turno. El límite es duro: `rei status set <id> in_progress` lo rechaza (también con `--force`), y `rei check`, `rei doctor` y `rei items status` fallan si detectan más de uno. Cierra (`review`/`done`), bloquea o revisa el Work Item activo antes de iniciar otro.
+
+**¿Puedo cambiar algo sin abrir un Work Item?**
+Sí, si es un cambio trivial (documentación, errata, formato, comentario) y lo pides explícitamente como «cambio directo» o «sin Work Item». El Leader confirma contigo, aplica el cambio sobre la rama actual y lo verifica con `rei check` y los checks del proyecto; no deja registro ni pasa por el Reviewer salvo que lo pidas. Si el cambio toca comportamiento, seguridad, datos, dependencias, API pública, arquitectura, más de un archivo o cualquier cosa que necesite especificación o revisión, el Leader se niega y te ofrece una Task o una Feature: esa negativa no se puede saltar.
 
 **¿Dónde declaro los checks de mi proyecto?**
 En `.rei/config.json` (ver `.rei/docs/project/verification.md`). `rei check` los ejecuta y refleja el resultado en su código de salida.
