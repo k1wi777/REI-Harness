@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/k1wi777/my-harness-SDD/internal/meta"
 	"github.com/k1wi777/my-harness-SDD/internal/paths"
 )
 
@@ -163,4 +164,60 @@ func TestRunDeclaredSinEfectos(t *testing.T) {
 	if _, err := os.Stat(p.CurrentFile()); !os.IsNotExist(err) {
 		t.Errorf("RunDeclared creó current.md (err=%v)", err)
 	}
+}
+
+// writeWorkItem registra un Work Item con el estado indicado.
+func writeWorkItem(t *testing.T, p *paths.Project, id, status string) {
+	t.Helper()
+	if err := os.MkdirAll(p.SpecDir(id), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	m := &meta.Meta{
+		ID: id, Title: "t", Description: "d", Type: "task",
+		Status: status, CreatedAt: "2026-01-01T00:00:00-05:00",
+	}
+	if err := m.Save(p.MetaFile(id)); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestRunUnInProgressOK(t *testing.T) {
+	p := setupValidProject(t)
+	writeWorkItem(t, p, "2026-01-01_00-00__a", meta.StatusInProgress)
+	var buf bytes.Buffer
+	if code := Run(p, true, &buf); code != 0 {
+		t.Fatalf("Run = %d, esperaba 0, salida:\n%s", code, buf.String())
+	}
+}
+
+func TestRunDosInProgressFail(t *testing.T) {
+	p := setupValidProject(t)
+	writeWorkItem(t, p, "2026-01-01_00-00__a", meta.StatusInProgress)
+	writeWorkItem(t, p, "2026-01-02_00-00__b", meta.StatusInProgress)
+	var buf bytes.Buffer
+	if code := Run(p, true, &buf); code != 1 {
+		t.Fatalf("Run = %d, esperaba 1, salida:\n%s", code, buf.String())
+	}
+	out := buf.String()
+	if !strings.Contains(out, "[FAIL]") || !strings.Contains(out, "2026-01-01_00-00__a") ||
+		!strings.Contains(out, "2026-01-02_00-00__b") {
+		t.Fatalf("salida inesperada:\n%s", out)
+	}
+}
+
+// setupValidProject crea un harness válido con los archivos requeridos.
+func setupValidProject(t *testing.T) *paths.Project {
+	t.Helper()
+	root := t.TempDir()
+	p := &paths.Project{Root: root}
+	for _, f := range RequiredFiles {
+		full := filepath.Join(root, f)
+		if err := os.MkdirAll(filepath.Dir(full), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(full, []byte("x"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return p
 }

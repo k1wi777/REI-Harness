@@ -20,11 +20,8 @@
   --review: #6bb0d6;
 
   /* Roles de color declarados en DESIGN.md. */
-  --primary-hover: #6755d8;
   --accent-edge: #6f5ae0;
   --on-primary: #f3f0ff;
-  --on-warn: #241a06;
-  --warn-hover: #e9b351;
   --scrollbar-hover: #4a515e;
   --on-accent: #ffffff;
 
@@ -386,34 +383,6 @@ a, button { caret-color: var(--accent); }
 .facts dt { font-family: var(--ui); font-size: var(--label-size); font-weight: var(--label-weight); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
 .facts dd.v { margin: 0; font-family: var(--mono); font-size: var(--mono-size); font-weight: var(--mono-weight); color: var(--text); word-break: break-word; }
 
-.action { margin-top: 1.9rem; }
-.approve-note { margin: 0 0 0.7rem; font-family: var(--ui); font-size: 14px; line-height: 1.5; color: var(--muted); }
-.approve-note .mono, .mono { font-family: var(--mono); font-size: 0.92em; color: var(--text); }
-.action button {
-  width: 100%;
-  padding: 0.8rem 0;
-  font-family: var(--ui);
-  font-weight: var(--ui-weight);
-  font-size: var(--ui-size);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--on-primary);
-  background: var(--accent-deep);
-  border: 1px solid var(--accent-edge);
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-.action button:hover { background: var(--primary-hover); }
-.action button:disabled { opacity: 0.6; cursor: default; }
-.action button.ghost { margin-top: 0.5rem; color: var(--muted); background: transparent; border-color: var(--line-2); }
-.action button.ghost:hover { color: var(--text); background: var(--ground-3); }
-.action.confirming #approve { color: var(--on-warn); background: var(--warn); border-color: var(--warn); }
-.action.confirming #approve:hover { background: var(--warn-hover); }
-.action-status { margin: 0.6rem 0 0; font-family: var(--ui); font-size: 13.5px; line-height: 1.5; color: var(--accent); }
-.action.approved .action-status { color: var(--ok); }
-.action-status:focus { outline: none; }
-
 /* ── Colofón ──────────────────────────────────────────────── */
 .colophon {
   display: flex;
@@ -461,7 +430,6 @@ a, button { caret-color: var(--accent); }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .action button { transition: none; }
 }
 
 /* En ultra-ancho se capa el ancho y se centra, para que los raíles no queden

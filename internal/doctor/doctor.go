@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/k1wi777/my-harness-SDD/internal/check"
 	"github.com/k1wi777/my-harness-SDD/internal/config"
@@ -99,6 +100,15 @@ func Run(p *paths.Project, out io.Writer) int {
 				}
 			}
 		}
+	}
+
+	// 2b. Invariante: solo un Work Item en in_progress
+	active, err := state.InProgressItems(p)
+	switch {
+	case err != nil:
+		fail("No se pudo comprobar el invariante de in_progress: %v", err)
+	case len(active) > 1:
+		fail("Hay %d Work Items en in_progress: %s. Solo puede haber uno.", len(active), strings.Join(active, ", "))
 	}
 
 	// 3. Sesión

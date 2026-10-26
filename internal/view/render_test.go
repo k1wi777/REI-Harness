@@ -78,15 +78,17 @@ func TestBuildModelDocsPresentesAusentes(t *testing.T) {
 	if byName["design.md"].Present || byName["tasks.md"].Present {
 		t.Errorf("design/tasks no existen y no deben marcarse presentes")
 	}
-	if !vm.CanApprove {
-		t.Errorf("en ready, CanApprove debe ser true")
-	}
 }
 
-// TestRenderPageYCcontent verifica la página completa y el fragmento, y la
-// ausencia del botón fuera de ready (R21).
-func TestRenderPageYCcontent(t *testing.T) {
+// TestRenderPageYContent verifica la página completa y el fragmento, y que el
+// visor es de solo lectura: sin botón ni ruta de aprobación, conservando
+// documentos, validación, sesión, TOC y colofón.
+func TestRenderPageYContent(t *testing.T) {
 	p, id := newViewFixture(t, meta.StatusReady)
+	writeTestFile(t, filepath.Join(p.SpecDir(id), "requirements.md"),
+		"# Requisitos\n\n## Uno\n\n- a\n\n## Dos\n\n- b\n")
+	writeTestFile(t, p.CurrentFile(),
+		"# Sesión actual\n\n- **Work Item:** "+id+"\n- **Estado:** ready\n- **Agente activo:** _—_\n")
 	vm, err := buildModel(p, id)
 	if err != nil {
 		t.Fatal(err)
@@ -95,11 +97,17 @@ func TestRenderPageYCcontent(t *testing.T) {
 	if err := renderPage(&page, vm); err != nil {
 		t.Fatalf("renderPage: %v", err)
 	}
-	if !strings.Contains(page.String(), "<!DOCTYPE html>") || !strings.Contains(page.String(), `id="approve"`) {
-		t.Errorf("la página en ready debe incluir el botón aprobar:\n%s", page.String())
+	got := page.String()
+	if !strings.Contains(got, "<!DOCTYPE html>") {
+		t.Errorf("la página debe ser un documento HTML completo")
 	}
-	if !strings.Contains(page.String(), "requirements.md") {
-		t.Errorf("la página debe listar los documentos")
+	for _, want := range []string{"requirements.md", "Validación", "Ficha", "Sesión", "toc-list", "colophon"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("la página debe incluir %q", want)
+		}
+	}
+	if strings.Contains(got, `id="approve"`) || strings.Contains(got, "/approve") {
+		t.Errorf("el visor no debe ofrecer aprobación:\n%s", got)
 	}
 
 	var content strings.Builder
@@ -109,21 +117,7 @@ func TestRenderPageYCcontent(t *testing.T) {
 	if strings.Contains(content.String(), "<!DOCTYPE html>") {
 		t.Errorf("el fragmento /content no debe ser un documento HTML completo")
 	}
-	if !strings.Contains(content.String(), `id="approve"`) {
-		t.Errorf("el fragmento debe incluir el botón en ready")
-	}
-
-	// Fuera de ready no hay botón.
-	p2, id2 := newViewFixture(t, meta.StatusInProgress)
-	vm2, err := buildModel(p2, id2)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var c2 strings.Builder
-	if err := renderContent(&c2, vm2); err != nil {
-		t.Fatal(err)
-	}
-	if strings.Contains(c2.String(), `id="approve"`) {
-		t.Errorf("no debe haber botón aprobar fuera de ready:\n%s", c2.String())
+	if strings.Contains(content.String(), `id="approve"`) || strings.Contains(content.String(), "/approve") {
+		t.Errorf("el fragmento no debe ofrecer aprobación")
 	}
 }

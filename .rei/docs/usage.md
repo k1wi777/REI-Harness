@@ -125,6 +125,11 @@ Cuando el Leader te presente una planificación lista (`ready`), te toca ejercer
 - Si estás de acuerdo, responde algo como **"aprobado"**. El Leader avanzará el Work Item a `in_progress`.
 - Si algo no refleja lo acordado, o encuentras una decisión de diseño con la que no estás de acuerdo, dilo en lenguaje natural. El Leader relanzará al Spec Author y volverá a presentarte la planificación actualizada.
 
+La aprobación se da **en el chat o en la terminal** (el Leader ejecuta
+`rei status set <id> in_progress`). Si abres el visor (`rei view`), ten en cuenta
+que es de **solo lectura**: muestra documentos, validación y sesión, pero no
+tiene botón ni ruta de aprobación. El visor nunca sustituye tu respuesta.
+
 REI Harness nunca avanza sin esta aprobación explícita — no por burocracia, sino porque la responsabilidad de qué se construye es tuya, no del agente.
 
 Lo mismo aplica después de la revisión: si el Reviewer rechaza el trabajo (`changes_requested`), el Leader te lo informará y relanzará al Implementer con las correcciones necesarias — no necesitas hacer nada salvo revisar el resultado otra vez al final.
@@ -142,7 +147,7 @@ La próxima vez que ejecutes `rei check` y hables con el agente, el Leader consu
 # 6. Preguntas frecuentes
 
 **¿Puedo tener varios Work Items en paralelo?**
-No al mismo tiempo en estado `in_progress` — REI Harness solo permite uno activo a la vez (ver `.rei/docs/harness/workflow.md`). Sí puedes tener varios `pending` esperando su turno.
+No al mismo tiempo en estado `in_progress` — REI Harness solo permite uno activo a la vez (ver `.rei/docs/harness/workflow.md`). Sí puedes tener varios `pending` esperando su turno. El límite es duro: `rei status set <id> in_progress` lo rechaza (también con `--force`), y `rei check`, `rei doctor` y `rei items status` fallan si detectan más de uno. Cierra (`review`/`done`), bloquea o revisa el Work Item activo antes de iniciar otro.
 
 **¿Dónde declaro los checks de mi proyecto?**
 En `.rei/config.json` (ver `.rei/docs/project/verification.md`). `rei check` los ejecuta y refleja el resultado en su código de salida.

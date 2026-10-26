@@ -481,6 +481,11 @@ func cmdItems(args []string) int {
 		fmt.Println("No hay Work Items registrados.")
 		return 0
 	}
+	active, err := state.InProgressItems(p)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return 1
+	}
 	fmt.Println("Work Items:")
 	width := 0
 	for _, it := range items {
@@ -488,17 +493,17 @@ func cmdItems(args []string) int {
 			width = len(it.ID)
 		}
 	}
-	active := 0
 	for _, it := range items {
 		marker := ""
-		if it.Status == "in_progress" {
+		if it.Status == meta.StatusInProgress {
 			marker = "   << ACTIVO"
-			active++
 		}
 		fmt.Printf("  - %-*s [%s]%s\n", width, it.ID, it.Status, marker)
 	}
-	if active > 0 {
-		fmt.Println("AVISO: existe un Work Item en in_progress.")
+	if len(active) > 1 {
+		fmt.Fprintf(os.Stderr, "ERROR: hay %d Work Items en in_progress (%s); solo puede haber uno.\n",
+			len(active), strings.Join(active, ", "))
+		return 1
 	}
 	return 0
 }
@@ -541,6 +546,14 @@ func cmdStatus(args []string) int {
 	}
 	previous, forced, err := state.Transition(p, id, status, force)
 	switch {
+	case errors.Is(err, state.ErrAnotherInProgress):
+		activos, _ := state.InProgressItems(p)
+		otro := "otro Work Item"
+		if len(activos) > 0 {
+			otro = strings.Join(activos, ", ")
+		}
+		fmt.Fprintf(os.Stderr, "ERROR: no se puede pasar %s a in_progress: %s ya está en curso; ciérralo (review/done), bloquéalo o revísalo antes de continuar.\n", id, otro)
+		return 1
 	case errors.Is(err, state.ErrTransitionNotAllowed):
 		fmt.Fprintf(os.Stderr, "ERROR: transición no permitida: %s -> %s (ver workflow.md; usa --force para forzar)\n", previous, status)
 		return 1

@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/k1wi777/my-harness-SDD/internal/check"
+	"github.com/k1wi777/my-harness-SDD/internal/meta"
 	"github.com/k1wi777/my-harness-SDD/internal/paths"
 )
 
@@ -94,5 +95,50 @@ func TestRunInvalidWorkItem(t *testing.T) {
 	var buf bytes.Buffer
 	if code := Run(p, &buf); code == 0 {
 		t.Fatalf("esperaba fallo por Work Item inválido, salida:\n%s", buf.String())
+	}
+}
+
+func writeDoctorItem(t *testing.T, p *paths.Project, id, status string) {
+	t.Helper()
+	if err := os.MkdirAll(p.SpecDir(id), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	m := &meta.Meta{
+		ID: id, Title: "t", Description: "d", Type: "task",
+		Status: status, CreatedAt: "2026-01-01T00:00:00-05:00",
+	}
+	if err := m.Save(p.MetaFile(id)); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(p.WorkItemDir(id), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(p.SpecDir(id), "plan.md"), []byte("# Plan\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestRunUnInProgressOK(t *testing.T) {
+	p := setupValidHarness(t)
+	writeDoctorItem(t, p, "2026-01-01_00-00__a", meta.StatusInProgress)
+	writeDoctorItem(t, p, "2026-01-02_00-00__b", meta.StatusReady)
+	var buf bytes.Buffer
+	if code := Run(p, &buf); code != 0 {
+		t.Fatalf("Run = %d, esperaba 0, salida:\n%s", code, buf.String())
+	}
+}
+
+func TestRunDosInProgressFail(t *testing.T) {
+	p := setupValidHarness(t)
+	writeDoctorItem(t, p, "2026-01-01_00-00__a", meta.StatusInProgress)
+	writeDoctorItem(t, p, "2026-01-02_00-00__b", meta.StatusInProgress)
+	var buf bytes.Buffer
+	if code := Run(p, &buf); code != 1 {
+		t.Fatalf("Run = %d, esperaba 1, salida:\n%s", code, buf.String())
+	}
+	out := buf.String()
+	if !strings.Contains(out, "[FAIL]") || !strings.Contains(out, "Solo puede haber uno") ||
+		!strings.Contains(out, "2026-01-01_00-00__a") || !strings.Contains(out, "2026-01-02_00-00__b") {
+		t.Fatalf("salida inesperada:\n%s", out)
 	}
 }

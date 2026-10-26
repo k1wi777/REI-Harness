@@ -3,17 +3,14 @@ package view
 import (
 	"bufio"
 	"context"
-	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/k1wi777/my-harness-SDD/internal/meta"
-	"github.com/k1wi777/my-harness-SDD/internal/state"
 )
 
 func doRequest(t *testing.T, h http.Handler, method, target string, cookie *http.Cookie) *httptest.ResponseRecorder {
@@ -85,76 +82,23 @@ func TestServerTokenYContent(t *testing.T) {
 	}
 }
 
-// TestApprovePermitido comprueba la transición ready -> in_progress y la
-// alineación de current.md (R22, R23, R26).
-func TestApprovePermitido(t *testing.T) {
+// TestApproveRutaInexistente confirma que el visor es de solo lectura: la ruta
+// /approve ya no existe y no cambia meta.json.
+func TestApproveRutaInexistente(t *testing.T) {
 	p, id := newViewFixture(t, meta.StatusReady)
-	if err := os.MkdirAll(p.ProgressDir(), 0o755); err != nil {
-		t.Fatal(err)
-	}
-	writeTestFile(t, p.CurrentFile(), "# Sesión actual\n\n- **Work Item:** "+id+"\n- **Estado:** ready\n")
-
-	s, err := newServer(p, id)
-	if err != nil {
-		t.Fatal(err)
-	}
-	h := s.Handler()
-
-	if rr := doRequest(t, h, http.MethodPost, "/approve", nil); rr.Code != http.StatusForbidden {
-		t.Errorf("/approve sin token = %d, want 403", rr.Code)
-	}
-	if rr := doRequest(t, h, http.MethodGet, "/approve?token="+s.token, nil); rr.Code != http.StatusMethodNotAllowed {
-		t.Errorf("/approve GET = %d, want 405", rr.Code)
-	}
-
-	rr := doRequest(t, h, http.MethodPost, "/approve?token="+s.token, nil)
-	if rr.Code != http.StatusOK {
-		t.Fatalf("/approve = %d, want 200; body: %s", rr.Code, rr.Body.String())
-	}
-	var body map[string]any
-	if err := json.Unmarshal(rr.Body.Bytes(), &body); err != nil {
-		t.Fatal(err)
-	}
-	if body["ok"] != true || body["status"] != meta.StatusInProgress {
-		t.Errorf("respuesta inesperada: %v", body)
-	}
-	if msg, _ := body["message"].(string); !strings.Contains(msg, "chat") {
-		t.Errorf("el mensaje debe recordar reanudar en el chat: %q", msg)
-	}
-
-	m, err := meta.Load(p.MetaFile(id))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if m.Status != meta.StatusInProgress {
-		t.Errorf("meta.json = %q, want in_progress", m.Status)
-	}
-	sess, err := state.ReadSession(p)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if sess.State != meta.StatusInProgress {
-		t.Errorf("current.md Estado = %q, want in_progress", sess.State)
-	}
-}
-
-// TestApproveDenegado comprueba que una transición no permitida no escribe
-// meta.json y responde 409 (R24).
-func TestApproveDenegado(t *testing.T) {
-	p, id := newViewFixture(t, meta.StatusPending)
 	s, err := newServer(p, id)
 	if err != nil {
 		t.Fatal(err)
 	}
 	rr := doRequest(t, s.Handler(), http.MethodPost, "/approve?token="+s.token, nil)
-	if rr.Code != http.StatusConflict {
-		t.Fatalf("/approve no permitido = %d, want 409; body: %s", rr.Code, rr.Body.String())
+	if rr.Code != http.StatusNotFound {
+		t.Fatalf("/approve = %d, want 404; body: %s", rr.Code, rr.Body.String())
 	}
 	m, err := meta.Load(p.MetaFile(id))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if m.Status != meta.StatusPending {
+	if m.Status != meta.StatusReady {
 		t.Errorf("meta.json no debería cambiar: %q", m.Status)
 	}
 }
@@ -213,8 +157,8 @@ func TestEventsEmiteReload(t *testing.T) {
 }
 
 // TestFondoSeCierraEnDone cubre el ciclo de vida del servidor de fondo: al
-// aprobar (ready -> in_progress) y durante review NO se cierra; solo se cierra
-// al llegar a done.
+// pasar a in_progress y durante review NO se cierra; solo se cierra al llegar
+// a done.
 func TestFondoSeCierraEnDone(t *testing.T) {
 	p, id := newViewFixture(t, meta.StatusReady)
 	s, err := newServer(p, id)
@@ -244,11 +188,11 @@ func TestFondoSeCierraEnDone(t *testing.T) {
 		}
 	}
 
-	// ready -> in_progress: aprobar no debe cerrar el visor.
+	// ready -> in_progress: el visor sigue abierto para leer los documentos.
 	setStatus(meta.StatusInProgress)
 	select {
 	case <-s.closed:
-		t.Fatal("el servidor no debe cerrarse al aprobar (in_progress)")
+		t.Fatal("el servidor no debe cerrarse en in_progress")
 	case <-time.After(150 * time.Millisecond):
 	}
 

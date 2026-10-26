@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"crypto/subtle"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -17,7 +16,6 @@ import (
 
 	"github.com/k1wi777/my-harness-SDD/internal/meta"
 	"github.com/k1wi777/my-harness-SDD/internal/paths"
-	"github.com/k1wi777/my-harness-SDD/internal/state"
 )
 
 const cookieName = "rei_view"
@@ -96,7 +94,6 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/", s.handleRoot)
 	mux.HandleFunc("/content", s.handleContent)
 	mux.HandleFunc("/events", s.handleEvents)
-	mux.HandleFunc("/approve", s.handleApprove)
 	mux.HandleFunc("/static/", s.handleStatic)
 	return s.trackActivity(mux)
 }
@@ -243,36 +240,6 @@ func (s *Server) handleContent(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) handleApprove(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.Header().Set("Allow", "POST")
-		http.Error(w, "método no permitido", http.StatusMethodNotAllowed)
-		return
-	}
-	if !s.authorized(r) {
-		http.Error(w, "no autorizado", http.StatusForbidden)
-		return
-	}
-	from, forced, err := state.Transition(s.p, s.id, meta.StatusInProgress, false)
-	switch {
-	case errors.Is(err, state.ErrTransitionNotAllowed):
-		writeJSON(w, http.StatusConflict, map[string]any{
-			"ok":    false,
-			"error": fmt.Sprintf("transición no permitida: %s -> in_progress", from),
-		})
-	case err != nil:
-		writeJSON(w, http.StatusInternalServerError, map[string]any{"ok": false, "error": err.Error()})
-	default:
-		writeJSON(w, http.StatusOK, map[string]any{
-			"ok":      true,
-			"from":    from,
-			"status":  meta.StatusInProgress,
-			"forced":  forced,
-			"message": "Aprobado: ready -> in_progress. Reanuda la conversación en el chat con una palabra breve (p. ej. «listo»).",
-		})
-	}
-}
-
 // handleEvents es el endpoint SSE: emite `data: reload` cuando cambia el mtime
 // de algún documento del Work Item. En segundo plano, además, cierra el
 // servidor cuando el Work Item llega a done.
@@ -357,12 +324,6 @@ func changedSnapshot(a, b map[string]time.Time) bool {
 		}
 	}
 	return false
-}
-
-func writeJSON(w http.ResponseWriter, code int, v any) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(code)
-	_ = json.NewEncoder(w).Encode(v)
 }
 
 func staticContentType(name string) string {

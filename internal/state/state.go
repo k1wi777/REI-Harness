@@ -16,6 +16,10 @@ const emptyWorkItem = "_ninguno_"
 // ErrTransitionNotAllowed indica que la transición no está permitida por workflow.
 var ErrTransitionNotAllowed = errors.New("transición no permitida")
 
+// ErrAnotherInProgress indica que ya hay otro Work Item en in_progress: el
+// invariante de un único Work Item activo es duro y no se puede forzar.
+var ErrAnotherInProgress = errors.New("ya existe otro Work Item en in_progress")
+
 // Session es el estado vivo reflejado en .rei/progress/current.md.
 type Session struct {
 	WorkItem string
@@ -61,6 +65,19 @@ func Transition(p *paths.Project, id, to string, force bool) (from string, force
 	from = m.Status
 	if from == to {
 		return from, false, nil
+	}
+	// El invariante de un único in_progress se comprueba antes de validar la
+	// transición o de escribir nada, y no se puede omitir con force.
+	if to == meta.StatusInProgress {
+		active, err := InProgressItems(p)
+		if err != nil {
+			return from, false, err
+		}
+		for _, other := range active {
+			if other != id {
+				return from, false, fmt.Errorf("%w: %s", ErrAnotherInProgress, other)
+			}
+		}
 	}
 	if !meta.TransitionAllowed(from, to) {
 		if !force {
@@ -137,6 +154,23 @@ func ListWorkItems(p *paths.Project) ([]ItemStatus, error) {
 	}
 	sort.Slice(items, func(i, j int) bool { return items[i].ID < items[j].ID })
 	return items, nil
+}
+
+// InProgressItems devuelve los ids de los Work Items en estado in_progress.
+// Es el criterio único que aplican `state.Transition`, `doctor`, `check` y
+// `items status` para hacer cumplir el invariante de un único Work Item activo.
+func InProgressItems(p *paths.Project) ([]string, error) {
+	items, err := ListWorkItems(p)
+	if err != nil {
+		return nil, err
+	}
+	var ids []string
+	for _, it := range items {
+		if it.Status == meta.StatusInProgress {
+			ids = append(ids, it.ID)
+		}
+	}
+	return ids, nil
 }
 
 func markdownField(content, label string) string {

@@ -1,8 +1,7 @@
 // app.js — JavaScript propio mínimo del visor (sin dependencias de terceros).
 // Se encarga de: (1) recarga en vivo por SSE conservando la posición de
-// lectura, (2) el selector de documento del índice, (3) enlaces profundos
-// (documento y sección) vía el hash, y (4) la aprobación en dos pasos con
-// acuse junto al botón.
+// lectura, (2) el selector de documento del índice y (3) enlaces profundos
+// (documento y sección) vía el hash. El visor es de solo lectura.
 (function () {
   "use strict";
 
@@ -10,7 +9,6 @@
   var IDX_KEY = "rei.view.index";
   var smallViewport = window.matchMedia("(max-width: 1080px)");
   var indexCollapsedState = false;
-  var approveState = "idle";
 
   function indexStored() {
     try {
@@ -43,13 +41,6 @@
 
   function setNotice(text) {
     var el = document.getElementById("notice");
-    if (el) {
-      el.textContent = text || "";
-    }
-  }
-
-  function setActionStatus(text) {
-    var el = document.getElementById("action-status");
     if (el) {
       el.textContent = text || "";
     }
@@ -153,62 +144,6 @@
       .catch(function () { /* recarga best-effort */ });
   }
 
-  function resetApprove() {
-    var area = document.getElementById("approve-area");
-    var btn = document.getElementById("approve");
-    var cancel = document.getElementById("approve-cancel");
-    approveState = "idle";
-    if (area) area.classList.remove("confirming", "approved");
-    if (btn) { btn.disabled = false; btn.hidden = false; btn.textContent = "Firmar aprobación"; }
-    if (cancel) { cancel.disabled = false; cancel.hidden = true; }
-    setActionStatus("");
-  }
-
-  function onApproveClick() {
-    var area = document.getElementById("approve-area");
-    var btn = document.getElementById("approve");
-    var cancel = document.getElementById("approve-cancel");
-    if (approveState === "idle") {
-      approveState = "confirming";
-      if (area) area.classList.add("confirming");
-      if (btn) btn.textContent = "Confirmar aprobación";
-      if (cancel) cancel.hidden = false;
-      return;
-    }
-    doApprove();
-  }
-
-  function doApprove() {
-    var area = document.getElementById("approve-area");
-    var btn = document.getElementById("approve");
-    var cancel = document.getElementById("approve-cancel");
-    if (btn) btn.disabled = true;
-    if (cancel) cancel.disabled = true;
-    setActionStatus("Aprobando…");
-    fetch("/approve", { method: "POST" })
-      .then(function (r) {
-        return r.json().then(function (data) { return { ok: r.ok, data: data }; });
-      })
-      .then(function (res) {
-        if (res.ok) {
-          approveState = "approved";
-          if (area) { area.classList.remove("confirming"); area.classList.add("approved"); }
-          if (btn) btn.hidden = true;
-          if (cancel) cancel.hidden = true;
-          var msg = res.data.message || "Aprobación registrada.";
-          setActionStatus(msg);
-          setNotice(msg);
-        } else {
-          resetApprove();
-          setActionStatus("No se pudo aprobar: " + (res.data.error || "error"));
-        }
-      })
-      .catch(function () {
-        resetApprove();
-        setActionStatus("Error de red al aprobar.");
-      });
-  }
-
   // applyHash selecciona el documento (o sección) que indique el hash.
   function applyHash() {
     var hash = (window.location.hash || "").replace(/^#/, "");
@@ -252,14 +187,6 @@
         ev.preventDefault();
         selectDoc(id);
       }
-      return;
-    }
-    if (t.closest("#approve")) {
-      onApproveClick();
-      return;
-    }
-    if (t.closest("#approve-cancel")) {
-      resetApprove();
       return;
     }
     var changes = t.closest(".changes-toggle");

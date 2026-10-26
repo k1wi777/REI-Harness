@@ -106,6 +106,7 @@ Los más usados (todos aceptan `rei <comando> --help`):
 | `rei status set <id> <estado>` | Cambia el estado de un Work Item. |
 | `rei validate [<id>]` | Comprueba la consistencia interna de un Work Item. |
 | `rei review-diff <id>` | Genera el paquete de revisión por diff. |
+| `rei view [<id>]` | Abre el visor local de solo lectura del Work Item (documentos, validación, sesión, TOC y diff; sin aprobar). |
 | `rei test` | Ejecuta los checks declarados en `.rei/config.json`. |
 | `rei update [--check]` | Actualiza el binario desde GitHub Releases. |
 

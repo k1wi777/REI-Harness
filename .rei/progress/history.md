@@ -1140,3 +1140,45 @@ pasan la puerta). El siguiente Work Item lo decide el usuario.
 
 Work Item cerrado. No hay más acciones pendientes.
 
+
+## 2026-10-26 00:08 — 2026-10-25_23-58__workflow-integrity-visor-in-progress
+
+- **Work Item:** 2026-10-25_23-58__workflow-integrity-visor-in-progress
+- **Tipo:** task
+- **Estado:** done
+- **Inicio:** 2026-10-25T23:58:33-05:00
+- **Agente activo:** reviewer
+
+## Plan
+
+Planificación de la Task completada en
+`.rei/specs/2026-10-25_23-58__workflow-integrity-visor-in-progress/plan.md`:
+visor de solo lectura (sin `/approve`, botón, JS, `CanApprove` ni CSS) e
+invariante de un único `in_progress` aplicado en `state.Transition`, `doctor`,
+`check` e `items status`, con tests y actualización de documentación.
+
+## Bitácora
+
+- Sesión iniciada (`rei session start ... task`) y `meta.json` leído.
+- Explorado el código afectado: `internal/view` (server, render, assets, tests),
+  `internal/state`, `internal/cli`, `internal/doctor`, `internal/check`.
+- `plan.md` redactado con archivos, cambios, restricciones y 12 pasos.
+- `status` actualizado a `ready` mediante el CLI (pending -> ready).
+- Implementer retoma: pasos 1-6 completados (invariante en `state`, `cli`,
+  `doctor` y `check`, con tests).
+- Pasos 7-10 completados: visor sin `/approve`, botón, JS, `CanApprove` ni CSS;
+  tests de ausencia de ruta/botón y cobertura de lectura/SSE/TOC.
+- Pasos 11-12 completados: documentación actualizada, adaptadores regenerados y
+  verificados con `--check`, suite completa en verde.
+- Reviewer: veredicto **aprobado**. Reproducidos el visor read-only en vivo
+  (`POST /approve?token=…` → 404, `meta.json` intacto) y el invariante en un
+  proyecto temporal (A permitido, B rechazado también con `--force`; dos
+  `in_progress` → `items status`/`doctor`/`check` exit 1). V1–V3 OK y V4 no
+  aplica. Detalle y observaciones en
+  `.rei/progress/work-items/2026-10-25_23-58__workflow-integrity-visor-in-progress/review.md`.
+
+## Próximo paso
+
+Work Item cerrado (`done`). El Leader puede archivar la sesión y continuar con
+el siguiente Work Item.
+

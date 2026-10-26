@@ -1,8 +1,10 @@
 package state
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/k1wi777/my-harness-SDD/internal/meta"
@@ -174,4 +176,107 @@ func TestTransitionEstadoInvalido(t *testing.T) {
 	if _, _, err := Transition(p, id, "no-existe", false); err == nil {
 		t.Fatal("se esperaba error por estado inválido")
 	}
+}
+
+// addWorkItem crea un meta.json adicional en el estado dado.
+func addWorkItem(t *testing.T, p *paths.Project, id, status string) {
+	t.Helper()
+	if err := os.MkdirAll(p.SpecDir(id), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	m := &meta.Meta{
+		ID: id, Title: "t", Description: "d", Type: "task",
+		Status: status, CreatedAt: "2026-01-01T00:00:00-05:00",
+	}
+	if err := m.Save(p.MetaFile(id)); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestInProgressItems(t *testing.T) {
+	p, _ := newProjectFixture(t, "2026-01-01_00-00__a", meta.StatusReady, false)
+	addWorkItem(t, p, "2026-01-02_00-00__b", meta.StatusInProgress)
+	addWorkItem(t, p, "2026-01-03_00-00__c", meta.StatusInProgress)
+	addWorkItem(t, p, "2026-01-04_00-00__d", meta.StatusDone)
+
+	ids, err := InProgressItems(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(ids) != 2 || ids[0] != "2026-01-02_00-00__b" || ids[1] != "2026-01-03_00-00__c" {
+		t.Fatalf("InProgressItems = %v, want [b c]", ids)
+	}
+}
+
+func TestTransitionRechazaOtroInProgress(t *testing.T) {
+	const id = "2026-01-01_00-00__demo"
+	const otro = "2026-01-02_00-00__otro"
+	for _, force := range []bool{false, true} {
+		p, original := newProjectFixture(t, id, meta.StatusReady, true)
+		addWorkItem(t, p, otro, meta.StatusInProgress)
+
+		_, _, err := Transition(p, id, meta.StatusInProgress, force)
+		if !errors.Is(err, ErrAnotherInProgress) {
+			t.Fatalf("force=%v: err = %v, want ErrAnotherInProgress", force, err)
+		}
+		if !strings.Contains(err.Error(), otro) {
+			t.Errorf("el error debe indicar el Work Item activo: %v", err)
+		}
+		m, err := meta.Load(p.MetaFile(id))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if m.Status != meta.StatusReady {
+			t.Errorf("meta.json no debería cambiar: status = %q", m.Status)
+		}
+		after, err := os.ReadFile(p.CurrentFile())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if string(after) != original {
+			t.Error("current.md no debería cambiar al rechazar la transición")
+		}
+	}
+}
+
+func TestTransitionSinOtroInProgressPermitida(t *testing.T) {
+	const id = "2026-01-01_00-00__demo"
+	p, _ := newProjectFixture(t, id, meta.StatusReady, true)
+	addWorkItem(t, p, "2026-01-02_00-00__cerrado", meta.StatusDone)
+
+	if _, _, err := Transition(p, id, meta.StatusInProgress, false); err != nil {
+		t.Fatalf("Transition: %v", err)
+	}
+	m, _ := meta.Load(p.MetaFile(id))
+	if m.Status != meta.StatusInProgress {
+		t.Fatalf("status = %q, want in_progress", m.Status)
+	}
+}
+
+func TestTransitionChangesRequestedAInProgress(t *testing.T) {
+	const id = "2026-01-01_00-00__demo"
+
+	t.Run("permitida", func(t *testing.T) {
+		p, _ := newProjectFixture(t, id, meta.StatusChangesRequested, false)
+		if _, _, err := Transition(p, id, meta.StatusInProgress, false); err != nil {
+			t.Fatalf("Transition: %v", err)
+		}
+		m, _ := meta.Load(p.MetaFile(id))
+		if m.Status != meta.StatusInProgress {
+			t.Fatalf("status = %q, want in_progress", m.Status)
+		}
+	})
+
+	t.Run("rechazada con otro activo", func(t *testing.T) {
+		p, _ := newProjectFixture(t, id, meta.StatusChangesRequested, false)
+		addWorkItem(t, p, "2026-01-02_00-00__otro", meta.StatusInProgress)
+		_, _, err := Transition(p, id, meta.StatusInProgress, false)
+		if !errors.Is(err, ErrAnotherInProgress) {
+			t.Fatalf("err = %v, want ErrAnotherInProgress", err)
+		}
+		m, _ := meta.Load(p.MetaFile(id))
+		if m.Status != meta.StatusChangesRequested {
+			t.Fatalf("meta.json no debería cambiar: %q", m.Status)
+		}
+	})
 }

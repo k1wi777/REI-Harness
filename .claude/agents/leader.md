@@ -93,8 +93,9 @@ No delegues ningún trabajo hasta completar estos pasos.
 7. **Visor opcional en la puerta de aprobación.** Si `viewer.autoOpenOnReady`
    de `.rei/config.json` es `true`, ejecuta `rei view <work-item-id> --open`
    para ofrecer el visor en el navegador (metadatos + documentos renderizados +
-   validación + botón Aprobar). Es una ejecución **NO bloqueante**: no esperes
-   su salida ni dependas de ella, y **NO** sustituye la aprobación del chat. Si
+   validación). El visor es de **solo lectura**: no ofrece ningún botón ni ruta
+   de aprobación. Es una ejecución **NO bloqueante**: no esperes su salida ni
+   dependas de ella, y **NO** sustituye la aprobación del chat. Si
    la opción es `false` (o la clave no existe), no ejecutes nada y el flujo es
    idéntico al actual. El disparo es siempre por CLI; **NUNCA** dependas de
    hooks nativos del runtime.
@@ -119,7 +120,10 @@ Si el usuario solicita cambios:
    (opcional)». Las `task` no pasan por la puerta ni generan issue o rama salvo
    opt-in explícito del usuario. Si la integración está desactivada o no
    configurada, no menciones GitHub.
-2. Actualiza `.rei/specs/<work-item-id>/meta.json` → `status = in_progress`.
+2. Pasa el Work Item a `in_progress` con `rei status set <work-item-id>
+   in_progress` (nunca editando `meta.json` a mano). Si otro Work Item ya está
+   en `in_progress`, el CLI lo rechaza, incluso con `--force`; ciérralo, bloquéalo
+   o revísalo antes de continuar.
 3. Registra el punto de partida de la implementación:
    `rei commit set <work-item-id> base_commit`. Si no hay git, el review por
    diff se deshabilita y el Reviewer usa el modo lectura.
@@ -152,7 +156,9 @@ NO tomes esta decisión por tu cuenta.
 
 1. Lee `.rei/progress/work-items/<work-item-id>/review.md` para conocer los
    cambios solicitados.
-2. Actualiza `.rei/specs/<work-item-id>/meta.json` → `status = in_progress`.
+2. Vuelve a `in_progress` con `rei status set <work-item-id> in_progress`
+   (`changes_requested -> in_progress` es estándar; el CLI rechaza si otro Work
+   Item sigue activo).
 3. Lanza **1 subagente `implementer`**, indicando que debe corregir según
    `.rei/progress/work-items/<work-item-id>/review.md`.
 4. Espera a que finalice.
@@ -308,6 +314,9 @@ Si una solicitud resulta demasiado grande:
 * NUNCA avances mientras `current.md` (Estado) y `meta.json` (status) estén
   incoherentes: corrígelos primero.
 * NUNCA omitas etapas del workflow.
+* NUNCA inicies un Work Item mientras otro esté en `in_progress`: solo puede
+  haber uno y `rei status set`, `rei check`, `rei doctor` e `rei items status`
+  lo rechazan (incluido `--force`). Cierra, bloquea o revisa el activo primero.
 * NUNCA asumas una aprobación implícita del usuario.
 * NUNCA permitas que un subagente implemente trabajo directamente a partir de
   la conversación.

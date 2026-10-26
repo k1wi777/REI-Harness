@@ -80,19 +80,6 @@
       <div class="row"><dt>estado</dt><dd class="v">{{status .Meta.Status}}</dd></div>
       <div class="row"><dt>creado</dt><dd class="v">{{.Meta.CreatedAt}}</dd></div>
     </dl>
-
-    <div class="action" id="approve-area">
-      {{if .CanApprove}}
-      <p class="sec-h gap">Aprobación</p>
-      <p class="approve-note">Transición: <span class="mono">listo para aprobar → en curso</span>.</p>
-      <button id="approve" type="button" data-id="{{.Meta.ID}}">Firmar aprobación</button>
-      <button id="approve-cancel" type="button" class="ghost" hidden>Cancelar</button>
-      <p class="action-status" id="action-status" role="status"></p>
-      {{else}}
-      <p class="sec-h gap">Aprobación</p>
-      <p class="approve-note">Este Work Item no está esperando aprobación.</p>
-      {{end}}
-    </div>
   </aside>
 </div>
 

@@ -12,6 +12,7 @@ import (
 	"github.com/k1wi777/my-harness-SDD/internal/config"
 	"github.com/k1wi777/my-harness-SDD/internal/gitx"
 	"github.com/k1wi777/my-harness-SDD/internal/paths"
+	"github.com/k1wi777/my-harness-SDD/internal/state"
 	"github.com/k1wi777/my-harness-SDD/internal/template"
 )
 
@@ -63,6 +64,17 @@ func Run(p *paths.Project, quiet bool, out io.Writer) int {
 	// 2-4. Estructura (specs, progreso, plantillas) y repositorio git
 	if ensureStructure(p, out, quiet) != 0 {
 		exit = 1
+	}
+
+	// 2b. Invariante: solo un Work Item en in_progress
+	active, err := state.InProgressItems(p)
+	switch {
+	case err != nil:
+		fail("No se pudo comprobar el invariante de in_progress: %v", err)
+	case len(active) > 1:
+		fail("Hay %d Work Items en in_progress: %s. Solo puede haber uno.", len(active), strings.Join(active, ", "))
+	default:
+		ok("Un solo Work Item en in_progress.")
 	}
 
 	// 5. Checks del proyecto (.rei/config.json)

@@ -107,7 +107,10 @@ Durante todo el flujo, `.rei/progress/current.md` refleja el estado vivo del Wor
 
 # Reglas generales
 
-- Solo puede existir un Work Item en estado `in_progress`.
+- Solo puede existir un Work Item en estado `in_progress`. El invariante es
+  duro: lo aplican `rei status set <id> in_progress` (también con `--force`),
+  `rei check`, `rei doctor` e `rei items status`. Si se rechaza, cierra
+  (`review`/`done`), bloquea o revisa el Work Item activo antes de continuar.
 - Todo Work Item comienza en `pending`.
 - Todo Work Item debe pasar por `spec_author`.
 - Ningún Work Item puede omitir la aprobación humana.

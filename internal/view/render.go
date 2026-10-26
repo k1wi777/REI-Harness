@@ -72,7 +72,6 @@ type viewModel struct {
 	SessionActive bool
 	Docs          []docView
 	Issues        []issueView
-	CanApprove    bool
 	TotalPresent  int
 
 	// Estado de la comparación contra el commit base de revisión.
@@ -165,10 +164,7 @@ func buildModel(p *paths.Project, id string) (*viewModel, error) {
 	if err != nil {
 		return nil, err
 	}
-	vm := &viewModel{
-		Meta:       m,
-		CanApprove: m.Status == meta.StatusReady,
-	}
+	vm := &viewModel{Meta: m}
 	if s, err := state.ReadSession(p); err == nil {
 		vm.Session = s
 		vm.SessionActive = s.Active() && s.WorkItem == id

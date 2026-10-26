@@ -1,6 +1,6 @@
-// Package view implementa `rei view`: sirve en el navegador una vista
-// enriquecida de un Work Item, con render seguro de Markdown, recarga en vivo
-// por SSE y un botón Aprobar que reutiliza la transición validada de estado.
+// Package view implementa `rei view`: sirve en el navegador una vista de solo
+// lectura de un Work Item, con render seguro de Markdown, recarga en vivo por
+// SSE y ciclo de vida del servidor local. Nunca muta documentos ni estado.
 package view
 
 import (

@@ -28,9 +28,10 @@ No documenta requisitos funcionales ni decisiones específicas de una Feature.
 - **Contrato de rol canónico, runtime aparte.** `.rei/agents/<rol>.md` define el
   comportamiento; `internal/adapter` solo traduce ese contrato al formato de cada
   runtime. Añadir un runtime no cambia el contrato.
-- **El visor observa y reutiliza.** `rei view` es de solo lectura sobre los
-  documentos; la única mutación (Aprobar) pasa por la misma transición de estado
-  validada que usa el CLI.
+- **El visor observa.** `rei view` es un visor de solo lectura: renderiza los
+  documentos, la validación y la sesión, sin botón ni ruta de aprobación. Las
+  transiciones de estado las emite solo el CLI (`rei status set`), que aplica la
+  validación centralizada de `state`.
 - **Simplicidad y dependencias mínimas.** Biblioteca estándar primero; toda
   dependencia nueva debe justificarse frente a código propio.
 - **Bajo acoplamiento y alta cohesión.** Cada paquete expone una API pequeña y no
@@ -104,8 +105,8 @@ Flujos particulares:
 - **Operación diaria**: `cli` → `paths`/`config`/`meta` → `state` (transición
   validada) → disco. `check` y `doctor` solo leen y ejecutan comandos.
 - **`rei view`**: `view` carga el Work Item → `render` (goldmark) → `net/http` con
-  assets embebidos y SSE; el botón Aprobar invoca la transición de `state` y
-  notifica a los clientes conectados.
+  assets embebidos y SSE. Es de solo lectura: no muta documentos ni estado; los
+  cambios en disco se reflejan por la recarga en vivo.
 - **`rei update`**: `update` consulta GitHub Releases, verifica `checksums.txt` y
   reemplaza el ejecutable de forma atómica.
 
@@ -124,8 +125,9 @@ Flujos particulares:
   otra requiere justificación y aprobación explícita.
 - **Visor sin terceros.** Nada de JavaScript, CSS ni fuentes de CDN; los assets son
   propios y van embebidos (`internal/view/assets`).
-- **El visor no muta documentos.** Solo puede ejecutar la transición de estado ya
-  validada por `state`; nunca edita `requirements.md`, `design.md` ni `tasks.md`.
+- **El visor no muta nada.** No ejecuta transiciones ni edita documentos,
+  `meta.json` ni `current.md`; la aprobación se registra únicamente desde el CLI
+  (`rei status set`) con la validación centralizada de `state`.
 - **El paquete raíz no contiene lógica.** `embed.go` solo declara `embed.FS`
   (`Skeleton` y `Harness`).
 - **No acoplar el contrato de rol a un runtime.** `internal/adapter` no puede
@@ -144,8 +146,9 @@ Flujos particulares:
 - **Patrón de capas:** presentación (`cli`, `view`, `show`) → dominio → ficheros.
   Los paquetes de dominio no conocen la CLI.
 - **Estado:** ficheros Markdown como contenido y `meta.json` como estado
-  estructurado; las transiciones se centralizan en `state` para que CLI y visor
-  compartan validación.
+  estructurado; las transiciones se centralizan en `state` y el CLI es su único
+  emisor (`rei status set`). El invariante de un único `in_progress` se aplica
+  allí y en `check`/`doctor`/`items status`.
 - **Visor:** servidor HTTP local (`net/http`) con `html/template` y render de
   Markdown con `goldmark`; recarga en vivo por SSE; modo primer plano y modo
   servidor de fondo con registro en `.rei/.view-server.json`.
