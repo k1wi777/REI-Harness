@@ -80,6 +80,17 @@
       <div class="row"><dt>estado</dt><dd class="v">{{status .Meta.Status}}</dd></div>
       <div class="row"><dt>creado</dt><dd class="v">{{.Meta.CreatedAt}}</dd></div>
     </dl>
+
+    <p class="sec-h gap">Enlaces</p>
+    {{if .Links.Valid}}
+    <dl class="facts">
+      <div class="row"><dt>issue</dt><dd class="v">#{{.Links.Issue}} · <a class="ext-link" href="{{.Links.URL}}">{{.Links.URL}}</a></dd></div>
+      <div class="row"><dt>base</dt><dd class="v">{{if .Links.HasBase}}{{.Links.Branch}}@{{short .Links.SHA}}{{else}}sin registrar{{end}}</dd></div>
+      <div class="row"><dt>épica</dt><dd class="v">{{if .Links.HasEpic}}{{.Links.EpicSlug}} · #{{.Links.EpicIssue}} · <a class="ext-link" href="{{.Links.EpicURL}}">{{.Links.EpicURL}}</a>{{else}}sin épica{{end}}</dd></div>
+    </dl>
+    {{else}}
+    <p class="links-note">{{.Links.Note}}{{range .Links.Problems}}<br>{{.}}{{end}}</p>
+    {{end}}
   </aside>
 </div>
 

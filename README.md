@@ -112,7 +112,7 @@ Los más usados (todos aceptan `rei <comando> --help`):
 | `rei status set <id> <estado> [--force]` | Cambia el estado de un Work Item; `done` es terminal y salir de él requiere `--force`. |
 | `rei validate [<id>]` | Comprueba la consistencia interna de un Work Item (un `links.json` inválido es un aviso recuperable). |
 | `rei review-diff <id>` | Genera el paquete de revisión por diff. |
-| `rei view [<id>]` | Abre el visor local de solo lectura del Work Item (documentos, validación, sesión, TOC y diff; sin aprobar). |
+| `rei view [<id>]` | Abre el visor local de solo lectura del Work Item (documentos, validación, sesión, TOC, diff y FICHA con issue/base/épica de `links.json`; estados y FICHA se refrescan en vivo y el servidor de fondo se cierra tras mostrar «terminado»). |
 | `rei test` | Ejecuta los checks declarados en `.rei/config.json`. |
 | `rei update [--check]` | Actualiza el binario desde GitHub Releases. |
 

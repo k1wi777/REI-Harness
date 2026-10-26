@@ -1464,3 +1464,52 @@ la documentación raíz ya están limpios. Se excluyen los históricos
 
 Work Item cerrado (`done`). Sin acciones pendientes.
 
+
+## 2026-10-26 02:51 — 2026-10-26_02-27__visor-estados-ficha-cierre
+
+- **Work Item:** 2026-10-26_02-27__visor-estados-ficha-cierre
+- **Tipo:** feature
+- **Estado:** done
+- **Inicio:** 2026-10-26T02:28:28-05:00
+- **Agente activo:** reviewer
+
+## Plan
+
+Planificación completada: `requirements.md` (16 requisitos en sintaxis EARS),
+`design.md` (etiquetas, refresco por SSE de estado y enlaces, FICHA desde
+`links.json` y protocolo de cierre en `done` con evento final, confirmación y
+gracia) y `tasks.md` (11 tareas). Planificación aprobada por el usuario.
+
+## Bitácora
+
+- Sesión iniciada con `rei session start` en estado `pending`.
+- Revisado el código del visor (`render.go`, `server.go`, `assets/app.js`,
+  `assets/page.html`), `internal/links`, la ayuda de `view` y la documentación
+  de uso para acotar las causas raíz.
+- Detectado que el SSE no vigilaba `meta.json` ni `links.json`, y que el cierre
+  en `done` competía entre `watchStatus` y `handleEvents` sin emitir estado
+  final.
+- Redactados `requirements.md`, `design.md` y `tasks.md` dentro del presupuesto
+  de Feature.
+- Implementadas T1–T11: etiquetas `ready`/`done`, instantánea SSE con
+  `meta.json`/`links.json`, FICHA de enlaces desde `internal/links`, evento
+  `final` + `POST /ack` y cierre centralizado en `watchStatus` (gracia 2 s,
+  vaciado mínimo 200 ms), restauración compartida en `app.js`, tests y
+  documentación.
+- Verificado con `gofmt`, `go vet`, `go test ./...`, `make build`, `rei check`,
+  `rei init * --check`, `rei doctor`, `rei init status` y `rei validate`.
+- Prueba manual con el binario: estado y FICHA se refrescan por SSE al cambiar
+  `meta.json`; `--stop` sigue operativo; `/approve` → 404 y `/ack` sin token →
+  403.
+- Revisión del Reviewer: **aprobado** (ver `review.md`). Verificados R1–R16 y la
+  trazabilidad T1–T11; `V1` (`go vet`), `V2` (`go test`, también
+  `-count=1` en `view`/`cli`), `V3` (`make build`), `V4` no aplica; `gofmt`,
+  `rei check --quiet`, adaptadores `--check`, `doctor`, `init status` y
+  `validate` en verde. Prueba manual en copia desechable con `view --serve`:
+  «en aprobación» con FICHA completa, refresco por SSE a «en curso»/«en
+  revisión», `--stop`, y secuencia `final` → `/ack` → cierre en `done`.
+
+## Próximo paso
+
+Work Item cerrado en `done`; sesión archivada.
+

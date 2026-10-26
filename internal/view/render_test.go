@@ -80,6 +80,117 @@ func TestBuildModelDocsPresentesAusentes(t *testing.T) {
 	}
 }
 
+// TestStatusLabel comprueba las etiquetas de los siete estados y que un valor
+// desconocido se muestre sin traducir (R1, R2).
+func TestStatusLabel(t *testing.T) {
+	cases := []struct {
+		status string
+		want   string
+	}{
+		{meta.StatusPending, "pendiente"},
+		{meta.StatusReady, "en aprobación"},
+		{meta.StatusInProgress, "en curso"},
+		{meta.StatusReview, "en revisión"},
+		{meta.StatusChangesRequested, "cambios solicitados"},
+		{meta.StatusDone, "terminado"},
+		{meta.StatusBlocked, "bloqueado"},
+		{"futuro", "futuro"},
+	}
+	for _, tc := range cases {
+		if got := statusLabel(tc.status); got != tc.want {
+			t.Errorf("statusLabel(%q) = %q, want %q", tc.status, got, tc.want)
+		}
+	}
+}
+
+// renderContentFor compone el modelo y el fragmento #content de un Work Item.
+func renderContentFor(t *testing.T, p *paths.Project, id string) string {
+	t.Helper()
+	vm, err := buildModel(p, id)
+	if err != nil {
+		t.Fatalf("buildModel: %v", err)
+	}
+	var content strings.Builder
+	if err := renderContent(&content, vm); err != nil {
+		t.Fatalf("renderContent: %v", err)
+	}
+	return content.String()
+}
+
+// TestFichaEnlaces cubre la FICHA de enlaces: válida con base y épica, campos
+// opcionales ausentes, archivo ausente, JSON mal formado y campos inválidos
+// (R6, R7, R8).
+func TestFichaEnlaces(t *testing.T) {
+	const (
+		issueURL = "https://github.com/owner/name/issues/12"
+		epicURL  = "https://github.com/owner/name/issues/3"
+	)
+	cases := []struct {
+		name    string
+		links   string
+		want    []string
+		notWant []string
+	}{
+		{
+			name: "válido completo",
+			links: `{"provider":"github","repo":"owner/name","issue":12,"url":"` + issueURL + `",` +
+				`"base":{"branch":"main","sha":"0123456789abcdef"},` +
+				`"epic":{"slug":"epica-x","issue":3,"url":"` + epicURL + `"}}`,
+			want: []string{
+				"#12", issueURL, "main@01234567", "epica-x", "#3", epicURL,
+				`<a class="ext-link" href="` + issueURL + `">`,
+				`<a class="ext-link" href="` + epicURL + `">`,
+			},
+			notWant: []string{"sin links.json", "links.json inválido"},
+		},
+		{
+			name:  "sin base ni épica",
+			links: `{"provider":"github","repo":"owner/name","issue":12,"url":"` + issueURL + `"}`,
+			want:  []string{"#12", issueURL, "sin registrar", "sin épica"},
+		},
+		{
+			name:  "archivo ausente",
+			links: "",
+			want:  []string{"sin links.json"},
+			notWant: []string{
+				`<a class="ext-link"`, "links.json inválido",
+			},
+		},
+		{
+			name:    "JSON mal formado",
+			links:   `{"issue":`,
+			want:    []string{"links.json inválido"},
+			notWant: []string{`<a class="ext-link"`},
+		},
+		{
+			name: "campos inválidos",
+			links: `{"provider":"github","repo":"owner/name","issue":12,` +
+				`"url":"javascript:alert(1)"}`,
+			want:    []string{"links.json inválido", "url"},
+			notWant: []string{`<a class="ext-link"`, "javascript:alert(1)</a>"},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			p, id := newViewFixture(t, meta.StatusReview)
+			if tc.links != "" {
+				writeTestFile(t, filepath.Join(p.SpecDir(id), "links.json"), tc.links)
+			}
+			got := renderContentFor(t, p, id)
+			for _, want := range tc.want {
+				if !strings.Contains(got, want) {
+					t.Errorf("la FICHA debe incluir %q:\n%s", want, got)
+				}
+			}
+			for _, notWant := range tc.notWant {
+				if strings.Contains(got, notWant) {
+					t.Errorf("la FICHA no debe incluir %q:\n%s", notWant, got)
+				}
+			}
+		})
+	}
+}
+
 // TestRenderPageYContent verifica la página completa y el fragmento, y que el
 // visor es de solo lectura: sin botón ni ruta de aprobación, conservando
 // documentos, validación, sesión, TOC y colofón.

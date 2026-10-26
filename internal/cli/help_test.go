@@ -66,7 +66,7 @@ func TestHelpViewDocumentaModos(t *testing.T) {
 	if !ok {
 		t.Fatal("no hay ayuda para view")
 	}
-	for _, want := range []string{"--open", "--stop", "--enable", "--disable", "Códigos de salida", "sesión activa"} {
+	for _, want := range []string{"--open", "--stop", "--enable", "--disable", "Códigos de salida", "sesión activa", "links.json", "terminado", "solo lectura"} {
 		if !strings.Contains(text, want) {
 			t.Errorf("la ayuda de view debe mencionar %q:\n%s", want, text)
 		}

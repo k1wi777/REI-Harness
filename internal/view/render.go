@@ -3,12 +3,15 @@ package view
 import (
 	"bytes"
 	"embed"
+	"errors"
 	"html/template"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/k1wi777/REI-Harness/internal/links"
 	"github.com/k1wi777/REI-Harness/internal/meta"
 	"github.com/k1wi777/REI-Harness/internal/paths"
 	"github.com/k1wi777/REI-Harness/internal/state"
@@ -65,6 +68,27 @@ type issueView struct {
 	Doc     string // documento relacionado, si el mensaje lo menciona
 }
 
+// linksView es la ficha de enlaces derivada de links.json. Solo la ficha
+// válida expone campos; en otro caso Note explica el motivo y Problems detalla
+// los incumplimientos, sin usar ningún campo del archivo (R6, R7).
+type linksView struct {
+	Valid    bool
+	Note     string
+	Problems []string
+
+	Issue int
+	URL   string
+
+	HasBase bool
+	Branch  string
+	SHA     string
+
+	HasEpic   bool
+	EpicSlug  string
+	EpicIssue int
+	EpicURL   string
+}
+
 // viewModel es el conjunto de datos que la plantilla HTML necesita.
 type viewModel struct {
 	Meta          *meta.Meta
@@ -72,6 +96,7 @@ type viewModel struct {
 	SessionActive bool
 	Docs          []docView
 	Issues        []issueView
+	Links         linksView
 	TotalPresent  int
 
 	// Estado de la comparación contra el commit base de revisión.
@@ -102,13 +127,13 @@ func statusLabel(s string) string {
 	case "pending":
 		return "pendiente"
 	case "ready":
-		return "listo para aprobar"
+		return "en aprobación"
 	case "in_progress":
 		return "en curso"
 	case "review":
 		return "en revisión"
 	case "done":
-		return "completado"
+		return "terminado"
 	case "blocked":
 		return "bloqueado"
 	case "changes_requested":
@@ -158,6 +183,40 @@ func renderDoc(src []byte) (template.HTML, []sectionView, error) {
 	return template.HTML(buf.String()), sections, nil
 }
 
+// readLinks compone la FICHA de enlaces para el Work Item. No duplica las
+// reglas de validación: se apoya en links.Read y links.Problems y solo consume
+// el resultado (R6–R8).
+func readLinks(p *paths.Project, id string) linksView {
+	l, err := links.Read(linksPath(p, id))
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return linksView{Note: "sin links.json"}
+		}
+		return linksView{Note: "links.json inválido", Problems: []string{err.Error()}}
+	}
+	if problems := links.Problems(l); len(problems) > 0 {
+		return linksView{Note: "links.json inválido", Problems: problems}
+	}
+	vm := linksView{Valid: true, Issue: l.Issue, URL: l.URL}
+	if l.Base != nil {
+		vm.HasBase = true
+		vm.Branch = l.Base.Branch
+		vm.SHA = l.Base.SHA
+	}
+	if l.Epic != nil {
+		vm.HasEpic = true
+		vm.EpicSlug = l.Epic.Slug
+		vm.EpicIssue = l.Epic.Issue
+		vm.EpicURL = l.Epic.URL
+	}
+	return vm
+}
+
+// linksPath devuelve la ruta del índice local del Work Item.
+func linksPath(p *paths.Project, id string) string {
+	return filepath.Join(p.SpecDir(id), "links.json")
+}
+
 // buildModel compone los datos de la página para un Work Item.
 func buildModel(p *paths.Project, id string) (*viewModel, error) {
 	m, err := meta.Load(p.MetaFile(id))
@@ -169,6 +228,7 @@ func buildModel(p *paths.Project, id string) (*viewModel, error) {
 		vm.Session = s
 		vm.SessionActive = s.Active() && s.WorkItem == id
 	}
+	vm.Links = readLinks(p, id)
 	if issues, err := validate.WorkItem(p, id); err == nil {
 		for _, is := range issues {
 			vm.Issues = append(vm.Issues, issueView{

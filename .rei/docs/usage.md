@@ -131,8 +131,12 @@ Cuando el Leader te presente una planificación lista (`ready`), te toca ejercer
 
 La aprobación se da **en el chat o en la terminal** (el Leader ejecuta
 `rei status set <id> in_progress`). Si abres el visor (`rei view`), ten en cuenta
-que es de **solo lectura**: muestra documentos, validación y sesión, pero no
-tiene botón ni ruta de aprobación. El visor nunca sustituye tu respuesta.
+que es de **solo lectura**: muestra documentos, validación, FICHA y sesión, con el
+estado real del Work Item (badge y FICHA se refrescan en vivo y la FICHA incluye
+issue, base y épica de `links.json`), pero no tiene botón ni ruta de aprobación.
+El visor nunca sustituye tu respuesta. En segundo plano se cierra poco después de
+mostrar «terminado» (`done`); `--stop`, el tiempo de inactividad y Ctrl+C siguen
+funcionando.
 
 REI Harness nunca avanza sin esta aprobación explícita — no por burocracia, sino porque la responsabilidad de qué se construye es tuya, no del agente.
 

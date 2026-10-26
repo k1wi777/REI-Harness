@@ -117,29 +117,76 @@
     }
   }
 
-  // refresh recarga el contenido conservando la posición de lectura.
-  function refresh() {
-    var content = document.getElementById("content");
+  // captureState guarda la posición de lectura y el estado de la interfaz que
+  // debe sobrevivir al reemplazo de #content: scroll del lector, índice y
+  // FICHA, diffs abiertos y hash vigente.
+  function captureState() {
     var reader = document.querySelector(".reader");
     var index = document.querySelector(".index");
     var meta = document.querySelector(".meta");
-    var rTop = reader ? reader.scrollTop : 0;
-    var iTop = index ? index.scrollTop : 0;
-    var mTop = meta ? meta.scrollTop : 0;
+    var diffs = [];
+    var open = document.querySelectorAll(".doc-body.show-changes");
+    for (var i = 0; i < open.length; i++) {
+      diffs.push(open[i].getAttribute("data-doc"));
+    }
+    return {
+      reader: reader ? reader.scrollTop : 0,
+      index: index ? index.scrollTop : 0,
+      meta: meta ? meta.scrollTop : 0,
+      diffs: diffs,
+      hash: window.location.hash || ""
+    };
+  }
+
+  // restoreHashPosition desplaza la vista a la sección vigente. El documento
+  // activo lo resuelve applySelection a partir de la selección guardada.
+  function restoreHashPosition(hash) {
+    var id = (hash || "").replace(/^#/, "");
+    if (!id || /^doc-/.test(id)) {
+      return;
+    }
+    var el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ block: "start" });
+    }
+  }
+
+  // restoreState reaplica sobre el contenido nuevo el estado capturado. Es la
+  // misma rutina para el refresco normal y para el evento final.
+  function restoreState(state) {
+    for (var i = 0; i < state.diffs.length; i++) {
+      var body = document.querySelector('.doc-body[data-doc="' + state.diffs[i] + '"]');
+      if (!body) {
+        continue;
+      }
+      body.classList.add("show-changes");
+      var toggle = body.querySelector(".changes-toggle");
+      if (toggle) {
+        toggle.setAttribute("aria-pressed", "true");
+      }
+    }
+    applySelection();
+    var reader = document.querySelector(".reader");
+    var index = document.querySelector(".index");
+    var meta = document.querySelector(".meta");
+    if (reader) reader.scrollTop = state.reader;
+    if (index) index.scrollTop = state.index;
+    if (meta) meta.scrollTop = state.meta;
+    restoreHashPosition(state.hash);
+  }
+
+  // refresh recarga el contenido conservando la posición de lectura.
+  function refresh() {
+    var content = document.getElementById("content");
+    if (!content) {
+      return;
+    }
+    var state = captureState();
     fetch("/content", { headers: { "Accept": "text/html" } })
       .then(function (r) { return r.text(); })
       .then(function (html) {
-        if (!content) {
-          return;
-        }
         content.innerHTML = html;
-        applySelection();
-        var r2 = document.querySelector(".reader");
-        var i2 = document.querySelector(".index");
-        var m2 = document.querySelector(".meta");
-        if (r2) r2.scrollTop = rTop;
-        if (i2) i2.scrollTop = iTop;
-        if (m2) m2.scrollTop = mTop;
+        restoreState(state);
       })
       .catch(function () { /* recarga best-effort */ });
   }
@@ -210,17 +257,19 @@
   applyHash();
   window.addEventListener("hashchange", applyHash);
 
-  // SSE: el servidor emite `data: reload` al cambiar los documentos. Si la
-  // conexión se interrumpe, se reconecta con espera creciente (1s → 15s) y se
-  // avisa de forma discreta hasta restablecerse.
+  // SSE: el servidor emite `data: reload` al cambiar los documentos, el estado
+  // o los enlaces. Al llegar a done emite un evento `final` con el HTML ya
+  // renderizado; la página lo aplica, confirma con POST /ack y deja de
+  // reconectar porque el servidor va a cerrarse por diseño.
   var RETRY_MIN = 1000;
   var RETRY_MAX = 15000;
   var es = null;
   var retryDelay = RETRY_MIN;
   var reconnectTimer = null;
+  var ended = false;
 
   function scheduleReconnect() {
-    if (reconnectTimer) {
+    if (ended || reconnectTimer) {
       return;
     }
     reconnectTimer = setTimeout(function () {
@@ -230,7 +279,52 @@
     retryDelay = Math.min(retryDelay * 2, RETRY_MAX);
   }
 
+  // applyFinal sustituye #content por el fragmento final conservando la lectura.
+  function applyFinal(payload) {
+    var content = document.getElementById("content");
+    if (!content || !payload || typeof payload.html !== "string") {
+      return false;
+    }
+    var state = captureState();
+    content.innerHTML = payload.html;
+    restoreState(state);
+    return true;
+  }
+
+  // confirmFinal avisa al servidor de que el estado final ya se aplicó. No
+  // modifica ningún documento: el visor sigue siendo de solo lectura.
+  function confirmFinal() {
+    try {
+      fetch("/ack", { method: "POST", headers: { "Accept": "application/json" } })
+        .catch(function () { /* el servidor puede cerrar igualmente */ });
+    } catch (e) {
+      /* el servidor puede cerrar igualmente */
+    }
+  }
+
+  function finish(payload) {
+    ended = true;
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+    }
+    if (es) {
+      es.close();
+      es = null;
+    }
+    setNotice("");
+    if (applyFinal(payload)) {
+      confirmFinal();
+    } else {
+      // Último recurso, aún dentro de la gracia: recarga completa.
+      window.location.reload();
+    }
+  }
+
   function connectEvents() {
+    if (ended) {
+      return;
+    }
     try {
       es = new EventSource("/events");
     } catch (e) {
@@ -249,10 +343,23 @@
         refresh();
       }
     };
+    // Los eventos con nombre no llegan a onmessage: se registran aparte.
+    es.addEventListener("final", function (ev) {
+      var payload = null;
+      try {
+        payload = JSON.parse(ev.data);
+      } catch (e) {
+        payload = null;
+      }
+      finish(payload);
+    });
     es.onerror = function () {
       if (es) {
         es.close();
         es = null;
+      }
+      if (ended) {
+        return;
       }
       setNotice("Reconectando…");
       scheduleReconnect();

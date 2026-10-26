@@ -1,11 +1,14 @@
 package view
 
 import (
+	"bytes"
 	"crypto/rand"
 	"crypto/subtle"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -32,6 +35,14 @@ type Server struct {
 	pollInterval time.Duration
 	idleTimeout  time.Duration
 
+	// Protocolo de cierre en done: marca terminal idempotente, confirmación del
+	// cliente y gracia de respaldo (R9–R13).
+	doneOnce      sync.Once
+	done          chan struct{}
+	ack           chan struct{}
+	gracePeriod   time.Duration
+	minFlushDelay time.Duration
+
 	srv        *http.Server
 	stopServer func()
 
@@ -51,13 +62,17 @@ func newServer(p *paths.Project, id string) (*Server, error) {
 		return nil, err
 	}
 	return &Server{
-		p:            p,
-		id:           id,
-		token:        token,
-		pollInterval: time.Second,
-		idleTimeout:  30 * time.Minute,
-		lastActivity: time.Now(),
-		closed:       make(chan struct{}),
+		p:             p,
+		id:            id,
+		token:         token,
+		pollInterval:  time.Second,
+		idleTimeout:   30 * time.Minute,
+		gracePeriod:   2 * time.Second,
+		minFlushDelay: 200 * time.Millisecond,
+		done:          make(chan struct{}),
+		ack:           make(chan struct{}, 1),
+		lastActivity:  time.Now(),
+		closed:        make(chan struct{}),
 	}, nil
 }
 
@@ -94,6 +109,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/", s.handleRoot)
 	mux.HandleFunc("/content", s.handleContent)
 	mux.HandleFunc("/events", s.handleEvents)
+	mux.HandleFunc("/ack", s.handleAck)
 	mux.HandleFunc("/static/", s.handleStatic)
 	return s.trackActivity(mux)
 }
@@ -129,10 +145,11 @@ func (s *Server) requestClose() {
 	})
 }
 
-// watchStatus cierra el servidor de fondo cuando el Work Item llega a done,
-// sin depender de que haya un cliente SSE conectado. Mientras avanza
-// (in_progress, review) el servidor sigue vivo para poder leer los documentos
-// que se generan; además siguen vigentes `rei view --stop` y el idle timeout.
+// watchStatus es el único responsable de cerrar por done. Al detectarlo marca el
+// estado terminal (idempotente) y deja que las conexiones SSE emitan su evento
+// final antes de cerrar. Mientras avanza (in_progress, review) el servidor sigue
+// vivo para poder leer los documentos que se generan; además siguen vigentes
+// `rei view --stop` y el idle timeout.
 func (s *Server) watchStatus() {
 	ticker := time.NewTicker(s.pollInterval)
 	defer ticker.Stop()
@@ -142,11 +159,45 @@ func (s *Server) watchStatus() {
 			return
 		case <-ticker.C:
 			if m, err := meta.Load(s.p.MetaFile(s.id)); err == nil && m.Status == meta.StatusDone {
-				s.requestClose()
+				s.markDone()
 				return
 			}
 		}
 	}
+}
+
+// markDone marca el estado terminal una sola vez y programa el cierre. Es
+// idempotente: observar `done` de nuevo no reinicia la gracia.
+func (s *Server) markDone() {
+	s.doneOnce.Do(func() {
+		close(s.done)
+		go s.closeAfterDone()
+	})
+}
+
+// closeAfterDone espera la confirmación de la página o, en su defecto, la
+// gracia de respaldo, y nunca cierra antes del intervalo mínimo de vaciado para
+// que las conexiones SSE alcancen a emitir el evento final (R10, R11).
+func (s *Server) closeAfterDone() {
+	start := time.Now()
+	timer := time.NewTimer(s.gracePeriod)
+	defer timer.Stop()
+	select {
+	case <-s.closed:
+		return
+	case <-s.ack:
+	case <-timer.C:
+	}
+	if wait := s.minFlushDelay - time.Since(start); wait > 0 {
+		drain := time.NewTimer(wait)
+		defer drain.Stop()
+		select {
+		case <-s.closed:
+			return
+		case <-drain.C:
+		}
+	}
+	s.requestClose()
 }
 
 // monitor cierra el servidor de fondo tras idleTimeout sin peticiones.
@@ -241,8 +292,9 @@ func (s *Server) handleContent(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleEvents es el endpoint SSE: emite `data: reload` cuando cambia el mtime
-// de algún documento del Work Item. En segundo plano, además, cierra el
-// servidor cuando el Work Item llega a done.
+// de cualquier fichero vigilado (documentos, meta.json o links.json) y, cuando
+// el servidor de fondo va a cerrarse por done, un evento final con el estado y
+// el fragmento ya renderizado. Nunca cierra por su cuenta (R9–R11).
 func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 	if !s.authorized(r) {
 		http.Error(w, "no autorizado", http.StatusForbidden)
@@ -268,6 +320,15 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 			return
 		case <-s.closed:
 			return
+		case <-s.done:
+			s.sendFinal(w, flusher)
+			// El evento final ya se ha enviado: se mantiene el stream hasta que
+			// el servidor cierre para que el cliente no vea un corte prematuro.
+			select {
+			case <-r.Context().Done():
+			case <-s.closed:
+			}
+			return
 		case <-ticker.C:
 			cur := s.snapshot()
 			if changedSnapshot(last, cur) {
@@ -277,14 +338,62 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 				}
 				flusher.Flush()
 			}
-			if s.background && s.closeOnDone {
-				if m, err := meta.Load(s.p.MetaFile(s.id)); err == nil && m.Status == meta.StatusDone {
-					s.requestClose()
-					return
-				}
-			}
 		}
 	}
+}
+
+// finalPayload es el contenido del evento SSE `final`. El HTML viaja en el
+// propio evento para que el cliente no dependa de un fetch que podría perder la
+// carrera contra el cierre del servidor.
+type finalPayload struct {
+	Status string `json:"status"`
+	Label  string `json:"label"`
+	HTML   string `json:"html"`
+}
+
+// sendFinal renderiza el fragmento con el estado actual (ya done) y lo envía en
+// un único evento SSE con JSON de una sola línea.
+func (s *Server) sendFinal(w io.Writer, flusher http.Flusher) {
+	vm, err := buildModel(s.p, s.id)
+	if err != nil {
+		return
+	}
+	var content bytes.Buffer
+	if err := renderContent(&content, vm); err != nil {
+		return
+	}
+	data, err := json.Marshal(finalPayload{
+		Status: vm.Meta.Status,
+		Label:  statusLabel(vm.Meta.Status),
+		HTML:   content.String(),
+	})
+	if err != nil {
+		return
+	}
+	if _, err := fmt.Fprintf(w, "event: final\ndata: %s\n\n", data); err != nil {
+		return
+	}
+	flusher.Flush()
+}
+
+// handleAck recibe la confirmación de que la página aplicó el estado final.
+// Solo valida la sesión y despierta al cierre: no lee ni escribe ningún
+// documento, meta.json ni estado (R14).
+func (s *Server) handleAck(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.Header().Set("Allow", http.MethodPost)
+		http.Error(w, "método no permitido", http.StatusMethodNotAllowed)
+		return
+	}
+	if !s.authorized(r) {
+		http.Error(w, "no autorizado", http.StatusForbidden)
+		return
+	}
+	select {
+	case s.ack <- struct{}{}:
+	default:
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (s *Server) handleStatic(w http.ResponseWriter, r *http.Request) {
@@ -302,12 +411,22 @@ func (s *Server) handleStatic(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(data)
 }
 
-// snapshot recoge el mtime de los documentos mostrados del Work Item.
+// snapshot recoge el mtime de los documentos mostrados y de los metadatos que
+// alimentan la cabecera y la FICHA (estado y enlaces), de modo que sus cambios
+// también disparan el `reload` (R3, R4).
 func (s *Server) snapshot() map[string]time.Time {
-	snap := make(map[string]time.Time, len(documentos))
+	snap := make(map[string]time.Time, len(documentos)+2)
 	for _, name := range documentos {
 		if fi, err := os.Stat(docPath(s.p, s.id, name)); err == nil {
 			snap[name] = fi.ModTime()
+		}
+	}
+	for _, extra := range []struct{ key, path string }{
+		{"meta.json", s.p.MetaFile(s.id)},
+		{"links.json", linksPath(s.p, s.id)},
+	} {
+		if fi, err := os.Stat(extra.path); err == nil {
+			snap[extra.key] = fi.ModTime()
 		}
 	}
 	return snap
