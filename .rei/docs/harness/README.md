@@ -12,4 +12,4 @@ No requieren personalización al adaptar REI Harness a un proyecto concreto. Mod
 | `progress.md` | Sistema de progreso: estado de sesión, historial y uso de plantillas. |
 | `meta.md` | Estructura y significado de `meta.json`. |
 | `adapters.md` | Formato canónico de rol y adaptación a runtimes nativos. |
-| `integrations/github.md` | Playbook de la integración opcional con GitHub Issues (v1). |
+| `integrations/github.md` | Playbook de la integración opcional con GitHub Issues (v2): épicas, backlog, adopción, asignación y cierre. |

@@ -885,3 +885,75 @@ canónico resuelto con `gh repo view` y aviso de remoto no canónico en
 Work Item cerrado (`done`). No hay acciones pendientes; el siguiente paso lo
 decide el usuario (nuevo Work Item o cierre de sesión).
 
+
+## 2026-10-25 20:01 — 2026-10-25_19-33__github-epicas-backlog-v2
+
+- **Work Item:** 2026-10-25_19-33__github-epicas-backlog-v2
+- **Tipo:** feature
+- **Estado:** done
+- **Inicio:** 2026-10-25T19:34:27-05:00
+- **Agente activo:** reviewer
+
+## Plan
+
+- Planificación completada: `requirements.md` (R1–R64), `design.md` y
+  `tasks.md` (T1–T12) en `.rei/specs/2026-10-25_19-33__github-epicas-backlog-v2/`.
+- Alcance: v2 de la integración opcional con GitHub Issues (épicas, backlog de
+  hijas, adopción/promoción, asignación, conflictos y cierre de épica).
+- Sin código Go nuevo: playbook + contrato del Leader + regeneración de agentes.
+- La prueba de campo (T12) creará una épica `[prueba v2]` y dos hijas en este
+  repositorio y las dejará cerradas como evidencia.
+
+## Bitácora
+
+- 2026-10-25 19:33 — Acuerdo de v2 leído de `meta.json`; se preservan v1 y el
+  vocabulario reservado (`rei:epic`, `rei:backlog`).
+- 2026-10-25 19:34 — Sesión iniciada en `pending` por el Spec Author.
+- 2026-10-25 — Planificación finalizada. Se documentaron modelo de épica/hija,
+  idempotencia canónica, creación parcial, adopción/promoción, publicación de
+  la spec, asignación, cierre bajo orden, errores y prueba de campo.
+- 2026-10-25 19:42 — Usuario aprobó la planificación. Puerta v1: sí a issue + rama.
+  Issue #2 creada (https://github.com/k1wi777/REI-Harness/issues/2), `links.json`
+  escrito y rama `feat/2-github-epicas-backlog-v2` creada desde `main`.
+- 2026-10-25 19:42 — Autorización explícita para la prueba de campo (T12): el
+  Implementer puede crear la épica `[prueba v2]` y dos hijas en
+  `k1wi777/REI-Harness`, asignar/desasignar, adoptar en un worktree temporal,
+  publicar la spec de prueba y cerrar las issues de prueba. No puede crear PR,
+  mergear ni tocar `main`.
+- 2026-10-25 — Implementer inicia la ejecución de T1–T12 en
+  `feat/2-github-epicas-backlog-v2`. T1–T7 completadas: playbook v2 reescrito
+  (épicas, backlog, adopción/promoción, spec, asignación, cierre, errores,
+  recordatorios) conservando las secciones v1.
+- 2026-10-25 — T8–T10 completadas: contrato del Leader con disparadores v2 y
+  regla de prueba de campo; índice del harness a v2; regenerados
+  `.opencode/agents/leader.md`, `.claude/agents/leader.md` y el manifiesto
+  (ignorado por git). `--check` de ambos adaptadores en verde.
+- 2026-10-25 — T11 en verde: `gofmt -l internal cmd` sin salida, `make vet`,
+  `make test`, `make build`, `rei check --quiet`, `init opencode --check`,
+  `init claude --check` y `rei validate` OK.
+- 2026-10-25 — T12 (prueba de campo) ejecutada y aprobada: épica #3
+  (https://github.com/k1wi777/REI-Harness/issues/3), hijas #4 y #5; idempotencia
+  (1 resultado por marcador), asignación/desasignación y lote con `@me`
+  (`k1wi777`), login inexistente rechazado sin cambios, cierre rechazado con
+  hijas abiertas, adopción de #4 en `/tmp/rei-v2-field` con Work Item `pending`
+  y spec publicada dos veces (1 bloque), cierre de #4/#5 y #3 verificado
+  `CLOSED`, y rechazo de añadir hija a la épica cerrada. Worktree eliminado, sin
+  commits. Evidencia completa en `impl.md`.
+- 2026-10-25 — Revisión iniciada (`reviewer`) con `rei review-diff --full` sobre
+  `a7e00b3`. **Veredicto: aprobado (`done`).** Verificado: playbook v2 cubre
+  R1–R57/R59 (épicas, backlog, idempotencia REST canónica, creación parcial,
+  adopción/promoción, spec idempotente, asignación, cierre bajo orden, errores);
+  contrato del Leader con disparadores, conflictos y prueba de campo (R58); sin
+  cambios en `internal/**`, `cmd/**`, `go.mod`/`go.sum` ni `config.json`;
+  `links.json` con `epic: null`; agentes nativos sincronizados (`--check` OK).
+  Prueba de campo comprobada en vivo: #3/#4/#5 cerradas con marcadores y labels
+  correctos, sin duplicados, #2 intacta y sin PRs, merges ni commits (`main` en
+  `a7e00b3`). `gofmt`, `go vet`, `go test`, build, `rei check --quiet` y
+  `rei validate` en verde. Detalle en `review.md`.
+
+## Próximo paso
+
+Work Item cerrado (`done`). Sin acciones pendientes de implementación; el
+siguiente paso lo decide el usuario (comentario de review/PR bajo orden
+explícita o nuevo Work Item).
+

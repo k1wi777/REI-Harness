@@ -194,7 +194,10 @@ Los comandos exactos están en
 `.rei/docs/harness/integrations/github.md`; esta sección fija las reglas no
 negociables.
 
-- **Puerta única.** Al aprobar la planificación (Caso C), si no existe
+- **Arranque.** Si el usuario pide crear o planificar un backlog, crear una
+  épica o hijas, asignar/desasignar o cerrar una épica, aplica el playbook
+  **antes** de `rei new`.
+- **Puerta única (v1).** Al aprobar la planificación (Caso C), si no existe
   `.rei/specs/<id>/links.json` ni una decisión registrada en `current.md`,
   formula una sola pregunta: «¿Creo la issue y la rama `feat/<n>-<slug>`?».
   Nunca la repitas en la misma sesión.
@@ -204,26 +207,48 @@ negociables.
     y sin forzarla.
   - **No:** no crees issue ni rama, trabaja en `<base>` y registra la decisión
     en `current.md`.
-- **Comentarios automáticos.** Tras el Implementer publica el comentario
+- **Backlog v2.** Entrevista (alcance, no-objetivos, features, orden,
+  responsables), borrador completo de épica e hijas y **aprobación explícita**
+  antes de crear nada. El silencio o una respuesta ambigua nunca son
+  aprobación. Usa idempotencia canónica por marcador; ante creación parcial,
+  informa de lo creado y lo pendiente y reintenta reutilizando lo existente.
+- **Adopción.** Si el usuario pide «trabajemos en la #N», lee la issue, sus
+  comentarios, labels, assignees y marcadores antes de crear el Work Item.
+  Nunca adoptes una épica; ofrece sus hijas. Si la issue ya tiene el marcador de
+  otro Work Item, detente e informa del conflicto. Si es una hija de backlog,
+  promuévela, conserva el cuerpo, ajusta labels/`links.json` y, si está sin
+  asignar, **ofrece** asignarla sin hacerlo por tu cuenta. Tras `spec_author`,
+  publica en la issue el resumen y `design.md` plegado de forma idempotente.
+- **Asignación.** Solo bajo orden explícita o confirmación de una oferta.
+  Resuelve `@me`, valida el login, ejecuta `gh issue edit
+  --add-assignee`/`--remove-assignee`, verifica el resultado y no autoasignes
+  nunca. GitHub es la fuente de verdad de las personas.
+- **Cierre de épica.** Solo bajo orden explícita; verifica el marcador de épica,
+  consulta el estado real de cada hija y cierra únicamente si todas están
+  cerradas. Nunca autocierres la épica ni cierres hijas desde este protocolo.
+- **Comentarios automáticos (v1).** Tras el Implementer publica el comentario
   `<!-- rei:comment:impl:<id> -->`; tras el Reviewer, el de
   `<!-- rei:comment:review:<id> -->`. Sin preguntar y sin duplicar: busca el
   marcador y actualiza el existente. Nunca comentes cambios de estado. Aplica o
   retira `rei:blocked` al entrar o salir de `blocked`, sin comentario.
-- **PR y merge.** Solo tras la revisión y con una orden explícita del usuario.
-  El PR lleva `Closes #<n>`; el merge es squash con asunto `<título> (#<n>)` y
-  borrado de rama. Nunca uses `--admin` ni auto-merge. Tras el merge verifica y
-  cierra la issue si sigue abierta. Sin orden, nunca hagas commit, push, merge
-  ni borres ramas.
-- **Adopción.** Si el usuario pide «trabajemos en la #N», lee la issue, busca
-  el marcador, pregunta lo que falte y crea el Work Item; al añadir el marcador
-  conserva el cuerpo original. Si la issue tiene el marcador de otro Work Item,
-  detente e informa del conflicto.
-- **Errores.** Informa siempre con causa y siguiente paso. Un fallo de GitHub
-  no altera `meta.json`, el estado de `current.md` ni la etapa del workflow;
-  reintenta sin duplicar issue ni comentario.
+- **PR y merge (v1).** Solo tras la revisión y con una orden explícita del
+  usuario. El PR lleva `Closes #<n>`; el merge es squash con asunto
+  `<título> (#<n>)` y borrado de rama. Nunca uses `--admin` ni auto-merge. Tras
+  el merge verifica y cierra la issue si sigue abierta. Sin orden, nunca hagas
+  commit, push, merge ni borres ramas.
+- **Conflictos y errores.** Informa siempre con causa y siguiente paso. Un
+  fallo de GitHub no altera `meta.json`, el estado de `current.md` ni la etapa
+  del workflow; reintenta sin duplicar Work Items, issues, marcadores, labels
+  ni secciones.
+- **Prueba de campo.** Si la planificación del Work Item incluye una prueba de
+  campo, registra la autorización explícita del usuario en `current.md` antes de
+  lanzar al Implementer y permite que sea el Implementer quien la ejecute,
+  remitiendo al playbook. Las operaciones normales de backlog, adopción,
+  asignación y cierre siguen siendo tuyas.
 - **Recordatorios.** Mientras haya sesión, mantén en «Próximo paso» de
-  `current.md` las acciones GitHub pendientes y retíralas al completarlas. Tras
-  `done`, repórtalas en tu respuesta.
+  `current.md` las acciones GitHub pendientes (backlog, hijas, task list,
+  adopción, spec, asignación, cierre, PR, merge) y retíralas al completarlas.
+  Tras `done`, repórtalas en tu respuesta.
 
 #### Delegación
 
