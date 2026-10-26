@@ -273,6 +273,7 @@ func Status(p *paths.Project, r Runner, out io.Writer) int {
 	}
 
 	remote, remoteErr := originCause(p.Root, r)
+	mismatch := gh != nil && gh.Repo != "" && remoteErr == nil && !strings.EqualFold(gh.Repo, remote.String())
 	switch {
 	case remoteErr != nil:
 		fmt.Fprintf(out, "        remoto origin: no detectado (%v).\n", remoteErr)
@@ -284,6 +285,10 @@ func Status(p *paths.Project, r Runner, out io.Writer) int {
 			relation = "coincide"
 		}
 		fmt.Fprintf(out, "        remoto origin: %s (%s con integrations.github.repo)\n", remote.String(), relation)
+	}
+	if mismatch {
+		fmt.Fprintln(out, "[WARN]  El remoto no es el nombre canónico configurado; la idempotencia debe")
+		fmt.Fprintln(out, "        resolverse con `gh repo view <repo> --json nameWithOwner --jq .nameWithOwner`.")
 	}
 
 	ghOK, ghAuth := ghDiagnosis(p, r)
@@ -307,6 +312,9 @@ func Status(p *paths.Project, r Runner, out io.Writer) int {
 		fmt.Fprintln(out, "Siguiente paso: `gh auth login` para autenticar GitHub CLI.")
 	case remoteErr != nil:
 		fmt.Fprintln(out, "Siguiente paso: revisa `git remote -v` y vuelve a ejecutar `rei github enable`.")
+	case mismatch:
+		fmt.Fprintln(out, "Siguiente paso: pon el nombre canónico (`gh repo view <repo> --json nameWithOwner --jq .nameWithOwner`)")
+		fmt.Fprintln(out, "en integrations.github.repo, o actualiza `origin` a ese repositorio.")
 	default:
 		fmt.Fprintln(out, "Sin acciones pendientes.")
 	}

@@ -834,3 +834,54 @@ Esperando revisión del Work Item. El trabajo está documentado en
 Work Item cerrado: veredicto registrado, `meta.json` en `done` y sesión
 archivada en `history.md`.
 
+
+## 2026-10-25 19:14 — 2026-10-25_19-01__github-repo-canonico-idempotencia
+
+- **Work Item:** 2026-10-25_19-01__github-repo-canonico-idempotencia
+- **Tipo:** task
+- **Estado:** done
+- **Inicio:** 2026-10-25T19:06:14-05:00
+- **Agente activo:** reviewer
+
+## Plan
+
+Task re-scopeada: idempotencia por API REST en el playbook de GitHub, nombre
+canónico resuelto con `gh repo view` y aviso de remoto no canónico en
+`rei github status`. Plan: `.rei/specs/2026-10-25_19-01__github-repo-canonico-idempotencia/plan.md`.
+
+## Bitácora
+
+- 2026-10-25 — `spec_author` leyó `meta.json` (Task, pending) y el playbook
+  `.rei/docs/harness/integrations/github.md`; inició la sesión con
+  `rei session start ... task`.
+- 2026-10-25 — Confirmado el estado actual del código: `Status` en
+  `internal/github/github.go` termina en «Sin acciones pendientes» también con
+  remoto distinto de `integrations.github.repo`; el playbook usa
+  `gh issue list --search` como paso de idempotencia.
+- 2026-10-25 — Descartados los flags de CLI (`--repo`, `--base`, `--strategy`)
+  según el re-scope de `meta.json`; sin cambios de contrato de rol, por lo que no
+  se regeneran agentes nativos.
+- 2026-10-25 — Planificación finalizada en `plan.md`; `rei check --quiet` en
+  verde (exit 0). Se espera aprobación humana.
+- 2026-10-25 — `implementer` inicia la implementación (pasos 1-5): playbook con
+  nombre canónico + idempotencia REST + fork/rename/tabla de errores; `Status`
+  avisa de remoto no canónico; tests de `TestStatusRemoto` ampliados.
+- 2026-10-25 — Verificación completa en verde (pasos 6-7): `gofmt`, `make test`,
+  `make vet`, `make build`, `rei check`, `rei init opencode/claude --check`; sin
+  contratos de rol afectados. Implementación documentada en `impl.md` (paso 8).
+  Work Item en `review`.
+- 2026-10-25 — `reviewer` aprueba el Work Item (`review.md`): playbook con
+  idempotencia REST filtrada por marcador (PRs excluidos) y nombre canónico
+  explícito con fallo ruidoso; §3 documenta rename/fork, `origin` vs `upstream`
+  e Issues deshabilitados; §7 la limitación PR fork→upstream. `status` emite
+  `[WARN]` y siguiente paso ante remoto ≠ config sin red ni escritura (smoke
+  manual con remoto viejo y coincidente). `TestStatusRemoto` 4/4 PASS; `make
+  test|vet|build`, `gofmt`, `rei check --quiet`, `rei init opencode|claude
+  --check` y `rei validate` en verde. Sin flags, dependencias ni cambio de
+  contratos.
+
+## Próximo paso
+
+Work Item cerrado (`done`). No hay acciones pendientes; el siguiente paso lo
+decide el usuario (nuevo Work Item o cierre de sesión).
+

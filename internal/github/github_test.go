@@ -439,24 +439,71 @@ func TestStatusEstados(t *testing.T) {
 
 func TestStatusRemoto(t *testing.T) {
 	cases := []struct {
-		name string
-		repo string
-		want string
+		name      string
+		cfg       string
+		wantAviso bool
+		wantStep  string
 	}{
-		{"coincide", "owner/name", "coincide"},
-		{"no coincide", "otro/repo", "no coincide"},
+		{
+			name:      "coincide",
+			cfg:       `{"integrations":{"github":{"enabled":true,"repo":"owner/name"}}}`,
+			wantAviso: false,
+			wantStep:  "Sin acciones pendientes.",
+		},
+		{
+			name:      "no coincide",
+			cfg:       `{"integrations":{"github":{"enabled":true,"repo":"otro/repo"}}}`,
+			wantAviso: true,
+			wantStep:  "Siguiente paso: pon el nombre canónico",
+		},
+		{
+			name:      "no coincide con integración desactivada",
+			cfg:       `{"integrations":{"github":{"enabled":false,"repo":"otro/repo"}}}`,
+			wantAviso: true,
+			wantStep:  "Siguiente paso: `rei github enable`",
+		},
+		{
+			name:      "repo vacío no compara ni avisa",
+			cfg:       `{"integrations":{"github":{"enabled":true}}}`,
+			wantAviso: false,
+			wantStep:  "Sin acciones pendientes.",
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			p := newProject(t, `{"integrations":{"github":{"enabled":true,"repo":"`+tc.repo+`"}}}`)
+			p := newProject(t, tc.cfg)
+			// Sin comandos de red simulados: si Status invocase `gh api` o
+			// `gh repo view`, el fakeRunner devolvería «comando no simulado».
 			r := fakeRunner{paths: ghOK(), runs: gitOK()}
 			r.runs["gh auth status"] = runResult{}
+			before, err := os.ReadFile(configPath(p))
+			if err != nil {
+				t.Fatal(err)
+			}
 			var out strings.Builder
 			if code := Status(p, r, &out); code != 0 {
-				t.Fatalf("Status = %d", code)
+				t.Fatalf("Status = %d, esperaba 0:\n%s", code, out.String())
 			}
-			if !strings.Contains(out.String(), tc.want) {
-				t.Fatalf("salida no contiene %q:\n%s", tc.want, out.String())
+			got := out.String()
+			if !strings.Contains(got, tc.wantStep) {
+				t.Fatalf("salida no contiene %q:\n%s", tc.wantStep, got)
+			}
+			hasAviso := strings.Contains(got, "El remoto no es el nombre canónico")
+			if hasAviso != tc.wantAviso {
+				t.Fatalf("aviso = %v, esperaba %v:\n%s", hasAviso, tc.wantAviso, got)
+			}
+			if tc.wantAviso && !strings.Contains(got, "gh repo view <repo> --json nameWithOwner") {
+				t.Fatalf("el aviso debe indicar la resolución canónica:\n%s", got)
+			}
+			if !tc.wantAviso && strings.Contains(got, "no coincide") {
+				t.Fatalf("no debía comparar el remoto:\n%s", got)
+			}
+			after, err := os.ReadFile(configPath(p))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if string(before) != string(after) {
+				t.Fatal("Status no debe escribir config.json")
 			}
 		})
 	}

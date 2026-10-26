@@ -69,6 +69,13 @@ rei github status    # solo lectura: estado, valores, remoto, gh y siguiente pas
 refs/remotes/origin/HEAD`; si no puede, usa `main` y lo informa. No consulta la
 API de GitHub. Los avisos de `gh` ausente o sin autenticar **no bloquean**.
 
+`status` es **offline y de solo lectura**: no llama a `gh` ni a la API de GitHub.
+Además de estado, valores, remoto y disponibilidad de `gh`, **avisa si el remoto
+de `origin` no coincide con `integrations.github.repo`** (rename, clon viejo o
+fork) y propone el siguiente paso: resolver el nombre canónico con `gh repo view`
+y ponerlo en la config, o actualizar `origin`. Con esa discrepancia **no**
+concluye «Sin acciones pendientes».
+
 **Regla dura:** si `integrations.github` no existe o `enabled` es `false`, el
 Leader **no menciona GitHub**, no ejecuta `gh` y trabaja sobre la rama base como
 siempre (R20).
@@ -105,6 +112,40 @@ verdad:
 Si falta, está corrupto o se desincroniza, no bloquea el Work Item: se recupera
 la issue buscando el marcador y se reescribe.
 
+## Nombre canónico del repositorio
+
+En este documento, `<repo>` significa siempre el **nombre canónico vigente**
+`owner/name`. Se resuelve **al inicio de cada acción GitHub** (no una vez por
+sesión: un rename a mitad de sesión invalidaría el valor cacheado):
+
+```bash
+canonical=$(gh repo view <repo> --json nameWithOwner --jq .nameWithOwner)
+```
+
+Ese valor se usa en **todos** los comandos de la acción: `--repo <canonical>` en
+`gh label create`, `gh issue view|create|edit|close|comment` y
+`gh pr create|view|merge`, y en las rutas REST `repos/<canonical>/issues/...`.
+
+- `<repo>` de partida es `integrations.github.repo`; si está vacío, el
+  `owner/name` detectado en `origin`.
+- Si la resolución falla (sin red, sin auth, sin permisos, repo inexistente), se
+  informa de **causa y siguiente paso** y se detiene la acción. **Nunca** se
+  continúa con el nombre viejo ni con el valor de la config sin resolver.
+
+## Rename y fork
+
+GitHub **redirige** el nombre viejo al nuevo (301), por lo que el listado REST
+funciona con ambos nombres. El **search API no sigue ese redirect**: indexa con
+retraso y, ante un nombre viejo, devuelve lista vacía con exit 0 — un fallo
+silencioso que lleva directo al duplicado. Por eso la idempotencia no se apoya en
+`gh issue list --search`.
+
+En un **fork**, `gh repo view` resuelve el nombre consultado al fork, no al
+upstream. La integración opera siempre sobre el repositorio configurado (o, si
+`repo` está vacío, sobre `origin`); **nunca** cambia sola a `upstream`. Para
+operar sobre el upstream hay que ponerlo explícitamente en
+`integrations.github.repo`.
+
 ---
 
 # 4. Puerta única al aprobar la planificación
@@ -130,29 +171,39 @@ Nunca repitas la pregunta en la misma sesión.
 Orden exacto. Sustituye `<id>`, `<repo>`, `<título>` y `<n>` por sus valores.
 
 ```bash
-# 1. ¿Existe ya la issue? (idempotencia por marcador; NUNCA crear dos veces)
-gh issue list --repo <repo> --state all --limit 10 \
-  --search 'in:body "rei:work-item:<id>"' \
-  --json number,url,state
+# 0. Nombre canónico (obligatorio al inicio de la acción)
+canonical=$(gh repo view <repo> --json nameWithOwner --jq .nameWithOwner)
+
+# 1. ¿Existe ya la issue? (fuente de verdad: el marcador, vía REST)
+gh api "repos/$canonical/issues?state=all&per_page=100" --paginate \
+  --jq '.[] | select(.pull_request == null)
+        | select((.body // "") | contains("<!-- rei:work-item:<id> -->"))
+        | [.number, .state, .html_url] | @tsv'
 
 # 2. Labels idempotentes (solo si falta la issue)
-gh label create rei --color 1D76DB --description "Gestionado por REI" --force
+gh label create rei --color 1D76DB --description "Gestionado por REI" --force \
+  --repo "$canonical"
 gh label create 'rei:feature' --color 0E8A16 \
-  --description "Work Item de tipo feature" --force
+  --description "Work Item de tipo feature" --force --repo "$canonical"
 ```
+
+El endpoint de issues incluye también PRs: se descartan los que traen
+`pull_request`. El marcador se busca en `.body` y el resultado es autoritativo
+aunque el remoto sea un nombre viejo (el REST sigue el redirect del rename).
+`--paginate` evita perder issues antiguas.
 
 Si el paso 1 devuelve una issue, **reutilízala**: informa de número y URL y no
 crees otra. Si no existe, escribe el cuerpo en un archivo temporal y crea:
 
 ```bash
 # 3. Crear la issue (solo si no existe)
-gh issue create --repo <repo> \
+gh issue create --repo "$canonical" \
   --title "<título del Work Item>" \
   --body-file /tmp/rei-issue-<id>.md \
   --label rei --label rei:feature
 
 # 4. Verificar número/URL/estado antes de afirmar éxito
-gh issue view <n> --repo <repo> --json number,url,state,body
+gh issue view <n> --repo "$canonical" --json number,url,state,body
 ```
 
 5. Escribe `.rei/specs/<id>/links.json` **antes** de crear la rama, para no
@@ -225,6 +276,10 @@ problema, la decisión y el alcance.
 
 # 5. Adopción de issues existentes
 
+> **Recordatorio:** `<repo>` es el nombre canónico resuelto al inicio de la acción
+> con `gh repo view` (ver «Nombre canónico del repositorio»), no el remoto
+> literal ni el valor de la config sin resolver.
+
 Cuando el usuario pida «trabajemos en la #N»:
 
 1. Comprueba que la integración está activa. Si no, no leas ni modifiques
@@ -260,6 +315,10 @@ Cuando el usuario pida «trabajemos en la #N»:
 ---
 
 # 6. Comentarios automáticos
+
+> **Recordatorio:** `<repo>` es el nombre canónico resuelto al inicio de la acción
+> con `gh repo view` (ver «Nombre canónico del repositorio»), no el remoto
+> literal ni el valor de la config sin resolver.
 
 Disparadores: el Leader acaba de recibir al Implementer (comentario `impl`) y al
 Reviewer (comentario `review`). Se publican **sin preguntar**.
@@ -337,6 +396,10 @@ estado de REI y se puede reintentar sin duplicar (R33, R46).
 
 # 7. Pull request y merge
 
+> **Recordatorio:** `<repo>` es el nombre canónico resuelto al inicio de la acción
+> con `gh repo view` (ver «Nombre canónico del repositorio»), no el remoto
+> literal ni el valor de la config sin resolver.
+
 Solo **tras la revisión** y bajo **orden explícita** del usuario (R35, R39).
 
 ```bash
@@ -353,6 +416,13 @@ gh pr view <pr> --repo <repo> --json number,url,state,mergeable
 ```
 
 Cuerpo del PR: resumen, cambios, verificación y `Closes #<n>`.
+
+**Limitación v1 — PR desde un fork:** la integración opera sobre **un único
+repositorio** (el canónico configurado). Si el destino es el upstream pero la rama
+vive en el fork, el flujo anterior no sirve: es un caso **manual**, con
+`gh pr create --repo <upstream> --head <fork-owner>:<branch> ...`. No hay flags
+`--repo`/`--base` en `rei`: la decisión y el comando los ejecuta el Leader bajo
+orden explícita.
 
 Merge solo con orden explícita (R36):
 
@@ -395,6 +465,9 @@ paso**. Nunca se silencia ni se afirma un éxito sin verificarlo (R44, R47).
 | `gh` ausente | `LookPath` falla | «GitHub CLI no está instalado» | Instalar `gh` |
 | `gh` sin auth | `gh auth status` falla | «GitHub CLI no está autenticado» | `gh auth login` |
 | Repo no detectado / ambiguo | `git remote get-url origin` falla o host inválido | «No se pudo detectar el repositorio» | Revisar `git remote -v` / configurar `repo` |
+| Remoto ≠ nombre canónico | `git remote get-url origin` frente a `integrations.github.repo` | «El remoto no coincide con `integrations.github.repo`» | Resolver el canónico con `gh repo view <repo> --json nameWithOwner --jq .nameWithOwner` y ponerlo en `integrations.github.repo`, o actualizar el remoto a ese repositorio |
+| Fallo al resolver el canónico | `gh repo view` falla (red/auth/permisos/404) | «No se pudo resolver el nombre canónico de `<repo>`» | Revisar `gh auth status` y la red; **no** continuar con el nombre viejo |
+| Issues deshabilitados | 404/410 al crear o listar la issue | «Las issues están deshabilitadas en `<repo>`» | Activar Issues en Settings del repositorio (o del fork) o configurar otro repositorio en `integrations.github.repo` |
 | Issue inexistente | `gh issue view` 404 | «La issue #N no existe en `<repo>`» | Verificar número/repo |
 | Rama existente | `git switch -c` falla | «La rama ya existe» | Reutilizarla o elegir otra; nunca forzar |
 | PR inexistente | `gh pr view` 404 | «No hay PR para esa rama» | Crear el PR solo si hay orden |
