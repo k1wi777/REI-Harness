@@ -25,7 +25,8 @@ Incluido en v1:
 
 - configuración y diagnóstico (`rei github enable|disable|status`);
 - vínculo issue ↔ Work Item con marcador y `links.json`;
-- puerta única al aprobar la planificación (issue + rama);
+- puerta única al aprobar la planificación de una **feature** (issue + rama; las
+  tasks no la ejecutan por defecto);
 - comentarios automáticos de implementación y revisión;
 - PR y merge bajo orden explícita;
 - adopción de issues existentes;
@@ -37,6 +38,9 @@ Incluido en v2 (construye sobre v1 sin alterarlo):
 - **épicas**: issue que planifica un módulo, no un Work Item;
 - **backlog de hijas**: issues completas pendientes de adopción;
 - **adopción y promoción** de una hija a Work Item, con publicación de la spec;
+- **base por Work Item en la puerta**: captura, registro en `links.json` y en la
+  issue, y uso para la rama y el PR; `integrations.github.base` es solo
+  *fallback*;
 - **asignación y desasignación** de personas con `gh issue edit`;
 - **progreso y cierre** de la épica bajo orden explícita;
 - tabla de errores, aislamiento y reintentos ampliados.
@@ -46,6 +50,12 @@ fork→upstream, sincronización bidireccional, Work Items `pending` locales com
 sustituto del backlog, autoasignación por carga, time tracking, proveedores
 distintos de GitHub, commits/push o merge automáticos, `--admin`/auto-merge y
 flags nuevos en `rei`.
+
+**Alcance por tipo de Work Item.** La puerta «issue + rama» es **solo para
+Work Items de tipo `feature`**. Una `task` **no** genera issue ni rama por
+defecto: se trabaja en la rama base sin tocar GitHub. Solo si el usuario pide
+explícitamente una issue y una rama para una `task` (opt-in) se aplica el mismo
+flujo, incluida la captura de la base de §4.
 
 **Regla dura:** si `integrations.github` no existe o `enabled` es `false`, el
 Leader **no menciona GitHub**, no ejecuta `gh`, no lee ni crea issues y trabaja
@@ -74,7 +84,16 @@ La configuración vive en `.rei/config.json`, bajo `integrations.github`:
   ni ejecuta `gh`.
 - `enabled: false` ⇒ integración **desactivada**; se conservan `repo`, `base`,
   `mergeStrategy` y `links.json`.
-- `base` vacío ⇒ `main`. `mergeStrategy` vacío ⇒ `squash`.
+- `base` es solo el **fallback** de la base por Work Item: se usa únicamente si
+  el Work Item no tiene base registrada (`links.json.base` ni la línea `Base:`
+  de la issue) y no se puede preguntar al usuario. La base efectiva es **por
+  Work Item** y se decide en la puerta (§4). Si `base` está vacío ⇒ `main`.
+  `mergeStrategy` vacío ⇒ `squash`.
+
+La base por Work Item **no** se escribe en `.rei/config.json` ni la modifica
+`rei github enable`; vive en `links.json` y en el cuerpo de la issue. `rei
+github status` sigue siendo offline y **no** conoce la base efectiva de cada
+Work Item.
 
 Comandos:
 
@@ -85,9 +104,10 @@ rei github status    # solo lectura: estado, valores, remoto, gh y siguiente pas
 ```
 
 `enable` detecta el repositorio con `git remote get-url origin` (SSH o HTTPS de
-`github.com`) y la rama base con `git symbolic-ref --quiet --short
-refs/remotes/origin/HEAD`; si no puede, usa `main` y lo informa. No consulta la
-API de GitHub. Los avisos de `gh` ausente o sin autenticar **no bloquean**.
+`github.com`) y la rama base (*fallback*) con `git symbolic-ref --quiet --short
+refs/remotes/origin/HEAD`; si no puede, usa `main` y lo informa. Ese valor no
+decide la base de cada Work Item (§4). No consulta la API de GitHub. Los avisos
+de `gh` ausente o sin autenticar **no bloquean**.
 
 `status` es **offline y de solo lectura**: no llama a `gh` ni a la API de GitHub.
 Además de estado, valores, remoto y disponibilidad de `gh`, **avisa si el remoto
@@ -160,6 +180,10 @@ de verdad:
   "repo": "owner/name",
   "issue": 123,
   "url": "https://github.com/owner/name/issues/123",
+  "base": {
+    "branch": "dev",
+    "sha": "0a1b2c3d4e5f"
+  },
   "epic": {
     "slug": "modulo-x",
     "issue": 100,
@@ -172,6 +196,23 @@ Sin épica, `epic` es `null` (compatible con v1). El objeto `epic` evita la
 ambigüedad entre slug y número y permite recuperar la épica sin releer el
 cuerpo. Si el archivo falta, está corrupto o se desincroniza, **no bloquea** el
 Work Item: se recupera la issue por su marcador y se reescribe.
+
+`base` (opcional, aditivo y compatible con v1) registra la base del Work Item
+capturada en la puerta:
+
+- `branch` es la rama de origen; `sha` es `git rev-parse --short=12 HEAD` en el
+  momento de la puerta, el mismo valor que el cuerpo de la issue.
+- **Ausente** ⇒ Work Item v1: la base se resuelve al actuar (§4 y §5) con el
+  orden `links.json.base` → línea `Base:` de la issue →
+  `integrations.github.base` (o `main` si está vacío) → preguntar al usuario.
+  Nunca se infiere de `origin/HEAD` ni de la rama actual.
+- **Corrupto o incompleto** (falta `branch`, `sha` inválido, JSON roto) ⇒ se
+  trata como ausente, se informa y se recupera; **nunca** bloquea el Work Item.
+- Si `links.json.base` y la línea `Base:` de la issue existen y **discrepan**, se
+  pregunta cuál vale; no se elige en silencio.
+
+La base así resuelta se guarda en `links.json` y en `current.md`, pero **no** se
+reescribe el cuerpo de issues ya creadas para añadirles la línea `Base:`.
 
 ## 3.4 Nombre canónico del repositorio
 
@@ -209,27 +250,64 @@ operar sobre el upstream hay que ponerlo explícitamente en
 
 ---
 
-# 4. Puerta única al aprobar la planificación (v1)
+# 4. Puerta única al aprobar la planificación de una feature (v1 + base por Work Item)
 
-**Disparador:** `meta.json` está en `ready`, el usuario aprueba y
-`integrations.github.enabled` es `true`.
+**Disparador:** `meta.json` está en `ready`, el usuario aprueba,
+`integrations.github.enabled` es `true` **y** `type` es `feature`.
+
+**Solo features.** La puerta «issue + rama» **no** se ejecuta para Work Items de
+tipo `task`: una task se trabaja en la rama base sin crear issue ni rama, y no se
+pregunta nada. Solo con un **opt-in explícito** del usuario (pide issue y rama
+para la task) se aplica esta sección completa. No preguntes la puerta a una
+`task` «por si acaso».
 
 Antes de `rei status set <id> in_progress`:
 
 1. Lee `.rei/config.json` y comprueba `enabled`.
-2. Si ya existe `.rei/specs/<id>/links.json`, no preguntes.
-3. Si `current.md` ya registra la decisión de este Work Item, no vuelvas a
-   preguntar.
-4. Formula **una sola** pregunta:
+2. Comprueba `type == feature` (o el opt-in explícito de una task).
+3. Si ya existe `.rei/specs/<id>/links.json`, no preguntes issue ni rama; si le
+   falta `base`, resuélvela (§3.3) y añádela sin repreguntar.
+4. Si `current.md` ya registra la decisión de este Work Item (base, sha y tipo),
+   no vuelvas a preguntar.
+5. Captura la base **antes** de formular la pregunta única:
 
-   > «¿Creo la issue y la rama `feat/<n>-<slug>`?» (el `<n>` será el número de
-   > la issue y `<slug>` el slug del Work Item).
+```bash
+current=$(git rev-parse --abbrev-ref HEAD)   # "HEAD" ⇒ detached
+sha=$(git rev-parse --short=12 HEAD)
+default=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD | sed 's#^origin/##')
+```
 
-Nunca repitas la pregunta en la misma sesión.
+Clasificación de la base y su **tipo** (el tipo decide el cierre en §11):
+
+| Situación | Base elegida | Acción |
+|-----------|--------------|--------|
+| `HEAD` = default | `HEAD` | Sin aviso; la pregunta única muestra la base (tipo **default**). |
+| `HEAD` ≠ default, no es `feat/*` | `HEAD` | Mostrar «base = `<base>` (no es la default `<default>`)» y **confirmar en la misma pregunta** que es la rama de integración (tipo **integración**, p. ej. `dev`). |
+| `HEAD` = `feat/*` | `HEAD` | Aviso de PR apilada: el PR irá contra `<base>`, no contra la default; exigir confirmación explícita (tipo **apilada**). |
+| default no resoluble | — | Preguntar cuál es la default y la rama de integración; no asumir `main` ni deducir el tipo en silencio. |
+| detached (`HEAD`) | `integrations.github.base` o `main` | Ofrecer el fallback; si no hay respuesta, usarlo y decirlo en la Bitácora. Nunca adivinar la rama original. |
+| `links.json.base` ya existe | la registrada | Mostrarla; si `HEAD` difiere, preguntar si se conserva o se actualiza. Nunca cambiarla en silencio. |
+
+Si `links.json.base` y la línea `Base:` de la issue discrepan, pregunta; nunca
+elijas en silencio (§12).
+
+6. Formula **una sola** pregunta, con la base incorporada:
+
+   > «¿Creo la issue y la rama `feat/<n>-<slug>` desde `<base>` (@`<sha>`)?»
+   > (el `<n>` será el número de la issue y `<slug>` el slug del Work Item).
+
+   La confirmación explícita es **obligatoria** si `<base>` no es la default o si
+   es una rama `feat/*` (aviso de PR apilada). Si el usuario no confirma, no se
+   crea nada.
+
+Nunca repitas la pregunta en la misma sesión. Registra en `current.md`
+(Bitácora): base, sha, **tipo de base** (default, integración o apilada) y, si
+aplica, el fallback usado por detached.
 
 ## 4.1 Camino «sí»
 
-Orden exacto. Sustituye `<id>`, `<repo>`, `<título>` y `<n>` por sus valores.
+Orden exacto. Sustituye `<id>`, `<repo>`, `<título>`, `<base>`, `<sha>` y `<n>`
+por sus valores.
 
 ```bash
 # 0. Nombre canónico (obligatorio al inicio de la acción)
@@ -268,19 +346,25 @@ gh issue create --repo "$canonical" \
 gh issue view <n> --repo "$canonical" --json number,url,state,body
 ```
 
-5. Escribe `.rei/specs/<id>/links.json` **antes** de crear la rama, para no
-   perder el vínculo si la rama falla. Si ya existía, actualízalo.
-6. Crea la rama solo desde la rama base:
+5. Escribe `.rei/specs/<id>/links.json` con `base {branch, sha}` **antes** de
+   crear la rama, para no perder el vínculo si la rama falla. Si ya existía,
+   actualízalo conservando el resto de campos.
+6. Crea la rama **desde la base**, sin exigir que `HEAD` sea la base:
 
 ```bash
-git rev-parse --abbrev-ref HEAD     # debe ser <base>
-git switch -c feat/<n>-<slug>
+git rev-parse --abbrev-ref HEAD        # rama actual (o "HEAD" si detached)
+git rev-parse --verify refs/heads/<base>
+git switch -c feat/<n>-<slug> <base>                    # base local
+# solo si la base no está en local:
+git fetch origin <base>
+git switch --no-track -c feat/<n>-<slug> origin/<base>  # sin upstream heredado
 ```
 
-Si la rama actual no es `<base>`, **detente y pregunta**; nunca crees la rama
-desde un punto arbitrario. Si `feat/<n>-<slug>` ya existe, no la fuerces ni la
-recrees: informa de la causa y del siguiente paso (reutilizarla o elegir otra).
-7. Reporta issue, rama y `links.json`.
+Si la base no existe ni en local ni en `origin`, **no** crees la rama: informa
+con causa y siguiente paso (§12). Nunca uses `-f` ni recrees una rama existente;
+si `feat/<n>-<slug>` ya existe, informa y ofrece reutilizarla o elegir otra.
+7. Reporta issue, base, sha, rama y `links.json` («rama creada desde `<base>`
+   (@`<sha>`)» aunque `HEAD` estuviera en otra rama).
 
 Si la issue se creó pero falla la rama o `links.json`, informa de **qué quedó
 hecho y qué está pendiente**, conserva la issue y permite reintentar sin
@@ -290,10 +374,14 @@ duplicarla.
 
 El marcador va en la **primera línea**. El título es `meta.json.title`. El
 cuerpo debe ser autosuficiente: alguien sin acceso al repo debe entender el
-problema, la decisión y el alcance.
+problema, la decisión y el alcance. La línea `Base:` (`<rama>` es la base elegida
+en la puerta y `<sha>` su sha corto) solo se escribe en issues **nuevas**; nunca
+se añade a issues ya creadas.
 
 ```md
 <!-- rei:work-item:<id> -->
+
+Base: <rama> @ <sha>
 
 ## Contexto y decisión
 
@@ -329,7 +417,8 @@ problema, la decisión y el alcance.
 ## 4.3 Camino «no»
 
 - No se crea issue ni rama.
-- Se trabaja sobre la rama base, como hoy.
+- Se trabaja en `<base>` si es una rama local; si `HEAD` está detached, en el
+  estado actual.
 - Se registra en `current.md` (Bitácora):
   «GitHub: issue/rama declinadas; se trabaja en `<base>`».
 - No se vuelve a preguntar.
@@ -398,13 +487,24 @@ la identidad es el marcador.
    ```
 
    Debe conservar `rei`, tener `rei:feature` y no tener `rei:backlog`.
-6. Escribir `links.json` con `provider`, `repo`, `issue`, `url` y el objeto
-   `epic` resuelto desde el marcador de la épica (slug, número y URL). Si
-   `links.json` faltaba o estaba corrupto, se reescribe (no bloquea).
-7. Si la hija está **sin asignar**, ofrecer asignarla a quien la trabaja y **no
+6. Resolver la base del Work Item **antes** de escribir `links.json` o crear la
+   rama, en este orden: `links.json.base` → línea `Base: <rama> @ <sha>` del
+   cuerpo de la issue → preguntar al usuario → `integrations.github.base`
+   (fallback; si está vacío, `main`). Si la issue no declara base y el usuario no
+   responde, aplica el fallback y decláralo; **nunca** inventes la rama de origen.
+   Si `links.json.base` y la línea `Base:` discrepan, pregunta. Si el **tipo** de
+   base no se deduce (no es la default ni `feat/*`), confírmalo con el usuario
+   antes de crear la rama o el PR; nunca asumas que es integración. Si la base
+   registrada ya no existe, deriva a §12.
+7. Escribir `links.json` con `provider`, `repo`, `issue`, `url`,
+   `base {branch, sha}` y el objeto `epic` resuelto desde el marcador de la épica
+   (slug, número y URL). Registrar base, sha y tipo en `current.md`. **No**
+   reescribir el cuerpo de la issue para añadir `Base:`. Si `links.json` faltaba
+   o estaba corrupto, se reescribe (no bloquea).
+8. Si la hija está **sin asignar**, ofrecer asignarla a quien la trabaja y **no
    asignarla sin confirmación**. Si está asignada a otra persona, preguntar
    antes.
-8. Continuar con el workflow normal: `spec_author`.
+9. Continuar con el workflow normal: `spec_author`.
 
 Si la adopción queda parcial (Work Item creado pero marcador, labels o
 `links.json` pendientes), se informa de lo hecho y lo pendiente; el reintento
@@ -472,9 +572,18 @@ Work Item y se puede reintentar sin duplicar la sección.
      --add-label rei --add-label 'rei:feature'
    ```
 
-5. Escribir `.rei/specs/<id>/links.json` con `epic: null` (o el objeto `epic` si
-   la issue declara pertenecer a una épica y esta se resuelve sin ambigüedad).
-6. Continuar con el workflow normal (`spec_author`).
+5. Resolver la base del Work Item antes de escribir `links.json` o crear la rama:
+   `links.json.base` → línea `Base: <rama> @ <sha>` de la issue → preguntar →
+   `integrations.github.base` (fallback; si está vacío, `main`). Si el usuario no
+   responde, aplica el fallback y decláralo; **nunca** inventes la rama de origen.
+   Si el tipo de base no se deduce (no es la default ni `feat/*`), confírmalo con
+   el usuario antes de crear la rama o el PR; nunca asumas integración. No
+   reescribas la issue para añadir `Base:`; guarda la base en `links.json` y
+   `current.md`. Si la base ya no existe, deriva a §12.
+6. Escribir `.rei/specs/<id>/links.json` con `base {branch, sha}` y `epic: null`
+   (o el objeto `epic` si la issue declara pertenecer a una épica y esta se
+   resuelve sin ambigüedad).
+7. Continuar con el workflow normal (`spec_author`).
 
 ---
 
@@ -873,9 +982,22 @@ estado de REI y se puede reintentar sin duplicar.
 
 ---
 
-# 11. Pull request y merge (v1)
+# 11. Pull request y merge (v1 + base por Work Item)
 
 Solo **tras la revisión** y bajo **orden explícita** del usuario.
+
+La base del PR es la **base del Work Item**, resuelta en la puerta y registrada
+(§3.3/§4), no `integrations.github.base` si el Work Item ya tiene base. Antes de
+crear el PR, verifica que la base está publicada en `origin`; si no lo está, se
+detiene el PR y se pide publicarla (bajo orden explícita), nunca se cae en
+silencio a la default:
+
+```bash
+# 0. Base del Work Item + verificación en origin (obligatoria antes del PR)
+base=<base del Work Item>       # links.json.base → Base: de la issue → fallback confirmado
+test -n "$(git ls-remote --heads origin "$base")" \
+  || { echo "La base '$base' no existe en origin: git push origin '$base'"; }
+```
 
 ```bash
 # La orden de PR autoriza commitear SOLO los archivos del Work Item (nunca
@@ -884,20 +1006,28 @@ git add <archivos del Work Item>
 git commit -m "<título>"
 git push -u origin feat/<n>-<slug>
 
-gh pr create --repo "$canonical" --base <base> --head feat/<n>-<slug> \
+gh pr create --repo "$canonical" --base "$base" --head feat/<n>-<slug> \
   --title "<título>" --body-file /tmp/rei-pr-<id>.md
 
 gh pr view <pr> --repo "$canonical" --json number,url,state,mergeable
 ```
 
-Cuerpo del PR: resumen, cambios, verificación y `Closes #<n>`.
+El cuerpo y el cierre dependen del **tipo de base confirmado en la puerta**
+(§4), nunca de la mera existencia de `dev`:
+
+- **default** (`<base>` == default): cuerpo con `Closes #<n>`; la issue se
+  autocierra al mergear.
+- **integración** (`<base>` no default, p. ej. `dev`, confirmada): **sin
+  `Closes`**; tras el merge se verifica y se cierra manualmente.
+- **apilada** (`<base>` es `feat/*` o confirmada como tal): cuerpo con
+  `Refs #<n>`, sin cierre; «cierre pendiente al llegar a `<integración>`».
 
 **Limitación v1 — PR desde un fork:** la integración opera sobre **un único
 repositorio** (el canónico configurado). Si el destino es el upstream pero la
 rama vive en el fork, el flujo anterior no sirve: es un caso **manual**, con
-`gh pr create --repo <upstream> --head <fork-owner>:<branch> ...`. No hay flags
-`--repo`/`--base` en `rei`: la decisión y el comando los ejecuta el Leader bajo
-orden explícita.
+`gh pr create --repo <upstream> --base "$base" --head <fork-owner>:<branch> ...`.
+No hay flags `--repo`/`--base` en `rei`: la decisión y el comando los ejecuta el
+Leader bajo orden explícita.
 
 Merge solo con orden explícita:
 
@@ -910,16 +1040,25 @@ gh pr merge <pr> --repo "$canonical" --squash --delete-branch \
 - Si branch protection, checks requeridos o permisos bloquean el merge: informa
   de la causa y del siguiente paso, deja el PR abierto y **no** reintentes en
   bucle ni fuerces el merge.
-- Después del merge, verifica la issue y ciérrala si sigue abierta:
+- Después del merge, verifica **siempre** la issue:
 
   ```bash
   gh issue view <n> --repo "$canonical" --json state,url
-  gh issue close <n> --repo "$canonical" --reason completed   # solo si sigue OPEN
-  gh issue view <n> --repo "$canonical" --json state           # verificar CLOSED
   ```
 
-  Si ya estaba cerrada por `Closes #N`, informa de ello. Si la verificación o el
-  cierre falla, informa de qué quedó pendiente.
+  - tipo **default**: si sigue abierta, ciérrala bajo la misma orden y verifica
+    `CLOSED`; si ya la cerró `Closes #N`, informa de ello.
+  - tipo **integración**: si sigue abierta, ciérrala manualmente y verifica:
+
+    ```bash
+    gh issue close <n> --repo "$canonical" --reason completed
+    gh issue view <n> --repo "$canonical" --json state     # debe ser CLOSED
+    ```
+
+  - tipo **apilada**: **no** la cierres; reporta «cierre pendiente al llegar a
+    `<integración>`».
+
+  Si la verificación o el cierre falla, informa de qué quedó pendiente.
 
 Cualquier otro commit o push distinto de la rama del Work Item requiere una
 orden propia.
@@ -953,6 +1092,13 @@ paso**. Nunca se silencia ni se afirma un éxito sin verificarlo.
 | Hijas abiertas al cerrar | estado `OPEN` | «La épica #N tiene hijas abiertas: ...» | Cerrar las hijas primero |
 | Creación parcial | contador creadas/pendientes | «Backlog parcial: creadas ..., pendientes ...» | Reintentar; los marcadores evitan duplicados |
 | Fallo al publicar la spec | error de `gh issue edit` | «No se pudo publicar la spec en #N» | Reintentar sin duplicar la sección |
+| `HEAD` detached en la puerta | `git rev-parse --abbrev-ref HEAD` = `HEAD` | «`HEAD` está detached: no hay rama actual» | Indicar la base o aceptar el fallback `integrations.github.base` |
+| Base no registrada al adoptar | sin `links.json.base` ni línea `Base:` | «El Work Item no tiene base registrada» | Preguntar la rama y guardarla en `links.json` |
+| Base solo local | `git ls-remote --heads origin <base>` vacío y rama local existente | «La base `<base>` no existe en `origin`» | `git push origin <base>` y reintentar el PR |
+| Base borrada o renombrada | no existe en local ni en `origin` | «La base `<base>` del Work Item ya no existe» | Confirmar el nombre nuevo y actualizar `links.json`, o recrear/publicar la rama |
+| Base contradictoria | `links.json.base` ≠ línea `Base:` | «La base registrada difiere de la issue» | Confirmar cuál vale y corregir `links.json` |
+| Tipo de base ambiguo | base ≠ default, no es `feat/*` y no hay confirmación | «No está claro si `<base>` es la rama de integración» | Confirmar el tipo en la puerta (default, integración o apilada); nunca asumirlo |
+| PR apilada sin confirmar | base `feat/*` sin confirmación | «La PR iría contra `<base>`, no contra la default `<default>`» | Confirmar la PR apilada o elegir otra base |
 | Rama existente | `git switch -c` falla | «La rama ya existe» | Reutilizarla o elegir otra; nunca forzar |
 | PR inexistente | `gh pr view` 404 | «No hay PR para esa rama» | Crear el PR solo si hay orden |
 | Permisos insuficientes | 403/404 de API | «Sin permisos sobre `<repo>`» | Revisar acceso y `gh auth status` |
@@ -988,6 +1134,9 @@ v1:
 - `GitHub: pendiente comentario de revisión (reintentar).`
 - `GitHub: pendiente PR de la rama feat/<n>-<slug>.`
 - `GitHub: pendiente merge del PR #<pr>.`
+- `GitHub: pendiente publicar la base <base> en origin antes del PR.`
+- `GitHub: pendiente actualizar la base del Work Item (<base> no existe).`
+- `GitHub: pendiente cierre de la issue #<n> al llegar a <integración> (PR apilada).`
 
 v2:
 

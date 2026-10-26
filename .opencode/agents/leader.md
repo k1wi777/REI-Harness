@@ -120,8 +120,10 @@ Si el usuario solicita cambios:
 
 ##### Caso C — `status == ready` y el usuario aprobó
 
-1. Si `integrations.github.enabled` es `true`, aplica la **puerta única** de la
-   sección «Integración con GitHub (opcional)». Si está desactivada o no
+1. Si `integrations.github.enabled` es `true` **y** el Work Item es de tipo
+   `feature`, aplica la **puerta única** de la sección «Integración con GitHub
+   (opcional)». Las `task` no pasan por la puerta ni generan issue o rama salvo
+   opt-in explícito del usuario. Si la integración está desactivada o no
    configurada, no menciones GitHub.
 2. Actualiza `.rei/specs/<work-item-id>/meta.json` → `status = in_progress`.
 3. Registra el punto de partida de la implementación:
@@ -197,16 +199,23 @@ negociables.
 - **Arranque.** Si el usuario pide crear o planificar un backlog, crear una
   épica o hijas, asignar/desasignar o cerrar una épica, aplica el playbook
   **antes** de `rei new`.
-- **Puerta única (v1).** Al aprobar la planificación (Caso C), si no existe
-  `.rei/specs/<id>/links.json` ni una decisión registrada en `current.md`,
-  formula una sola pregunta: «¿Creo la issue y la rama `feat/<n>-<slug>`?».
+- **Puerta única (v1).** **Solo para Work Items de tipo `feature`**: al aprobar
+  la planificación (Caso C), si no existe `.rei/specs/<id>/links.json` ni una
+  decisión registrada en `current.md`, captura `HEAD`/sha, muestra la base y
+  formula una sola pregunta: «¿Creo la issue y la rama `feat/<n>-<slug>` desde
+  `<base>` (@`<sha>`)?». Las **tasks no generan issue ni rama** y no se les
+  pregunta la puerta salvo opt-in explícito del usuario. La confirmación es
+  obligatoria si la base no es la default o es `feat/*` (PR apilada).
   Nunca la repitas en la misma sesión.
   - **Sí:** busca antes el marcador `<!-- rei:work-item:<id> -->` para no
-    duplicar la issue; créala con el cuerpo autosuficiente y las labels `rei` y
-    `rei:feature`; escribe `links.json`; crea la rama solo si estás en `<base>`
-    y sin forzarla.
+    duplicar la issue; créala con el cuerpo autosuficiente (línea
+    `Base: <base> @ <sha>`), las labels `rei` y `rei:feature` y escribe
+    `links.json` con `base {branch, sha}`; crea la rama desde esa base sin exigir
+    `HEAD == base` y sin forzarla.
   - **No:** no crees issue ni rama, trabaja en `<base>` y registra la decisión
     en `current.md`.
+  - `integrations.github.base` es solo **fallback** (detached, adopción sin base
+    o usuario que no responde); nunca la base por defecto de un Work Item.
 - **Backlog v2.** Entrevista (alcance, no-objetivos, features, orden,
   responsables), borrador completo de épica e hijas y **aprobación explícita**
   antes de crear nada. El silencio o una respuesta ambigua nunca son
@@ -232,10 +241,15 @@ negociables.
   marcador y actualiza el existente. Nunca comentes cambios de estado. Aplica o
   retira `rei:blocked` al entrar o salir de `blocked`, sin comentario.
 - **PR y merge (v1).** Solo tras la revisión y con una orden explícita del
-  usuario. El PR lleva `Closes #<n>`; el merge es squash con asunto
-  `<título> (#<n>)` y borrado de rama. Nunca uses `--admin` ni auto-merge. Tras
-  el merge verifica y cierra la issue si sigue abierta. Sin orden, nunca hagas
-  commit, push, merge ni borres ramas.
+  usuario. Usa como `--base` la **base del Work Item** (no la global) y verifica
+  antes que existe en `origin`; si es solo local, detente y pide
+  `git push origin <base>`. El cierre depende del tipo de base confirmado en la
+  puerta: **default** → `Closes #<n>` y autocierre al mergear; **integración**
+  (no default, p. ej. `dev`) → sin `Closes` y cierre manual verificado tras el
+  merge; **apilada** (`feat/*`) → `Refs #<n>` y cierre pendiente declarado. El
+  merge es squash con asunto `<título> (#<n>)` y borrado de rama. Nunca uses
+  `--admin` ni auto-merge. Tras el merge verifica siempre la issue. Sin orden,
+  nunca hagas commit, push, merge ni borres ramas.
 - **Conflictos y errores.** Informa siempre con causa y siguiente paso. Un
   fallo de GitHub no altera `meta.json`, el estado de `current.md` ni la etapa
   del workflow; reintenta sin duplicar Work Items, issues, marcadores, labels

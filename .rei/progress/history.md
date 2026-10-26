@@ -957,3 +957,123 @@ Work Item cerrado (`done`). Sin acciones pendientes de implementación; el
 siguiente paso lo decide el usuario (comentario de review/PR bajo orden
 explícita o nuevo Work Item).
 
+
+## 2026-10-25 22:27 — 2026-10-25_22-04__github-base-por-work-item
+
+- **Work Item:** 2026-10-25_22-04__github-base-por-work-item
+- **Tipo:** task
+- **Estado:** done
+- **Inicio:** 2026-10-25T22:05:34-05:00
+- **Agente activo:** reviewer
+
+## Plan
+
+`plan.md` redactado en `.rei/specs/2026-10-25_22-04__github-base-por-work-item/`.
+Captura de la base por Work Item en la puerta «issue + rama», registro en
+`links.json` (`base: {branch, sha}`) y en el cuerpo de la issue
+(`Base: <rama> @ <sha>`), rama `feat/<n>-<slug>` desde esa base, PR con
+`--base <base>` verificada en `origin`, y `integrations.github.base` como
+fallback. Sin código Go: playbook, contrato del Leader y plantillas.
+
+## Bitácora
+
+- Se inició la sesión (`rei session start`) con estado `pending`.
+- Se leyó el acuerdo de `meta.json` y el playbook de GitHub v2.
+- Se redactó `plan.md` con objetivo, decisiones (precedencia de la base, esquema,
+  rama de integración, confirmación de PR apilada, fallback), archivos, cambios
+  por sección, restricciones, verificación y pasos.
+- La planificación finalizó y espera aprobación humana.
+- Revisión solicitada: corregido D3 para que el cierre dependa del tipo de base
+  (default → `Closes`/autocierre; integración no default → cierre manual
+  verificado; apilada → `Refs` y cierre pendiente), no de la existencia de `dev`.
+  Actualizados §4 (confirmación del tipo), §5 (adopción), §11 (PR/merge/cierre),
+  §12 (error de tipo ambiguo) y los criterios de verificación y prueba de campo.
+- 2026-10-25 22:10 — Usuario aprobó la planificación. Es una **Task**, así que
+  NO se crea issue ni rama: la puerta es solo para Features. Se implementa en
+  `main`.
+- 2026-10-25 22:10 — Autorización explícita para la prueba de campo: el
+  Implementer puede crear `dev` desde `main` en `origin`, crear dos Features de
+  prueba (una con base `main`, otra con base `dev`), abrir issues/ramas/PRs,
+  mergear a `main`/`dev`, cerrar las issues y limpiar worktrees y ramas de prueba.
+  No puede tocar Work Items reales ni dejar ramas de prueba abiertas.
+- 2026-10-25 22:12 — Paso 1 completado: §1 (v2 con base por Work Item y puerta
+  solo para features) y §2 (`base` como fallback, base por Work Item fuera de la
+  config). `rei check --quiet` exit 0.
+- 2026-10-25 22:14 — Paso 2 completado: §3.3 documenta `base {branch, sha}`
+  (opcional, aditivo, corrupto = ausente) y el orden de recuperación.
+- 2026-10-25 22:18 — Paso 3 completado: §4 reescrita con la puerta solo para
+  features (tasks sin issue/rama salvo opt-in), captura de `HEAD`/sha/default,
+  clasificación y confirmación del tipo de base, pregunta única con base,
+  `Base: <rama> @ <sha>` en la plantilla y rama desde la base sin exigir
+  `HEAD == base`.
+- 2026-10-25 22:18 — Corrección del usuario incorporada: la puerta es solo para
+  Features; las Tasks no generan issue ni rama por defecto.
+- 2026-10-25 22:20 — Paso 4 completado: §5.2 y §5.4 resuelven la base (orden
+  `links.json` → `Base:` → preguntar → fallback), guardan `base` en `links.json`
+  y `current.md` y exigen confirmar el tipo si es ambiguo.
+- 2026-10-25 22:22 — Paso 5 completado: §11 verifica la base en `origin` antes
+  del PR, usa `--base` del Work Item y decide `Closes`/cierre manual/`Refs` por
+  el tipo de base, con verificación posterior.
+- 2026-10-25 22:24 — Paso 6 completado: siete filas nuevas en §12 (detached, base
+  no registrada, solo local, borrada, contradictoria, tipo ambiguo y PR apilada
+  sin confirmar) y tres recordatorios en §13.
+- 2026-10-25 22:26 — Paso 7 completado: contrato del Leader con puerta solo para
+  features, base confirmada/registrada, rama desde la base y PR/cierre por tipo
+  de base.
+- 2026-10-25 22:28 — Paso 8 completado: `.opencode/agents/leader.md` y
+  `.claude/agents/leader.md` regenerados; `rei init opencode --check` y
+  `rei init claude --check` exit 0.
+- 2026-10-25 22:29 — Paso 9 completado: `.rei/docs/harness/README.md` incluye
+  «base por Work Item» en la descripción del playbook.
+- 2026-10-25 22:32 — Paso 10 completado (parcial en lo que depende de Go):
+  `rei check --quiet` exit 0, `rei init opencode|claude --check` exit 0, greps de
+  consistencia sin hallazgos y `git diff --stat` limitado a los archivos del
+  plan. **El entorno no tiene toolchain de Go** (`go`, `gofmt`, `make vet`,
+  `make build` no disponibles), así que esas comprobaciones no pudieron
+  ejecutarse; no hay cambios bajo `internal/**` ni `cmd/**` (verificado con
+  `git diff --stat`).
+- 2026-10-25 23:25 — Paso 11 completado: prueba de campo con `dev` creada en
+  `origin` antes de los tests y worktrees temporales.
+  - **Test A (base `main`, con `dev` existiendo):** Feature de prueba con `HEAD`
+    `main` @ `1d3ae0b89e81`, tipo **default**; issue #7 con `Base: main @
+    1d3ae0b89e81`; `links.json` con `base branch main`; rama
+    `feat/7-field-test-a` desde `main`; PR #8 a `main` con `Closes #7` (squash,
+    commit vacío); issue #7 **CLOSED** automáticamente 2 s tras el merge.
+  - **Test B (base `dev`):** Feature de prueba con `HEAD` `dev` @ `1d3ae0b89e81`,
+    tipo **integración** confirmado; issue #9 con `Base: dev @ 1d3ae0b89e81`;
+    `links.json` con `base branch dev`; rama `feat/9-field-test-b` desde `dev`;
+    PR #10 a `dev` **sin `Closes`** (squash, commit vacío); tras el merge la
+    issue seguía **OPEN** y se cerró con `gh issue close --reason completed`
+    (verificado **CLOSED**). Después `dev → main` (fast-forward
+    `23c659b`, sin archivos de prueba).
+  - Sin efectos secundarios: rama `feat/*` ⇒ aviso de PR apilada y declinar no
+    crea nada; base solo local ⇒ mensaje de §12 antes del PR.
+  - Limpieza: worktrees eliminados, ramas `feat/7-field-test-a` y
+    `feat/9-field-test-b` borradas (local y remoto), `dev` permanece en `origin`
+    en `23c659b`; `main` local y remoto en `23c659b`; issues/PRs quedan
+    cerradas/mergeadas como evidencia.
+  - Detalle en `.rei/progress/work-items/2026-10-25_22-04__github-base-por-work-item/impl.md`.
+- 2026-10-26 — Revisión (`reviewer`) sobre `rei review-diff` (base `1d3ae0b`) y
+  el working tree. **Veredicto: aprobado (`done`).** Verificado: puerta solo para
+  `feature` en §1/§4 y en el contrato del Leader; captura y clasificación de la
+  base (default/integración/apilada/ambiguo), pregunta única con
+  `Base: <rama> @ <sha>`, `links.json` con `base {branch, sha}`, rama desde la
+  base sin exigir `HEAD == base`; cierre por tipo (default → `Closes`/
+  autocierre; integración → cierre manual verificado; apilada → `Refs`/cierre
+  pendiente); verificación de la base en `origin` antes del PR; adopción sin
+  reescribir issues; `integrations.github.base` solo como fallback. Sin cambios
+  en `internal/**`, `cmd/**`, `go.mod` ni `.rei/config.json`; agentes nativos
+  regenerados (`--check` OK); `README.md` actualizado. `rei check --quiet`,
+  `rei init opencode|claude --check` y `rei validate` exit 0. Prueba de campo
+  comprobada en vivo (`gh`): #7 CLOSED y PR #8 a `main` con `Closes`; #9 cerrada
+  manualmente tras el PR #10 a `dev` sin `Closes`; `dev → main` (`23c659b`), sin
+  ramas ni worktrees de prueba y `git diff --stat 1d3ae0b..HEAD` vacío. Go
+  (`test`/`vet`/build) no ejecutable por falta de toolchain; sin código Go
+  tocado. Detalle en `review.md`.
+
+## Próximo paso
+
+Work Item cerrado (`done`). Queda pendiente que el Leader commitee los cambios
+de esta Task (docs, contrato y agentes regenerados); no se abre PR (las Tasks no
+pasan la puerta). El siguiente Work Item lo decide el usuario.
+
