@@ -6,18 +6,30 @@
 
 ## Estrategia de verificación
 
-La verificación es **local y reproducible**: no hay workflow de CI que ejecute los
-tests (`.github/workflows/release.yml` solo publica releases en tags `v*`).
+La verificación combina tres vías complementarias y es reproducible en local:
+
+- **CI** (`.github/workflows/ci.yml`): en cada push a `main`/`dev`, cada PR contra
+  esas ramas y bajo demanda (`workflow_dispatch`), un único job `test` comprueba
+  formato (`gofmt -l .`), `go vet ./...` y `go test -count=1 ./...`. El CI
+  **valida**: no compila ni publica binarios.
+- **CD** (`.github/workflows/release.yml`): al publicar un tag `v*`, GoReleaser
+  construye y publica los binarios de release. El CD **publica**.
+- **Manual**: `make build` (`V3`) y `make cross` (`V4`) se ejecutan a mano antes de
+  cerrar un Work Item cuando el cambio lo justifica. El CI no los ejecuta.
 
 Se apoya en:
 
-- **`go vet`** para errores estáticos evidentes.
+- **Formato** con `gofmt -l .`: puerta del job `test` (falla si lista archivos) y
+  comprobación obligatoria antes de revisar (`make fmt` para corregir).
+- **`go vet`** para errores estáticos evidentes; también se ejecuta en CI.
 - **Tests automatizados** con `go test ./...` sobre todos los paquetes
-  `internal/**` y `cmd/rei`.
-- **Build** del binario real (`make build`), que además valida `go:embed` del
-  esqueleto.
-- **Build multiplataforma** (`make cross`) antes de un release o cuando el cambio
-  toque código específico de plataforma (`process_unix.go`, `process_windows.go`).
+  `internal/**` y `cmd/rei`; CI los ejecuta con `-count=1`, sin caché.
+- **Build** del binario real (`make build`), manual: además de enlazar el binario
+  valida `go:embed` del esqueleto. El CI no compila.
+- **Build multiplataforma** (`make cross`), manual o cubierto por el release:
+  obligatorio si el cambio toca código específico de plataforma
+  (`process_unix.go`, `process_windows.go`) o el proceso de release. El CI no lo
+  ejecuta.
 - **Validación manual del CLI** cuando el cambio afecta a la interacción: ejecutar
   el comando afectado sobre un proyecto de prueba (`t.TempDir()` o un repo
   desechable) y comprobar salida y código de salida.
@@ -36,16 +48,19 @@ se ejecuta al iniciar sesión, al implementar y al revisar.
 |----|---------|-------------|
 | `V1` | `go vet ./...` | Análisis estático; detecta errores evidentes de compilación y uso incorrecto de la API. |
 
+`V1` sigue siendo el único checkpoint declarado en `rei check`. El job `test` de
+CI ejecuta además `go vet` como refuerzo, pero `.rei/config.json` no cambia.
+
 ### Checkpoints lentos (NO van en `.rei/config.json`)
 
-Se ejecutan manualmente antes de cerrar el Work Item (o en el release), se
-documentan aquí y se referencian en la evidencia.
+Se ejecutan **manualmente o en el CD**, nunca desde `rei check`; el job de CI solo
+ejecuta `V2`. Se documentan aquí y se referencian en la evidencia.
 
 | ID | Comando | Descripción |
 |----|---------|-------------|
-| `V2` | `go test ./...` | Suite completa de tests unitarios (~13 s); compila todos los paquetes y valida el comportamiento. Se ejecuta antes de cerrar o revisar el Work Item, no en cada `rei check`. |
-| `V3` | `make build` | Compila y enlaza `bin/rei` con `-ldflags`; valida el `go:embed` del esqueleto y el punto de entrada. |
-| `V4` | `make cross` | Build para linux/darwin/windows y amd64/arm64; obligatorio si el cambio toca código por plataforma o el proceso de release. |
+| `V2` | `go test ./...` | Suite completa de tests unitarios (~13 s); compila todos los paquetes y valida el comportamiento. La ejecuta el job `test` de CI (`go test -count=1 ./...`) y también puede ejecutarse a mano antes de revisar el Work Item. |
+| `V3` | `make build` | Compila y enlaza `bin/rei` con `-ldflags`; valida el `go:embed` del esqueleto y el punto de entrada. **Manual**: el CI no compila binarios. |
+| `V4` | `make cross` | Build multiplataforma **manual** (o cubierto por el release). Produce cinco binarios: linux/darwin × amd64/arm64 y windows × amd64; GoReleaser cubre las seis combinaciones en release, incluida windows/arm64. Obligatorio si el cambio toca código por plataforma o el proceso de release. |
 
 > Los checkpoints rápidos se declaran en `.rei/config.json`:
 >
@@ -75,6 +90,11 @@ Como mínimo, por cada checkpoint ejecutado:
 - observaciones relevantes (logs, capturas, validaciones manuales) cuando el
   checkpoint no sea automatizable.
 
+Para `V2`, el run de CI es evidencia válida: se indica la URL del run, el job
+`test` y el commit SHA. El run debe corresponder al commit que se está revisando.
+Para `V3`/`V4` se documenta la ejecución manual (comando, resultado y salida
+relevante) o el run de release del CD cuando aplique.
+
 La evidencia debe documentarse en:
 
 ```
@@ -103,3 +123,6 @@ fallida.
 - No describir una verificación de forma libre si ya existe un ID (`V1`, `V2`, ...) para ella.
 - No declarar `V2` como pasado ejecutando solo un subconjunto de paquetes.
 - No ejecutar `V2`/`V3`/`V4` desde `rei check`: son lentos y no deben ir en la configuración.
+- No citar un run de CI de otro commit como evidencia del Work Item revisado.
+- No declarar verificado un job de CI que ha fallado.
+- No atribuir a CI la ejecución de `V3`/`V4`: el CI no compila binarios.

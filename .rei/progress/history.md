@@ -1290,3 +1290,50 @@ reglas de contexto en `AGENTS.md`/`progress.md`.
 Work Item cerrado. `rei session archive` mueve el resumen a `history.md` y
 restablece este archivo.
 
+
+## 2026-10-26 00:51 — 2026-10-26_00-38__ci-tests-build
+
+- **Work Item:** 2026-10-26_00-38__ci-tests-build
+- **Tipo:** task
+- **Estado:** done
+- **Inicio:** 2026-10-26T00:39:10-05:00
+- **Agente activo:** reviewer
+
+## Plan
+
+Task planificada en `.rei/specs/2026-10-26_00-38__ci-tests-build/plan.md`:
+workflow `ci.yml` con un único job `test` (formato, `go vet`, tests) y
+actualización de `verification.md`, `README.md` y `AGENTS.md`. CI no compila:
+`make build`/`make cross` son manuales y el CD es `release.yml` en tags.
+
+## Bitácora
+
+- 2026-10-26: Planificación de la Task completada (174 líneas). Se documenta la
+  decisión de no modificar el `Makefile`: `make cross` cubre cinco binarios
+  (windows/arm64 queda fuera de alcance). Validación de YAML y GitHub Actions
+  solo posible de forma estructural/local.
+- 2026-10-26: Revisión por cambio de alcance del usuario. El CI deja de compilar
+  (`make build`/`make cross` manuales o CD); un único job `test` con formato,
+  `go vet` y tests. `verification.md` separa CI (`V2`) de manual/CD (`V3`/`V4`).
+  Plan reescrito (172 líneas); `rei validate` OK.
+- 2026-10-26: Inicio de la implementación (implementer). Pasos 1–2:
+  `.github/workflows/ci.yml` con job único `test`.
+- 2026-10-26: Implementación completada (pasos 1–12). YAML validado con
+  `yaml@2` (YAML 1.2) + comprobación estructural; `gofmt`/`go vet`/`go test
+  -count=1` OK; `rei check` (V1), adaptadores, `doctor`, `init status` y
+  `validate` OK; alcance sin cambios en `release.yml`, `Makefile`,
+  `.goreleaser.yaml`, `skeleton/` ni `.rei/config.json`.
+- 2026-10-26: Revisión completada (reviewer): **aprobado**. `review-diff --full`
+  confirma alcance (`ci.yml`, `verification.md`, `README.md`, `AGENTS.md`);
+  `ci.yml` válido con un único job `test` (main/dev/PR/dispatch, `contents: read`,
+  `concurrency` cancelable, formato/vet/tests, sin build ni artefactos);
+  `verification.md` separa CI (`V2`) de manual/CD (`V3`/`V4`); rutas protegidas
+  sin cambios; `V1` (rei check), `V2`, adaptadores, `doctor`, `init status` y
+  `validate` OK. `V3`/`V4` no aplican (cambio de CI/documentación).
+
+## Próximo paso
+
+Work Item cerrado (`done`). Archivar la sesión y mover el resumen a
+`history.md`.
+
+

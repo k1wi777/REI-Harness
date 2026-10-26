@@ -92,8 +92,10 @@ propio proyecto destino.
   (`.rei/config.json`, `meta.json`).
 - **Testing:** `testing` de la biblioteca estándar (`go test ./...`), con tests
   junto al código en `internal/**`.
-- **Despliegue:** binarios precompilados con GoReleaser (`.goreleaser.yaml`) al
-  publicar un tag `v*`; también `make install` para instalación local.
+- **Despliegue:** CI (`.github/workflows/ci.yml`) valida formato, `go vet` y tests
+  en push/PR a `main`/`dev`; GoReleaser (`.goreleaser.yaml`) publica los binarios
+  precompilados al publicar un tag `v*`; `make build` y `make cross` son manuales
+  (no los ejecuta CI); también `make install` para instalación local.
 
 ## Comandos principales
 

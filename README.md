@@ -144,7 +144,7 @@ Este repositorio es **el código fuente de la herramienta**:
 ├── skeleton/              # Esqueleto neutral que despliega `rei init` (AGENTS.md, config y docs de proyecto)
 ├── embed.go               # Empaqueta el esqueleto del arnés dentro del binario
 ├── .goreleaser.yaml       # Release multi-SO/arch
-├── .github/workflows/     # Publicación de releases con goreleaser
+├── .github/workflows/     # CI (formato, vet, tests) y publicación de releases con goreleaser
 └── .rei/                  # Arnés (docs, agentes, plantillas, adaptadores) + su propio estado
 ```
 
