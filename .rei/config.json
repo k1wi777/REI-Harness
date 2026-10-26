@@ -1,5 +1,13 @@
 {
   "checks": [],
+  "integrations": {
+    "github": {
+      "base": "main",
+      "enabled": true,
+      "mergeStrategy": "squash",
+      "repo": "k1wi777/REI-Harness"
+    }
+  },
   "viewer": {
     "autoOpenOnReady": true
   }
