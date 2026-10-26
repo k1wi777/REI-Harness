@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/k1wi777/my-harness-SDD/internal/meta"
+	"github.com/k1wi777/REI-Harness/internal/meta"
 )
 
 func doRequest(t *testing.T, h http.Handler, method, target string, cookie *http.Cookie) *httptest.ResponseRecorder {

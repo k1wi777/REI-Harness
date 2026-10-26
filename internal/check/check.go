@@ -9,11 +9,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/k1wi777/my-harness-SDD/internal/config"
-	"github.com/k1wi777/my-harness-SDD/internal/gitx"
-	"github.com/k1wi777/my-harness-SDD/internal/paths"
-	"github.com/k1wi777/my-harness-SDD/internal/state"
-	"github.com/k1wi777/my-harness-SDD/internal/template"
+	"github.com/k1wi777/REI-Harness/internal/config"
+	"github.com/k1wi777/REI-Harness/internal/gitx"
+	"github.com/k1wi777/REI-Harness/internal/paths"
+	"github.com/k1wi777/REI-Harness/internal/state"
+	"github.com/k1wi777/REI-Harness/internal/template"
 )
 
 // RequiredFiles son los archivos críticos de REI Harness (rutas relativas a la raíz).

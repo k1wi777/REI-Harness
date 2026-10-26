@@ -9,7 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/k1wi777/my-harness-SDD/internal/paths"
+	"github.com/k1wi777/REI-Harness/internal/paths"
 )
 
 // ResolveRootFrom determina el proyecto destino partiendo de dir: el ancestro

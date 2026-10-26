@@ -5,7 +5,7 @@ import (
 	"io/fs"
 	"strings"
 
-	reiskel "github.com/k1wi777/my-harness-SDD"
+	reiskel "github.com/k1wi777/REI-Harness"
 )
 
 // skeletonRoot es el directorio raíz de reiskel.Skeleton; su prefijo no forma

@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	reiskel "github.com/k1wi777/my-harness-SDD"
-	"github.com/k1wi777/my-harness-SDD/internal/paths"
+	reiskel "github.com/k1wi777/REI-Harness"
+	"github.com/k1wi777/REI-Harness/internal/paths"
 )
 
 const testClaudeToolsJSON = `{

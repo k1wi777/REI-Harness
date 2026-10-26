@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/k1wi777/my-harness-SDD/internal/browser"
+	"github.com/k1wi777/REI-Harness/internal/browser"
 )
 
 // Options configura una ejecución de `rei update`. Los campos de costura con

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/k1wi777/my-harness-SDD/internal/meta"
+	"github.com/k1wi777/REI-Harness/internal/meta"
 )
 
 // TestRenderDocSections verifica la extracción de encabezados (nivel, id y

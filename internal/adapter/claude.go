@@ -4,7 +4,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/k1wi777/my-harness-SDD/internal/paths"
+	"github.com/k1wi777/REI-Harness/internal/paths"
 )
 
 // claudeMark identifica los archivos generados por el adaptador de Claude Code.

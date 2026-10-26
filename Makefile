@@ -16,7 +16,7 @@ DIST_DIR := dist
 
 # Versión inyectada en build time. `make build VERSION=v0.1.0` sella el binario.
 VERSION ?= dev
-PKG     := github.com/k1wi777/my-harness-SDD/internal/cli
+PKG     := github.com/k1wi777/REI-Harness/internal/cli
 LDFLAGS := -X $(PKG).version=$(VERSION)
 
 .PHONY: build test vet fmt install cross clean

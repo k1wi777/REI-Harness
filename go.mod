@@ -1,4 +1,4 @@
-module github.com/k1wi777/my-harness-SDD
+module github.com/k1wi777/REI-Harness
 
 go 1.27
 

@@ -11,9 +11,9 @@ import (
 	"strings"
 	"text/template"
 
-	harnesscheck "github.com/k1wi777/my-harness-SDD/internal/check"
-	"github.com/k1wi777/my-harness-SDD/internal/initwizard"
-	"github.com/k1wi777/my-harness-SDD/internal/paths"
+	harnesscheck "github.com/k1wi777/REI-Harness/internal/check"
+	"github.com/k1wi777/REI-Harness/internal/initwizard"
+	"github.com/k1wi777/REI-Harness/internal/paths"
 )
 
 // runtime describe cómo adaptar el formato canónico de rol a un runtime nativo.

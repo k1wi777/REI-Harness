@@ -9,8 +9,8 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/k1wi777/my-harness-SDD/internal/browser"
-	"github.com/k1wi777/my-harness-SDD/internal/paths"
+	"github.com/k1wi777/REI-Harness/internal/browser"
+	"github.com/k1wi777/REI-Harness/internal/paths"
 )
 
 // Mode selecciona el modo de ejecución de `rei view`.

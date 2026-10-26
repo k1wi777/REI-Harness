@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/k1wi777/my-harness-SDD/internal/check"
-	"github.com/k1wi777/my-harness-SDD/internal/config"
-	"github.com/k1wi777/my-harness-SDD/internal/paths"
+	"github.com/k1wi777/REI-Harness/internal/check"
+	"github.com/k1wi777/REI-Harness/internal/config"
+	"github.com/k1wi777/REI-Harness/internal/paths"
 )
 
 func TestInstallSkeletonCreaEsqueleto(t *testing.T) {

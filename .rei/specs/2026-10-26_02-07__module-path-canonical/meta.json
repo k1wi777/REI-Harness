@@ -1,0 +1,10 @@
+{
+  "id": "2026-10-26_02-07__module-path-canonical",
+  "title": "Go module: usar github.com/k1wi777/REI-Harness",
+  "description": "Cambiar el module path de Go de `github.com/k1wi777/my-harness-SDD` a `github.com/k1wi777/REI-Harness` (repo canónico). Es una identidad mecánica; no cambia comportamiento ni dependencias.\n\nAlcance:\n- `go.mod` (línea `module`) y todos los imports en `cmd/`, `internal/`, `embed.go`, `embed_test.go` y tests; usar `grep -rl` para no dejar ninguno.\n- `Makefile` (`PKG` y `LDFLAGS` con `-X .../internal/cli.version`).\n- `.goreleaser.yaml` (`ldflags`).\n- Referencias vivas en documentación/build (README, usage, AGENTS u otras) si existen; **no** reescribir `.rei/specs/**` ni `.rei/progress/**` históricos (son registros y conservan el path viejo).\n- Verificar `skeleton/`: el esqueleto neutral no debería contener el path; si lo contiene, actualizarlo.\n- No añadir dependencias; `go.mod`/`go.sum` solo cambian por el module path; `go mod tidy` no debe incorporar nada nuevo.\n\nVerificación:\n- `go test ./...`, `go vet ./...`, `gofmt -l .`, `make build`, `./bin/rei version` (dev) y `CGO_ENABLED=0 make cross` (V4; valida los ldflags en release).\n- `rei check --quiet` (V1), adaptadores `--check`, `doctor`, `init status`, `validate`.\n- `grep -rn` del path viejo en `cmd/`, `internal/`, `embed.go`, `embed_test.go`, `Makefile`, `.goreleaser.yaml`, `README.md`, `.rei/docs/`, `AGENTS.md` → sin resultados; el histórico `.rei/specs`/`.rei/progress` se excluye conscientemente.\n- `git diff` acotado; sin cambios de comportamiento ni deps.\n\nCriterio de aceptación: no queda el path viejo en código/build/docs vivos; tests, vet, build, cross, `rei check`, adaptadores, doctor/init status/validate en verde; specs/progress históricos intactos.",
+  "type": "task",
+  "status": "done",
+  "created_at": "2026-10-26T02:07:00-05:00",
+  "base_commit": "d18ef632101795d07b64064cabf22de98bf3d2a8",
+  "last_review_commit": ""
+}

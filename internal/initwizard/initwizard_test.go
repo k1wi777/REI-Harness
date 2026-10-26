@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/k1wi777/my-harness-SDD/internal/paths"
+	"github.com/k1wi777/REI-Harness/internal/paths"
 )
 
 func writeProjectFile(t *testing.T, p *paths.Project, rel, content string) {

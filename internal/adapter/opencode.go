@@ -3,7 +3,7 @@ package adapter
 import (
 	"io"
 
-	"github.com/k1wi777/my-harness-SDD/internal/paths"
+	"github.com/k1wi777/REI-Harness/internal/paths"
 )
 
 // generatedMark identifica los archivos generados por el adaptador de OpenCode

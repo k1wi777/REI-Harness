@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/k1wi777/my-harness-SDD/internal/meta"
-	"github.com/k1wi777/my-harness-SDD/internal/paths"
+	"github.com/k1wi777/REI-Harness/internal/meta"
+	"github.com/k1wi777/REI-Harness/internal/paths"
 )
 
 const metaTemplate = `{"id":"{{ID}}","title":"{{TITLE}}","description":"{{DESCRIPTION}}","type":"{{TYPE}}","status":"{{STATUS}}","created_at":"{{CREATED_AT}}","base_commit":"{{BASE_COMMIT}}","last_review_commit":"{{LAST_REVIEW_COMMIT}}"}`

@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/k1wi777/my-harness-SDD/internal/github"
-	"github.com/k1wi777/my-harness-SDD/internal/meta"
-	"github.com/k1wi777/my-harness-SDD/internal/paths"
+	"github.com/k1wi777/REI-Harness/internal/github"
+	"github.com/k1wi777/REI-Harness/internal/meta"
+	"github.com/k1wi777/REI-Harness/internal/paths"
 )
 
 func TestProjectMessage(t *testing.T) {

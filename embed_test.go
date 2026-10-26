@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/k1wi777/my-harness-SDD/internal/config"
+	"github.com/k1wi777/REI-Harness/internal/config"
 )
 
 // projectDocs son los documentos de proyecto que el esqueleto despliega en la

@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/k1wi777/my-harness-SDD/internal/paths"
-	"github.com/k1wi777/my-harness-SDD/internal/template"
+	"github.com/k1wi777/REI-Harness/internal/paths"
+	"github.com/k1wi777/REI-Harness/internal/template"
 )
 
 var idPattern = regexp.MustCompile(`^[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}__[a-z0-9]+(-[a-z0-9]+)*$`)

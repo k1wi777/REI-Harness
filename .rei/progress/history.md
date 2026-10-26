@@ -1410,3 +1410,57 @@ fuera de alcance. Esperando aprobación humana.
 
 Cierre del Work Item: aprobado, sin acciones pendientes.
 
+
+## 2026-10-26 02:16 — 2026-10-26_02-07__module-path-canonical
+
+- **Work Item:** 2026-10-26_02-07__module-path-canonical
+- **Tipo:** task
+- **Estado:** done
+- **Inicio:** 2026-10-26T02:08:22-05:00
+- **Agente activo:** reviewer
+
+## Plan
+
+Planificación de la Task completada en `.rei/specs/2026-10-26_02-07__module-path-canonical/plan.md`
+(159 líneas, dentro del presupuesto 150–200). Inventario: 51 archivos y 118
+ocurrencias del path antiguo (115 en 48 archivos `.go`, más `go.mod`, `Makefile`
+y `.goreleaser.yaml`); `embed.go`, `skeleton/`, `.github/**`, `.rei/docs/**` y
+la documentación raíz ya están limpios. Se excluyen los históricos
+`.rei/specs/**` y `.rei/progress/**`.
+
+## Bitácora
+
+- 2026-10-26T02:08:22-05:00 — Sesión iniciada (`pending`, agente `spec_author`).
+- 2026-10-26T02:12:00-05:00 — `rei check --quiet` OK; leído `task.md` y el
+  `meta.json` del Work Item.
+- 2026-10-26T02:18:00-05:00 — Inventario del path antiguo con `grep -rl` y
+  revisión de `go.mod`, `Makefile`, `.goreleaser.yaml`, docs vivas y `skeleton/`.
+- 2026-10-26T02:26:00-05:00 — `plan.md` redactado y `rei validate` en OK.
+- 2026-10-26T02:28:00-05:00 — Work Item marcado `ready`; agente liberado.
+- 2026-10-26T02:40:00-05:00 — Implementer inicia la ejecución del `plan.md`
+  (pasos 1–12). Inventario reconfirmado: 51 archivos / 118 ocurrencias
+  (48 `.go` / 115, más `go.mod`, `Makefile`, `.goreleaser.yaml`); `embed.go`
+  limpio.
+- 2026-10-26T02:44:00-05:00 — Pasos 1–7: `make clean`; `go.mod`, `Makefile` y
+  `.goreleaser.yaml` actualizados; prefijo reemplazado en 48 `.go` (115
+  ocurrencias, alias `reiskel` intactos); `gofmt -w .`; `go mod tidy` (`go.sum`
+  intacto, `go.mod` solo difiere en `module`).
+- 2026-10-26T02:48:00-05:00 — Pasos 8–10: `go vet` OK; `go test -count=1 ./...`
+  OK; `make build` → `dev`; `VERSION=v0.0.0-ldflags` → `v0.0.0-ldflags`;
+  `CGO_ENABLED=0 make cross` con 5 binarios.
+- 2026-10-26T02:51:00-05:00 — Pasos 11–12: `check`, `doctor`, `init status`,
+  `validate`, `init opencode --check` e `init claude --check` OK; grep del path
+  antiguo sin resultados; diff acotado a 51 archivos + sesión.
+- 2026-10-26T02:52:00-05:00 — `impl.md` redactado. Work Item a `review`.
+- 2026-10-26T03:05:00-05:00 — Revisión completada (Reviewer): `rei review-diff`
+  confirma 51 archivos previstos; V1 (`go vet`, `rei check`) OK; V2
+  (`go test -count=1 ./...`) OK con el module path nuevo; V3 (`dev` y
+  `v0.0.0-ldflags`) OK; V4 (`make cross`, 5 binarios) OK; `gofmt -l .` limpio;
+  `go mod tidy -diff` sin cambios y `go.sum` intacto; `doctor`, `init status`,
+  `validate`, adaptadores `--check` OK; grep del path antiguo sin resultados en
+  vivo y en binarios regenerados. Veredicto: aprobado (`review.md`).
+
+## Próximo paso
+
+Work Item cerrado (`done`). Sin acciones pendientes.
+

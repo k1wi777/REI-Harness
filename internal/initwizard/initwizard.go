@@ -11,8 +11,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/k1wi777/my-harness-SDD/internal/check"
-	"github.com/k1wi777/my-harness-SDD/internal/paths"
+	"github.com/k1wi777/REI-Harness/internal/check"
+	"github.com/k1wi777/REI-Harness/internal/paths"
 )
 
 // marker es el marcador canónico que señala contenido pendiente de personalizar.

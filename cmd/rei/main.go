@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/k1wi777/my-harness-SDD/internal/cli"
+	"github.com/k1wi777/REI-Harness/internal/cli"
 )
 
 func main() {

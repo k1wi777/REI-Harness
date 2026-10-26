@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	reiskel "github.com/k1wi777/my-harness-SDD"
+	reiskel "github.com/k1wi777/REI-Harness"
 )
 
 // canonicalRole construye un rol canónico válido para los tests.

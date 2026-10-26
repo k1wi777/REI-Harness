@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/k1wi777/my-harness-SDD/internal/gitx"
-	"github.com/k1wi777/my-harness-SDD/internal/paths"
+	"github.com/k1wi777/REI-Harness/internal/gitx"
+	"github.com/k1wi777/REI-Harness/internal/paths"
 )
 
 // applyChanges calcula, para los documentos del Work Item, el cambio respecto
