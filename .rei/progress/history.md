@@ -1182,3 +1182,56 @@ invariante de un único `in_progress` aplicado en `state.Transition`, `doctor`,
 Work Item cerrado (`done`). El Leader puede archivar la sesión y continuar con
 el siguiente Work Item.
 
+
+## 2026-10-26 00:22 — 2026-10-26_00-11__github-playbook-split
+
+- **Work Item:** 2026-10-26_00-11__github-playbook-split
+- **Tipo:** task
+- **Estado:** done
+- **Inicio:** 2026-10-26T00:12:38-05:00
+- **Agente activo:** reviewer
+
+## Plan
+
+Dividir `.rei/docs/harness/integrations/github.md` en un índice de enrutado y
+cuatro archivos por dominio (`core.md`, `backlog.md`, `templates.md`,
+`errors.md`), con mapa de migración, contrato del Leader por acción y registro
+en `RequiredFiles`/embed/docs. Ver
+`.rei/specs/2026-10-26_00-11__github-playbook-split/plan.md` (9 pasos).
+
+## Bitácora
+
+- Planificación completada: estructura de índice ≤ 200 líneas, mapa explícito
+  sección actual → archivo destino, reglas de no duplicación y verificación de
+  contenido.
+- Contrato del Leader definido con tabla acción → archivo y prohibición de
+  cargar el playbook entero; `initializer.md` se auditará (hoy no cita el
+  playbook).
+- Registro previsto en `internal/check.RequiredFiles`, `embed_test.go`,
+  `.rei/docs/harness/README.md`, `AGENTS.md` §7, `help.go`, `README.md` y
+  `.rei/docs/usage.md`.
+- Adaptadores nativos se regenerarán con el CLI, no se editarán a mano.
+- Implementación iniciada: `github.md` reescrito como índice (200 líneas) y
+  detalle migrado a `github/core.md`, `backlog.md`, `templates.md` y `errors.md`
+  según el mapa del plan.
+- Registro actualizado en `RequiredFiles`, `embed_test`, README del arnés,
+  `AGENTS.md` §7, `help.go`, `README.md` y `usage.md`; contrato del Leader con
+  tabla acción → archivo y prohibición de cargar todo.
+- Adaptadores regenerados con `rei init opencode` y `rei init claude`; ambos
+  `--check` en 0.
+- Verificación completa: V1 `go vet` OK, V2 `go test ./...` OK, V3 `make build`
+  OK, `rei check --quiet` 0, `rei doctor` 0, `rei init status` 0,
+  `rei validate` OK. Sin pérdida de tablas, comandos, plantillas ni recordatorios.
+- Revisión aprobada (`review.md`): índice de 200 líneas sin comandos `gh`/`git`
+  ni plantillas; los 35 bloques de código y las 48 líneas `gh`/`git` del
+  original migrados íntegros (31 en `core.md`, 17 en `backlog.md`), tabla de
+  errores, reintentos, recordatorios y prueba de campo idénticos. Contrato del
+  Leader enrutado por acción con prohibición de cargar el playbook completo;
+  `initializer.md` sin cambios; los cuatro archivos en `RequiredFiles`/embed y
+  docs del arnés actualizados. V1/V2/V3, `rei check --quiet`, adaptadores
+  `--check`, `doctor`, `init status` y `validate` en 0. Sin desviaciones.
+
+## Próximo paso
+
+Cierre del Work Item: archivar la sesión; el resumen pasa a `history.md`.
+

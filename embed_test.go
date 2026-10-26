@@ -80,6 +80,10 @@ func TestHarnessContieneMaterialDelArnes(t *testing.T) {
 	for _, path := range []string{
 		".rei/docs/harness/workflow.md",
 		".rei/docs/harness/integrations/github.md",
+		".rei/docs/harness/integrations/github/core.md",
+		".rei/docs/harness/integrations/github/backlog.md",
+		".rei/docs/harness/integrations/github/templates.md",
+		".rei/docs/harness/integrations/github/errors.md",
 		".rei/docs/usage.md",
 		".rei/agents/leader.md",
 		".rei/agents/initializer.md",

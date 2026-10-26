@@ -182,9 +182,11 @@ Define cómo funciona el arnés. No requiere personalización por proyecto.
 |-----------------|-------------|
 | Workflow | `.rei/docs/harness/workflow.md` |
 | Spec Driven Development | `.rei/docs/harness/specs.md` |
+| Planificación de Tasks | `.rei/docs/harness/task.md` |
 | Sistema de progreso | `.rei/docs/harness/progress.md` |
 | Estructura de `meta.json` | `.rei/docs/harness/meta.md` |
 | Roles y adaptadores | `.rei/docs/harness/adapters.md` |
+| Integración GitHub (opcional) | `.rei/docs/harness/integrations/github.md` (índice; carga el archivo del dominio que indique) |
 | El comportamiento de un agente | `.rei/agents/<role>.md` |
 
 ## Documentación del proyecto

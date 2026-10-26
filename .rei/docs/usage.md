@@ -86,6 +86,10 @@ La documentación en `docs/` está dividida en dos carpetas. Solo una de ellas d
 
 Si modificas un archivo de `.rei/docs/harness/` o `.rei/agents/`, estarías alterando REI Harness en sí, no la configuración de tu proyecto.
 
+La integración con GitHub es opcional: `.rei/docs/harness/integrations/github.md`
+es el índice y los agentes cargan solo el archivo de la acción en curso
+(`integrations/github/core.md`, `backlog.md`, `templates.md` o `errors.md`).
+
 ---
 
 # 2. Negociar el Work Item con el Leader

@@ -198,13 +198,24 @@ Solo se aplica si `integrations.github.enabled` es `true` en
 `.rei/config.json`. Si la clave falta o `enabled` es `false`, **NO menciones
 GitHub**, no ejecutes `gh` y trabaja sobre la rama base como siempre.
 
-Los comandos exactos están en
-`.rei/docs/harness/integrations/github.md`; esta sección fija las reglas no
-negociables.
+Los comandos y procedimientos están en los archivos de dominio de
+`.rei/docs/harness/integrations/github/`; `github.md` es solo el índice de
+orientación y configuración. Carga **solo** el archivo que indique esta tabla
+para la acción en curso (como máximo `templates.md` junto al archivo del flujo
+cuando vayas a escribir); **no cargues el playbook completo ni todos los
+archivos a la vez**.
+
+| Acción | Archivo |
+|--------|---------|
+| Orientación, configuración, vocabulario, `rei github` (enable/disable/status) | `.rei/docs/harness/integrations/github.md` |
+| Puerta issue+rama y base, `links.json`, nombre canónico, adopción v1, comentarios impl/review, PR/merge | `.rei/docs/harness/integrations/github/core.md` |
+| Épicas, backlog/hijas, entrevista/borrador/aprobación, promoción, publicación de spec, asignación, cierre de épica | `.rei/docs/harness/integrations/github/backlog.md` |
+| Escribir cuerpo de issue, comentario, épica, hija o bloque de spec | `.rei/docs/harness/integrations/github/templates.md` (además del archivo del flujo) |
+| Error, ambigüedad, reintento, recordatorios en `current.md`, prueba de campo | `.rei/docs/harness/integrations/github/errors.md` |
 
 - **Arranque.** Si el usuario pide crear o planificar un backlog, crear una
-  épica o hijas, asignar/desasignar o cerrar una épica, aplica el playbook
-  **antes** de `rei new`.
+  épica o hijas, asignar/desasignar o cerrar una épica, aplica
+  `github/backlog.md` **antes** de `rei new`.
 - **Puerta única (v1).** **Solo para Work Items de tipo `feature`**: al aprobar
   la planificación (Caso C), si no existe `.rei/specs/<id>/links.json` ni una
   decisión registrada en `current.md`, captura `HEAD`/sha, muestra la base y
@@ -263,8 +274,8 @@ negociables.
 - **Prueba de campo.** Si la planificación del Work Item incluye una prueba de
   campo, registra la autorización explícita del usuario en `current.md` antes de
   lanzar al Implementer y permite que sea el Implementer quien la ejecute,
-  remitiendo al playbook. Las operaciones normales de backlog, adopción,
-  asignación y cierre siguen siendo tuyas.
+  remitiendo a `github/errors.md §3`. Las operaciones normales de backlog,
+  adopción, asignación y cierre siguen siendo tuyas.
 - **Recordatorios.** Mientras haya sesión, mantén en «Próximo paso» de
   `current.md` las acciones GitHub pendientes (backlog, hijas, task list,
   adopción, spec, asignación, cierre, PR, merge) y retíralas al completarlas.

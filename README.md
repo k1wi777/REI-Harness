@@ -224,6 +224,7 @@ Define el funcionamiento de REI Harness. **No requiere personalización.**
 | `progress.md` | Sistema de progreso y plantillas. |
 | `meta.md` | Estructura y significado de `meta.json`. |
 | `adapters.md` | Formato canónico de rol y adaptadores de runtime. |
+| `integrations/github.md` | Índice de la integración opcional con GitHub Issues; el detalle vive en `integrations/github/core.md`, `backlog.md`, `templates.md` y `errors.md`. |
 
 ## Del proyecto (`.rei/docs/project/`)
 
